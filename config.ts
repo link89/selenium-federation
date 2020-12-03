@@ -1,17 +1,14 @@
 import yargs from 'yargs/yargs';
 import { parse } from 'yaml';
 import fs from 'fs';
-import { defaultsDeep } from 'lodash';
-import { Configuration } from 'types';
-
+import { configurationSchema } from 'schemas';
 
 export const argv = yargs(process.argv.slice(2)).options({
-  config: { type: 'string', demandOption: false},
+  c: { type: 'string', demandOption: false },
 }).argv;
 
-const DEFAULT_CONFIG: Configuration = {
-  port: 4444,
-  browsers: [],
-};
+export const config = configurationSchema.cast(argv.c ? parse(fs.readFileSync(argv.c, 'utf-8')) : {});
 
-export const config: Configuration =  argv.config ? defaultsDeep(parse(fs.readFileSync(argv.config, 'utf-8')), DEFAULT_CONFIG) : DEFAULT_CONFIG;
+if (config.localDrivers.length > 1 && config.remoteDrivers.length > 1) {
+  throw Error("Unable to support remote and local drivers at the same time!");
+}
