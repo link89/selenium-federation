@@ -48,9 +48,10 @@ export class LocalSession extends Session {
   }
 
   public async forward(request: Request, path?: string) {
-    const url = `${this.baseUrl}/${this.id}${isNil(path) ? '' : ('/' + path)}`;
+    const url = `/${this.id}${isNil(path) ? '' : ('/' + path)}`;
     try {
       return await axios.request({
+        baseURL: this.baseUrl,
         url,
         method: request.method as any,
         data: request.body,
@@ -67,7 +68,7 @@ export class LocalSession extends Session {
     this.port = await getPort();
     this.childProcess = spawn(this.webdriverPath, [...this.args, `--port=${this.port}`], { stdio: 'inherit' });
     const response = await retry<AxiosResponse>(
-      () => axios.post(this.baseUrl, sanitizeCreateSessionRequest(request.body, this.defaultCapabilities)),
+      () => axios.request({ method: 'POST', url: this.baseUrl, data: sanitizeCreateSessionRequest(request.body, this.defaultCapabilities) }),
       {
         max: 5,
         interval: 1e3,
@@ -109,17 +110,13 @@ export class RemoteSession extends Session {
   }
 
   public async stop() {
-    await axios.request({
-      method: 'DELETE',
-      baseURL: this.baseUrl,
-      url: `/session/${this.id}`,
-    }).catch();
   }
 
   public async forward(request: Request, path?: string) {
-    const url = `${this.baseUrl}/${this.id}${isNil(path) ? '' : ('/' + path)}`;
+    const url = `/session/${this.id}${isNil(path) ? '' : ('/' + path)}`;
     try {
       return await axios.request({
+        baseURL: this.baseUrl,
         url,
         method: request.method as any,
         data: request.body,

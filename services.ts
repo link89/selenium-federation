@@ -138,7 +138,6 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
       return response.data.
         filter(localDriver => localDriverSchema.isValidSync(localDriver)).
         map(localDriver => [remoteDriver, localDriver]);
-
     }, { concurrency: 8 });
     return flatten(packedCandidates);
   }

@@ -22,3 +22,22 @@ export async function retry<T>(cb: () => Promise<T> | T, option: IRetryOption = 
     }
   }
 }
+
+export class Semaphore {
+  queue: (() => void)[] = [];
+
+  constructor(private size: number) {}
+
+  async wait() {
+    if (this.size - 1 < 0) {
+      await new Promise(resolve => this.queue.push(resolve));
+    }
+    this.size -= 1;
+  }
+
+  signal() {
+    this.size += 1;
+    const resolve = this.queue.shift();
+    if (resolve) resolve();
+  }
+}
