@@ -1,10 +1,18 @@
 {
   "name": "selenium-federation",
   "version": "0.1.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A lightweight alternative to selenium-grid.",
+  "main": "dist/main.js",
+  "files": [
+    "dist",
+    "bin"
+  ],
+  "bin": {
+    "selenium-federation": "bin/selenium-federation"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "rm -rf dist || true && tsc",
     "start": "ts-node -r tsconfig-paths/register main.ts"
   },
   "repository": {
