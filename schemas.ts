@@ -7,11 +7,11 @@ const remoteDriverSchema = yup.object({
   maxSessions: yup.number().default(1).defined(),
 }).defined();
 
-const localDriverSchema = yup.object({
+export const localDriverSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
-  tags: yup.array().of(yup.string().defined()).default([]),
+  tags: yup.array(yup.string().defined()).default([]),
   webdriverPath: yup.string().defined(),
-  args: yup.array().of(yup.string().defined()).default([]),
+  args: yup.array(yup.string().defined()).default([]),
   maxSessions: yup.number().default(1).defined(),
   defaultCapabilities: yup.object().default({}).defined(),
 }).defined();
@@ -27,6 +27,7 @@ export const configurationSchema = yup.object({
 export type Configuration = yup.InferType<typeof configurationSchema>;
 export type LocalDriver = yup.InferType<typeof localDriverSchema>;
 export type RemoteDriver = yup.InferType<typeof remoteDriverSchema>;
+export type Driver = LocalDriver | RemoteDriver;
 
 export interface DriverMatchCriteria {
   browserName: string;

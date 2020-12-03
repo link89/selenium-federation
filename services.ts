@@ -1,14 +1,17 @@
-import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams } from "schemas";
+import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema } from "schemas";
 import { LocalSession, RemoteSession, Session } from "sessions";
 import { Request } from "koa";
 import { Watchdog } from "watchdog";
+import axios, { AxiosResponse } from "axios";
+import Bluebird from "bluebird";
+import { flatten } from "lodash";
 
 
 export abstract class DriverService<D extends object, S extends Session>{
-  private  sessions: Map<string, S>;
-  private  sessionDriverMap: WeakMap<S, D>;
-  private  sessionWatchdogMap: WeakMap<S, Watchdog>;
-  private  driverSessionsMap: WeakMap<D, Set<S>>;
+  private sessions: Map<string, S>;
+  private sessionDriverMap: WeakMap<S, D>;
+  private sessionWatchdogMap: WeakMap<S, Watchdog>;
+  private driverSessionsMap: WeakMap<D, Set<S>>;
 
   constructor(
     protected readonly drivers: D[],
@@ -54,23 +57,7 @@ export abstract class DriverService<D extends object, S extends Session>{
     return this.driverSessionsMap.get(driver);
   }
 
-  abstract getAvailableDrivers(): D[];
-}
-
-
-export class LocalDriverService extends DriverService<LocalDriver, LocalSession> {
-
-  async createSession(request: Request) {
-    const criteria = sanitizeMatchCriteria(request.body);
-    const candidates = this.getAvailableDrivers()
-      .filter(driver => driver.browserName === criteria.browserName)
-      .filter(driver => criteria.tags.every(tag => driver.tags!.includes(tag)));
-
-    if (candidates.length === 0) {
-      throw Error(`No Drivers Available!`);
-    }
-    const driver = candidates[0];
-    const session = new LocalSession(driver.webdriverPath, driver.args!, driver.defaultCapabilities);
+  async startSession(session: S, request: Request, driver: D) {
     const response = await session.start(request);
     const watchdog = new Watchdog(() => {
       this.deleteSession(session.id!);
@@ -93,10 +80,74 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
     return await session.forward(request, params.suffix);
   }
 
-  getAvailableDrivers() {
+  abstract getAvailableDrivers(): Promise<LocalDriver[]>;
+  abstract createSession(request: Request): Promise<AxiosResponse>;
+}
+
+
+export class LocalDriverService extends DriverService<LocalDriver, LocalSession> {
+
+  async getAvailableDrivers() {
     return this.drivers.filter(driver => this.getSessionsByDriver(driver)!.size < driver.maxSessions)
   }
+
+  async createSession(request: Request) {
+    const criteria = sanitizeMatchCriteria(request.body);
+    const candidates = (await this.getAvailableDrivers())
+      .filter(driver => isCriteriaMatch(driver, criteria));
+
+    if (!candidates.length) {
+      throw Error(`No Drivers Available!`);
+    }
+    const driver = candidates[0];
+    const session = new LocalSession(driver.webdriverPath, driver.args!, driver.defaultCapabilities);
+    return this.startSession(session, request, driver);
+  }
 }
+
+
+export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSession> {
+
+  async getAvailableDrivers() {
+    return this.getCandidates().then(candidates => candidates.map(([rd, ld]) => ld));
+  }
+
+  async createSession(request: Request) {
+
+    const criteria = sanitizeMatchCriteria(request.body);
+    const candidates: [RemoteDriver, LocalDriver][] = (await this.getCandidates())
+      .filter(([remoteDriver, localDriver]) => isCriteriaMatch(localDriver, criteria));
+
+    if (!candidates.length) {
+      throw Error(`No Drivers Available!`);
+    }
+    const driver = candidates[0][0];
+    const session = new RemoteSession(driver.url);
+    return this.startSession(session, request, driver);
+  }
+
+  private async getCandidates(): Promise<[RemoteDriver, LocalDriver][]> {
+    const packedCandidates: [RemoteDriver, LocalDriver][][] = await Bluebird.map(this.drivers, async remoteDriver => {
+      const response = await axios.request<LocalDriver[]>({
+        method: 'GET',
+        baseURL: remoteDriver.url,
+        url: '/available-sessions',
+      }).catch((e) => console.log(e));
+
+      if (!response) return [];
+      return response.data.
+        filter(localDriver => localDriverSchema.isValidSync(localDriver)).
+        map(localDriver => [remoteDriver, localDriver]);
+
+    }, { concurrency: 8 });
+    return flatten(packedCandidates);
+  }
+}
+
+
+const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): boolean =>
+  driver.browserName === criteria.browserName && criteria.tags.every(tag => driver.tags!.includes(tag));
+
 
 const sanitizeMatchCriteria = (obj: any): DriverMatchCriteria => {
   const capabilities = obj?.desiredCapabilities;

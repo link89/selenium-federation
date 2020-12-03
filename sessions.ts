@@ -7,8 +7,11 @@ import { isNil,} from "lodash";
 import { cloneDeep, defaultsDeep } from "lodash";
 
 
-export class Session {
+export abstract class Session {
   public id?: string;
+  public abstract start(request: Request): Promise<AxiosResponse>;
+  public abstract stop(): Promise<void>;
+  public abstract forward(request: Request, path?: string): Promise<AxiosResponse>;
 }
 
 
@@ -87,9 +90,50 @@ export class LocalSession extends Session {
 
 export class RemoteSession extends Session {
 
+  constructor(private baseUrl: string) {
+    super();
+  }
+
+  public async start(request: Request) {
+    const response = await axios.request({
+      method: 'POST',
+      baseURL: this.baseUrl,
+      url: '/session',
+      data: sanitizeCreateSessionRequest(request.body),
+    });
+    this.id = response?.data?.sessionId || response?.data?.value.sessionId;
+    if (!response || !this.id) {
+      throw Error(`Invalid response: ${JSON.stringify(response)}`);
+    }
+    return response;
+  }
+
+  public async stop() {
+    await axios.request({
+      method: 'DELETE',
+      baseURL: this.baseUrl,
+      url: `/session/${this.id}`,
+    }).catch();
+  }
+
+  public async forward(request: Request, path?: string) {
+    const url = `${this.baseUrl}/${this.id}${isNil(path) ? '' : ('/' + path)}`;
+    try {
+      return await axios.request({
+        url,
+        method: request.method as any,
+        data: request.body,
+        headers: request.headers,
+        params: request.query,
+      });
+    } catch (e) {
+      if (!e.response) throw e;
+      return e.response;
+    }
+  }
 }
 
-const sanitizeCreateSessionRequest = (caps: any, defaultCaps: any) => {
+const sanitizeCreateSessionRequest = (caps: any, defaultCaps?: any) => {
   const _caps = cloneDeep(caps);
   delete _caps?.capabilities;
   delete _caps?.desiredCapabilities?.extOptions;

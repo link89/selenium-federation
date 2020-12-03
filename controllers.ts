@@ -1,13 +1,13 @@
 import { AxiosResponse } from "axios";
 import { Context } from "koa";
-import { localDriverService } from "runtime";
+import { driverService } from "runtime";
 import { SessionPathParams } from "schemas";
 
 type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void>;
 
 export const handleCreateSessionRequest: RequestHandler = async (ctx, next)=> {
   logRequest(ctx);
-  const response = await localDriverService.createSession(ctx.request);
+  const response = await driverService.createSession(ctx.request);
   setResponse(ctx, response);
   next();
 }
@@ -15,19 +15,19 @@ export const handleCreateSessionRequest: RequestHandler = async (ctx, next)=> {
 export const handleSessionRequest: RequestHandler = async (ctx, next) => {
   logRequest(ctx);
   const params = sanitizeSessionParams(ctx.params);
-  const response = await localDriverService.forward(ctx.request, params);
+  const response = await driverService.forward(ctx.request, params);
   ctx.set(response?.headers);
   ctx.body = JSON.stringify(response?.data);
   ctx.status = response?.status!;
   next();
 
   if ('DELETE' === ctx.method.toUpperCase() && !params.suffix) {
-    await localDriverService.deleteSession(params.sessionId);
+    await driverService.deleteSession(params.sessionId);
   }
 }
 
 export const handleQueryAvailableSessions: RequestHandler = async (ctx, next) => {
-  ctx.body = JSON.stringify(localDriverService.getAvailableDrivers());
+  ctx.body = JSON.stringify(await driverService.getAvailableDrivers());
   ctx.status = 200;
   next();
 }
