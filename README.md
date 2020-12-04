@@ -6,6 +6,10 @@ A lightweight alternative to selenium-grid.
 ### Install
 ```bash
 npm install -g selenium-federation
+
+# testing
+selenium-federation --help
+selenium-federation-pm2-starter --help
 ```
 
 ### Start Local Service
@@ -73,6 +77,16 @@ selenium-federation -c remote.yaml
 Now you can access the selenium compatible service via
 `http://localhost:5555/wd/hub`.
 
+### Start Service in pm2
+
+`pm2` is powerful, but it is tedious to start service with it, especially on on Windows system.
+
+Now you can start `selenium-federation` service in `pm2` with the following command
+
+```bash
+npm install -g pm2  # ensure you have pm2 installed
+selenium-federation-pm2-starter -c ./local.yaml
+```
 
 ## Differentiation from Selenium 4
 
