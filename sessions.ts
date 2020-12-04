@@ -43,8 +43,6 @@ export class LocalSession extends Session {
   }
 
   public async stop() {
-    // firefox won't be closed after driver is got kill due to this bug:
-    // https://bugzilla.mozilla.org/show_bug.cgi?id=1430064
     this.kill();
   }
 
@@ -69,7 +67,7 @@ export class LocalSession extends Session {
 
   private async _start(request: Request) {
     this.port = await getPort();
-    this.childProcess = spawn(this.webdriverPath, [...this.args, `--port=${this.port}`], { stdio: 'inherit' });
+    this.childProcess = spawn(this.webdriverPath, [...this.args, `--port=${this.port}`], { stdio: 'inherit', detached: true });
     const response = await retry<AxiosResponse>(
       () => axios.request({ method: 'POST', url: this.baseUrl, data: sanitizeCreateSessionRequest(request.body, this.defaultCapabilities) }),
       {
@@ -86,7 +84,8 @@ export class LocalSession extends Session {
 
   private kill() {
     if (this.childProcess && !this.childProcess.killed) {
-      this.childProcess.kill('SIGTERM');
+      process.kill(-this.childProcess.pid);  // kill the whole process group
+      // this.childProcess.kill('SIGINT');
     }
   }
 
