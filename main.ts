@@ -2,8 +2,8 @@ import Koa from "koa";
 import Router from "koa-router";
 import bodyParser from 'koa-bodyparser';
 
-import { config } from "config";
-import { handleCreateSessionRequest, handleQueryAvailableSessions, handleSessionRequest } from "controllers";
+import { config } from "./config";
+import { handleCreateSessionRequest, handleQueryAvailableSessions, handleSessionRequest } from "./controllers";
 
 
 const router = new Router();

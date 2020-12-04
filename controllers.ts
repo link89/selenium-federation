@@ -1,8 +1,8 @@
 import { AxiosResponse } from "axios";
 import { Context } from "koa";
-import { driverService } from "runtime";
-import { SessionPathParams } from "schemas";
-import { Semaphore } from "utils";
+import { driverService } from "./runtime";
+import { SessionPathParams } from "./schemas";
+import { Semaphore } from "./utils";
 
 type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void>;
 

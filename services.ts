@@ -1,7 +1,7 @@
-import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema } from "schemas";
-import { LocalSession, RemoteSession, Session } from "sessions";
+import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema } from "./schemas";
+import { LocalSession, RemoteSession, Session } from "./sessions";
 import { Request } from "koa";
-import { Watchdog } from "watchdog";
+import { Watchdog } from "./watchdog";
 import axios, { AxiosResponse } from "axios";
 import Bluebird from "bluebird";
 import { flatten } from "lodash";

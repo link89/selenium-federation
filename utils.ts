@@ -24,7 +24,7 @@ export async function retry<T>(cb: () => Promise<T> | T, option: IRetryOption = 
 }
 
 export class Semaphore {
-  queue: (() => void)[] = [];
+  queue: ((value?: any) => void)[] = [];
 
   constructor(private size: number) {}
 

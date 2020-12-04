@@ -1,5 +1,5 @@
 import { spawn, ChildProcess} from "child_process";
-import { retry } from "utils";
+import { retry } from "./utils";
 import getPort from "get-port";
 import axios, { AxiosResponse } from "axios";
 import { Request } from "koa";
