@@ -49,13 +49,15 @@ export class LocalSession extends Session {
 
   public async forward(request: Request, path?: string) {
     const url = `/${this.id}${isNil(path) ? '' : ('/' + path)}`;
+    const headers = { ...request.headers };
+    delete headers.host;
     try {
       return await axios.request({
         baseURL: this.baseUrl,
         url,
         method: request.method as any,
         data: request.body,
-        headers: {...request.headers, Host: undefined},
+        headers,
         params: request.query,
       });
     } catch (e) {
@@ -114,13 +116,15 @@ export class RemoteSession extends Session {
 
   public async forward(request: Request, path?: string) {
     const url = `/session/${this.id}${isNil(path) ? '' : ('/' + path)}`;
+    const headers = { ...request.headers };
+    delete headers.host;
     try {
       return await axios.request({
         baseURL: this.baseUrl,
         url,
         method: request.method as any,
         data: request.body,
-        headers: {...request.headers, Host: undefined},
+        headers,
         params: request.query,
       });
     } catch (e) {
