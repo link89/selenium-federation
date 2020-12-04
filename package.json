@@ -8,7 +8,7 @@
     "dist"
   ],
   "bin": {
-    "selenium-federation": ".bin/selenium-federation"
+    "selenium-federation": "./bin/selenium-federation"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
