@@ -5,7 +5,7 @@ A lightweight alternative to selenium-grid.
 
 ### Install
 ```bash
-npm install selenium-federation
+npm install -g selenium-federation
 ```
 
 ### Start Local Service
@@ -17,18 +17,23 @@ browserIdleTimeout: 60
 
 localDrivers:
   - browserName: firefox
+    maxSessions: 2
     webdriverPath: geckodriver # Support global webdriver command.
 
   - browserName: safari
+    maxSessions: 1
     webdriverPath: safaridriver
 
   - browserName: MicrosoftEdge
+    maxSessions: 2
     webdriverPath: msedgedriver
 
   - browserName: chrome
+    maxSessions: 2
     webdriverPath: ./chromedriver88  # Also support relative/absolute path to webdriver.
 
   - browserName: chrome
+    maxSessions: 2
     tags:
       - canary
     webdriverPath: ./chromedriver89
@@ -44,7 +49,6 @@ selenium-federation -c local.yaml
 
 Now you can access the selenium compatible service via
 `http://localhost:4444/wd/hub`.
-
 
 
 ### Start Remote Service
@@ -68,3 +72,55 @@ selenium-federation -c remote.yaml
 
 Now you can access the selenium compatible service via
 `http://localhost:5555/wd/hub`.
+
+
+## Differentiation from Selenium 4
+
+### Default Capabilities
+
+The `defaultCapabilities` will be merged with the `desiredCapabilities` received from the client-side before firing the NEW_SESSIONS request. This is useful when you need to hide the server-side detail from clients.
+
+The below configuration is a real world example to use this feature to support `ChromeCanary`.
+
+```yaml
+port: 4444
+browserIdleTimeout: 60
+
+localDrivers:
+  - browserName: chrome
+    tags:
+      - canary
+    webdriverPath: ./chromedriver89
+    defaultCapabilities:
+      "goog:chromeOptions":
+        binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
+```
+
+Address this [issue](https://github.com/SeleniumHQ/selenium/issues/8745) of selenium.
+
+### Matching with Tags
+
+`tags` fields can be used in `localDrivers` to distinguish the configuration items with same `browserName`. The client-side can set the `extOptions.tags` in capabilities to make use of this feature.
+
+The below script is an example of using this feature with `webdriver.io`.
+
+```typescript
+import { remote } from "webdriverio";
+
+const opt = {
+  hostname: 'localhost', port: 4444, path: '/wd/hub',
+  capabilities: {
+    browserName: 'chrome',
+    extOptions: {
+      tags: ['canary'],
+    }
+  }
+};
+
+const url = "https://github.com";
+void (async () => {
+  const driver = await remote(opt);
+  await driver.navigateTo(url);
+  await driver.deleteSession();
+})();
+```
