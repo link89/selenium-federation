@@ -8,7 +8,8 @@
     "dist"
   ],
   "bin": {
-    "selenium-federation": "./bin/selenium-federation"
+    "selenium-federation": "./bin/selenium-federation",
+    "selenium-federation-pm2-starter": "./bin/selenium-federation-pm2-starter"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
