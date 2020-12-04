@@ -136,7 +136,12 @@ export class RemoteSession extends Session {
 
 const sanitizeCreateSessionRequest = (caps: any, defaultCaps?: any) => {
   const _caps = cloneDeep(caps);
-  delete _caps?.capabilities;
   delete _caps?.desiredCapabilities?.extOptions;
-  return defaultCaps ? defaultsDeep(_caps, { desiredCapabilities: defaultCaps }) : _caps;
+  delete _caps?.capabilities?.alwaysMatch?.extOptions;
+  return defaultCaps ? defaultsDeep(_caps, {
+    capabilities: {
+      alwaysMatch: defaultCaps,
+    },
+    desiredCapabilities: defaultCaps,
+  }) : _caps;
 }
