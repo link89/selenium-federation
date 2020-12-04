@@ -55,7 +55,7 @@ export class LocalSession extends Session {
         url,
         method: request.method as any,
         data: request.body,
-        headers: request.headers,
+        headers: {...request.headers, Host: undefined},
         params: request.query,
       });
     } catch (e) {
@@ -120,7 +120,7 @@ export class RemoteSession extends Session {
         url,
         method: request.method as any,
         data: request.body,
-        headers: request.headers,
+        headers: {...request.headers, Host: undefined},
         params: request.query,
       });
     } catch (e) {
