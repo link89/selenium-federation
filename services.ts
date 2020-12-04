@@ -100,7 +100,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
       throw Error(`No Drivers Available!`);
     }
     const driver = candidates[0];
-    const session = new LocalSession(driver.webdriverPath, driver.args!, driver.defaultCapabilities);
+    const session = new LocalSession(driver.browserName, driver.webdriverPath, driver.args!, driver.defaultCapabilities);
     return this.startSession(session, request, driver);
   }
 }

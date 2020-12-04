@@ -1,10 +1,10 @@
 import { spawn, ChildProcess} from "child_process";
 import { retry } from "./utils";
 import getPort from "get-port";
-import axios, { AxiosResponse } from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Request } from "koa";
 import { isNil,} from "lodash";
-import { cloneDeep, defaultsDeep } from "lodash";
+import { cloneDeep, defaultsDeep, isEmpty } from "lodash";
 
 
 export abstract class Session {
@@ -25,6 +25,7 @@ export class LocalSession extends Session {
   }
 
   constructor(
+    private browserName: string,
     private webdriverPath: string,
     private args: string[],
     private defaultCapabilities: any,
@@ -52,14 +53,14 @@ export class LocalSession extends Session {
     const headers = { ...request.headers };
     delete headers.host;
     try {
-      return await axios.request({
+      return await axios.request(this.sanitizeRequest({
         baseURL: this.baseUrl,
         url,
         method: request.method as any,
         data: request.body,
         headers,
         params: request.query,
-      });
+      }));
     } catch (e) {
       if (!e.response) throw e;
       return e.response;
@@ -87,6 +88,16 @@ export class LocalSession extends Session {
     if (this.childProcess && !this.childProcess.killed) {
       this.childProcess.kill('SIGTERM');
     }
+  }
+
+  private sanitizeRequest(request: AxiosRequestConfig) {
+    const method = request.method?.toUpperCase();
+    if ('safari' == this.browserName && ('GET' === method || 'DELETE' == method) && isEmpty(request.data)) {
+      // FIX: https://github.com/webdriverio/webdriverio/issues/3187
+      // Request failed with status 400 due to Response has empty body on safari
+      delete request.data;
+    }
+    return request;
   }
 }
 
