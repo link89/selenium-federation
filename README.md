@@ -65,7 +65,7 @@ browserIdleTimeout: 60
 
 remoteDrivers:
   - url: http://localhost:4444/wd/hub  # The URL to local service.
-  - url: http://192.168.1.2:4444/wd/hub
+  - url: http://192.168.1.2:4444/wd/hub  # The URL to other local service.
   - url: http://192.168.1.3:4444/wd/hub
 ```
 
@@ -79,7 +79,7 @@ Now you can access the selenium compatible service via
 
 ### Start Service in pm2
 
-`pm2` is powerful, but it is tedious to start service with it, especially on on Windows system.
+`pm2` is powerful, but it is tedious to start service with it, especially on Windows system.
 
 Now you can start `selenium-federation` service in `pm2` with the following command
 
