@@ -75,7 +75,7 @@ export class LocalSession extends Session {
         interval: 1e3,
         condition: (e) => !e.response,
       });
-    this.id = response?.data?.sessionId || response?.data?.value.sessionId;
+    this.id = response?.data?.sessionId || response?.data?.value?.sessionId;
     if (!response || !this.id) {
       throw Error(`Invalid response: ${JSON.stringify(response)}`);
     }
