@@ -3,11 +3,11 @@ import Router from "koa-router";
 import bodyParser from 'koa-bodyparser';
 
 import { config } from "./config";
-import { handleCreateSessionRequest, handleQueryAvailableSessions, handleSessionRequest } from "./controllers";
+import { handleCreateSessionRequest, handleQueryAvailableDrivers, handleSessionRequest } from "./controllers";
 
 
 const router = new Router();
-router.get('/wd/hub/available-sessions', handleQueryAvailableSessions);
+router.get('/wd/hub/available-drivers', handleQueryAvailableDrivers);
 router.post('/wd/hub/session', handleCreateSessionRequest);
 router.all([
   '/wd/hub/session/:sessionId',

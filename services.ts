@@ -131,7 +131,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
       const response = await axios.request<LocalDriver[]>({
         method: 'GET',
         baseURL: remoteDriver.url,
-        url: '/available-sessions',
+        url: '/available-drivers',
       }).catch((e) => console.log(e));
 
       if (!response) return [];

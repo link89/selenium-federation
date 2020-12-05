@@ -32,7 +32,7 @@ export const handleSessionRequest: RequestHandler = async (ctx, next) => {
   }
 }
 
-export const handleQueryAvailableSessions: RequestHandler = async (ctx, next) => {
+export const handleQueryAvailableDrivers: RequestHandler = async (ctx, next) => {
   ctx.body = JSON.stringify(await driverService.getAvailableDrivers());
   ctx.status = 200;
   next();
