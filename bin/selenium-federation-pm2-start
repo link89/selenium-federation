@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { spawn } = require('child_process');
-const { join, resolve } = require('path');
+const { join } = require('path');
 
 const yargs = require('yargs/yargs')(process.argv.slice(2));
 const argv = yargs.usage('start selenium-federation with pm2').options({
@@ -21,4 +21,8 @@ const argv = yargs.usage('start selenium-federation with pm2').options({
 
 const bin = join(__dirname, 'selenium-federation');  // requirement of windows
 
-spawn('pm2', ['start', '--name', argv.name, bin, '--', '-c', argv.config], { detached: true });
+if ('win32' === process.platform) {
+  spawn('cmd', ['/c', 'pm2', 'start', '--name', argv.name, bin, '--', '-c', argv.config]);
+} else {
+  spawn('pm2', ['start', '--name', argv.name, bin, '--', '-c', argv.config]);
+}
