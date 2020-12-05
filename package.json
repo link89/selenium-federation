@@ -9,7 +9,7 @@
   ],
   "bin": {
     "selenium-federation": "./bin/selenium-federation",
-    "selenium-federation-pm2-starter": "./bin/selenium-federation-pm2-starter"
+    "selenium-federation-pm2-start": "./bin/selenium-federation-pm2-start"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

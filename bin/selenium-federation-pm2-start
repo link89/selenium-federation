@@ -20,6 +20,5 @@ const argv = yargs.usage('start selenium-federation with pm2').options({
 
 
 const bin = join(__dirname, 'selenium-federation');  // requirement of windows
-const config = resolve(argv.config);  // requirement of pm2
 
-spawn('pm2', ['start', '--name', argv.name, bin, '--', '-c', config], { detached: true });
+spawn('pm2', ['start', '--name', argv.name, bin, '--', '-c', argv.config], { detached: true });

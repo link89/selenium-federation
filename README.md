@@ -9,7 +9,7 @@ npm install -g selenium-federation
 
 # testing
 selenium-federation --help
-selenium-federation-pm2-starter --help
+selenium-federation-pm2-start --help
 ```
 
 ### Start Local Service
@@ -85,7 +85,7 @@ Now you can start `selenium-federation` service in `pm2` with the following comm
 
 ```bash
 npm install -g pm2  # ensure you have pm2 installed
-selenium-federation-pm2-starter -c ./local.yaml
+selenium-federation-pm2-start -c ./local.yaml
 ```
 
 ## Differentiation from Selenium 4
