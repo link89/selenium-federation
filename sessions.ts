@@ -1,4 +1,4 @@
-import { spawn, ChildProcess} from "child_process";
+import { execSync, spawn, ChildProcess } from "child_process";
 import { retry } from "./utils";
 import getPort from "get-port";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
@@ -84,8 +84,15 @@ export class LocalSession extends Session {
 
   private kill() {
     if (this.childProcess && !this.childProcess.killed) {
-      process.kill(-this.childProcess.pid);  // kill the whole process group
-      // this.childProcess.kill('SIGINT');
+      if ("win32" === process.platform) {
+        try {
+          execSync(`taskkill /T /F /PID ${this.childProcess.pid}`);
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        process.kill(-this.childProcess.pid);
+      }
     }
   }
 
