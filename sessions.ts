@@ -48,15 +48,13 @@ export class LocalSession extends Session {
 
   public async forward(request: Request, path?: string) {
     const url = `/${this.id}${isNil(path) ? '' : ('/' + path)}`;
-    const headers = { ...request.headers };
-    delete headers.host;
     try {
       return await axios.request(this.sanitizeRequest({
         baseURL: this.baseUrl,
         url,
         method: request.method as any,
         data: request.body,
-        headers,
+        headers: request.headers,
         params: request.query,
       }));
     } catch (e) {
@@ -97,6 +95,10 @@ export class LocalSession extends Session {
   }
 
   private sanitizeRequest(request: AxiosRequestConfig) {
+    const headers = { ...request.headers };
+    delete headers.host;
+    request.headers = headers;
+
     const method = request.method?.toUpperCase();
     if ('safari' == this.browserName && ('GET' === method || 'DELETE' == method) && isEmpty(request.data)) {
       // FIX: https://github.com/webdriverio/webdriverio/issues/3187
@@ -133,15 +135,13 @@ export class RemoteSession extends Session {
 
   public async forward(request: Request, path?: string) {
     const url = `/session/${this.id}${isNil(path) ? '' : ('/' + path)}`;
-    const headers = { ...request.headers };
-    delete headers.host;
     try {
       return await axios.request({
         baseURL: this.baseUrl,
         url,
         method: request.method as any,
         data: request.body,
-        headers,
+        headers: request.headers,
         params: request.query,
       });
     } catch (e) {

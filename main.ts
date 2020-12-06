@@ -6,10 +6,9 @@ import { config } from "./config";
 import { handleCreateSessionRequest, handleQueryAvailableDrivers, handleSessionRequest } from "./controllers";
 
 
-const baseRouter = new Router()
-
 const router = new Router();
 router
+  .post('/register')
   .get('/available-drivers', handleQueryAvailableDrivers)
   .post('/session', handleCreateSessionRequest)
   .all([
@@ -17,6 +16,7 @@ router
     '/session/:sessionId/(.*)',
   ], handleSessionRequest);
 
+const baseRouter = new Router()
 baseRouter.use('/wd/hub', router.routes(), router.allowedMethods());
 
 const app = new Koa();
