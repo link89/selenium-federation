@@ -92,7 +92,7 @@ selenium-federation-pm2-start -c ./local.yaml
 
 ### Default Capabilities
 
-The `defaultCapabilities` will be merged with the `desiredCapabilities` received from the client-side before firing the NEW_SESSIONS request. This is useful when you need to hide the server-side detail from clients.
+The `defaultCapabilities` will be merged with the `desiredCapabilities` received from the client-side before firing the NEW_SESSION request. This is useful when you need to hide the server-side detail from clients.
 
 The below configuration is a real world example to use this feature to support `ChromeCanary`.
 

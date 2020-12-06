@@ -6,17 +6,22 @@ import { config } from "./config";
 import { handleCreateSessionRequest, handleQueryAvailableDrivers, handleSessionRequest } from "./controllers";
 
 
+const baseRouter = new Router()
+
 const router = new Router();
-router.get('/wd/hub/available-drivers', handleQueryAvailableDrivers);
-router.post('/wd/hub/session', handleCreateSessionRequest);
-router.all([
-  '/wd/hub/session/:sessionId',
-  '/wd/hub/session/:sessionId/(.*)',
-], handleSessionRequest);
+router
+  .get('/available-drivers', handleQueryAvailableDrivers)
+  .post('/session', handleCreateSessionRequest)
+  .all([
+    '/session/:sessionId',
+    '/session/:sessionId/(.*)',
+  ], handleSessionRequest);
+
+baseRouter.use('/wd/hub', router.routes(), router.allowedMethods());
 
 const app = new Koa();
 app.use(bodyParser());
-app.use(router.routes()).use(router.allowedMethods());
+app.use(baseRouter.routes()).use(baseRouter.allowedMethods());
 
 app.listen(config.port, () => {
   console.log(`selenium-federation is starting at port ${config.port}`);
