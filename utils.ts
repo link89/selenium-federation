@@ -41,3 +41,12 @@ export class Semaphore {
     if (resolve) resolve();
   }
 }
+
+
+export function getW3CPlatformName() {
+  switch (process.platform) {
+    case "win32": return "windows";
+    case "darwin": return "mac";
+    default: return "linux";
+  }
+}

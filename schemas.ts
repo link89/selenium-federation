@@ -1,9 +1,11 @@
 import * as yup from 'yup';
+import { getW3CPlatformName } from './utils';
 
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
 
 export const localDriverSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
+  platformName: yup.string().default(getW3CPlatformName()).defined(),
   tags: yup.array(yup.string().defined()).default([]),
   webdriverPath: yup.string().defined(),
   args: yup.array(yup.string().defined()).default([]),
@@ -32,6 +34,7 @@ export type Driver = LocalDriver | RemoteDriver;
 
 export interface DriverMatchCriteria {
   browserName: string;
+  platformName?: string;
   tags: string[];
 }
 

@@ -196,7 +196,9 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
 }
 
 const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): boolean =>
-  driver.browserName === criteria.browserName && criteria.tags.every(tag => driver.tags!.includes(tag));
+  (driver.browserName === criteria.browserName) &&
+  (criteria.tags.every(tag => driver.tags!.includes(tag))) &&
+  (criteria.platformName ? driver.platformName === criteria.platformName : true)
 
 const sanitizeMatchCriteria = (obj: any): DriverMatchCriteria => {
   const capabilities = obj?.desiredCapabilities;
@@ -204,5 +206,5 @@ const sanitizeMatchCriteria = (obj: any): DriverMatchCriteria => {
   if (!browserName || 'string' !== typeof browserName) throw Error(`browserName is invalid!`);
   const extOptions = capabilities?.extOptions;
   const tags = extOptions?.tags || [];
-  return { browserName, tags };
+  return { browserName, tags, platformName: capabilities.platformName};
 }
