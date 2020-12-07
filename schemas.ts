@@ -2,11 +2,6 @@ import * as yup from 'yup';
 
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
 
-const remoteDriverSchema = yup.object({
-  url: yup.string().defined(),
-  maxSessions: yup.number().default(1).defined(),
-}).defined();
-
 export const localDriverSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   tags: yup.array(yup.string().defined()).default([]),
@@ -16,12 +11,18 @@ export const localDriverSchema = yup.object({
   defaultCapabilities: yup.object().default({}).defined(),
 }).defined();
 
+export const remoteDriverSchema = yup.object({
+  url: yup.string().defined(),
+  registerAt: yup.number().defined(),
+}).defined();
+
 export const configurationSchema = yup.object({
   port: yup.number().default(4444).defined(),
   browserIdleTimeout: yup.number().default(60).defined(),
-  maxSessions: yup.number().default(5).defined(),
   localDrivers: yup.array(localDriverSchema).default([]).defined(),
-  remoteDrivers: yup.array(remoteDriverSchema).default([]).defined(),
+  registerTimeout: yup.number().default(60).defined(),
+  registerTo: yup.string().optional(),
+  registerAs: yup.string().optional(),
 }).defined();
 
 export type Configuration = yup.InferType<typeof configurationSchema>;

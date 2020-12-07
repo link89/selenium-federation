@@ -1,4 +1,4 @@
-import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema } from "./schemas";
+import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration } from "./schemas";
 import { LocalSession, RemoteSession, Session } from "./sessions";
 import { Request } from "koa";
 import { Watchdog } from "./watchdog";
@@ -15,7 +15,7 @@ export abstract class DriverService<D extends object, S extends Session>{
 
   constructor(
     protected readonly drivers: D[],
-    protected readonly browserIdleTimeout: number,
+    protected readonly config: Configuration,
   ) {
     this.sessions = new Map();
     this.sessionDriverMap = new WeakMap();
@@ -24,6 +24,11 @@ export abstract class DriverService<D extends object, S extends Session>{
     for (const driver of this.drivers) {
       this.driverSessionsMap.set(driver, new Set());
     }
+  }
+
+  addDriver(driver: D) {
+    this.drivers.push(driver);
+    this.driverSessionsMap.set(driver, new Set());
   }
 
   addSession(session: S, driver: D, watchdog: Watchdog) {
@@ -61,7 +66,7 @@ export abstract class DriverService<D extends object, S extends Session>{
     const response = await session.start(request);
     const watchdog = new Watchdog(() => {
       this.deleteSession(session.id!);
-    }, this.browserIdleTimeout);
+    }, this.config.browserIdleTimeout);
     this.addSession(session, driver, watchdog);
     return response;
   }
@@ -80,12 +85,33 @@ export abstract class DriverService<D extends object, S extends Session>{
     return await session.forward(request, params.suffix);
   }
 
+  abstract init(): void;
+  abstract registerDriver(driver: RemoteDriver): Promise<void>;
   abstract getAvailableDrivers(): Promise<LocalDriver[]>;
   abstract createSession(request: Request): Promise<AxiosResponse>;
 }
 
 
 export class LocalDriverService extends DriverService<LocalDriver, LocalSession> {
+  init() {
+    console.log(`working on local mode`);
+    if (this.config.registerTo) {
+      console.log(`register to ${this.config.registerTo}`);
+      setInterval(async () => {
+        await axios.request({
+          method: 'POST',
+          url: this.config.registerTo,
+          data: {
+            registerAs: this.config.registerAs,
+          }
+        }).catch(console.log);
+      }, this.config.registerTimeout / 3);
+    }
+  }
+
+  async registerDriver(driver: RemoteDriver) {
+    throw Error("This node is running on local mode.");
+  }
 
   async getAvailableDrivers() {
     return this.drivers.filter(driver => this.getSessionsByDriver(driver)!.size < driver.maxSessions)
@@ -107,6 +133,18 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
 
 
 export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSession> {
+  init() {
+    console.log(`working on remote mode`);
+  }
+
+  async registerDriver(driver: RemoteDriver) {
+    const found = this.drivers.find(d => d.url === driver.url);
+    if (found) {
+      found.registerAt = Date.now()
+    } else {
+      this.addDriver(driver);
+    }
+  }
 
   async getAvailableDrivers() {
     return this.getCandidates().then(candidates => candidates.map(([rd, ld]) => ld));
@@ -127,7 +165,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
   }
 
   private async getCandidates(): Promise<[RemoteDriver, LocalDriver][]> {
-    const packedCandidates: [RemoteDriver, LocalDriver][][] = await Bluebird.map(this.drivers, async remoteDriver => {
+    const packedCandidates: [RemoteDriver, LocalDriver][][] = await Bluebird.map(this.activeRemoteDriver, async remoteDriver => {
       const response = await axios.request<LocalDriver[]>({
         method: 'GET',
         baseURL: remoteDriver.url,
@@ -141,12 +179,15 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
     }, { concurrency: 8 });
     return flatten(packedCandidates);
   }
-}
 
+  private get activeRemoteDriver() {
+    const now = Date.now();
+    return this.drivers.filter(driver => driver.registerAt + 1e3 * this.config.registerTimeout > now);
+  }
+}
 
 const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): boolean =>
   driver.browserName === criteria.browserName && criteria.tags.every(tag => driver.tags!.includes(tag));
-
 
 const sanitizeMatchCriteria = (obj: any): DriverMatchCriteria => {
   const capabilities = obj?.desiredCapabilities;

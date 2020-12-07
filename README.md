@@ -19,6 +19,9 @@ Prepare configuration file `local.yaml` with the following content.
 port: 4444
 browserIdleTimeout: 60
 
+registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
+registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to the local service
+
 localDrivers:
   - browserName: firefox
     maxSessions: 2
@@ -57,16 +60,11 @@ Now you can access the selenium compatible service via
 
 ### Start Remote Service
 
-Prepare configuration file `remote.yaml` with the following content.
+A remote service allows local services to register to. Prepare configuration file `remote.yaml` with the following content.
 
 ```yaml
 port: 5555
 browserIdleTimeout: 60
-
-remoteDrivers:
-  - url: http://localhost:4444/wd/hub  # The URL to local service.
-  - url: http://192.168.1.2:4444/wd/hub  # The URL to other local service.
-  - url: http://192.168.1.3:4444/wd/hub
 ```
 
 Then start the server with following command.
@@ -74,7 +72,9 @@ Then start the server with following command.
 selenium-federation -c remote.yaml
 ```
 
-Now you can access the selenium compatible service via
+If there are local driver services register to the remote service by setting `registerTo: http://localhost:5555/wd/hb`, you can find them in `http://localhost:5555/wd/hub/available-drivers`.
+
+Once there are nodes registered, you can access the selenium compatible service via
 `http://localhost:5555/wd/hub`.
 
 ### Start Service in pm2

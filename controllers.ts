@@ -1,5 +1,5 @@
 import { AxiosResponse } from "axios";
-import { Context } from "koa";
+import { Context, Request } from "koa";
 import { driverService } from "./runtime";
 import { SessionPathParams } from "./schemas";
 import { Semaphore } from "./utils";
@@ -8,7 +8,19 @@ type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void>;
 
 const createSessionLock = new Semaphore(1);
 
-export const handleCreateSessionRequest: RequestHandler = async (ctx, next)=> {
+export const handleRegisterRequest: RequestHandler = async (ctx, next) => {
+  logRequest(ctx);
+  const driver = {
+    url: getDefaultUpstreamUrl(ctx.request),
+    registerAt: Date.now(),
+    ...ctx.body,
+  };
+  await driverService.registerDriver(driver);
+  ctx.status = 201;
+  next();
+}
+
+export const handleCreateSessionRequest: RequestHandler = async (ctx, next) => {
   logRequest(ctx);
   try {
     await createSessionLock.wait();
@@ -49,6 +61,10 @@ const setResponse = (ctx: Context, response: AxiosResponse) => {
   ctx.set(response?.headers || {});
   ctx.body = data ? JSON.stringify(data) : data;
   ctx.status = response?.status || 500;
+}
+
+const getDefaultUpstreamUrl = (request: Request) => {
+  return `http://${request.headers.host}/wd/hub`;
 }
 
 const logRequest = (ctx: Context) => {
