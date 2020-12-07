@@ -82,14 +82,14 @@ export class LocalSession extends Session {
 
   private kill() {
     if (this.childProcess && !this.childProcess.killed) {
-      if ("win32" === process.platform) {
-        try {
+      try {
+        if ("win32" === process.platform) {
           execSync(`taskkill /T /F /PID ${this.childProcess.pid}`);
-        } catch (e) {
-          console.error(e);
+        } else {
+          process.kill(-this.childProcess.pid);
         }
-      } else {
-        process.kill(-this.childProcess.pid);
+      } catch (e) {
+        console.error(e);
       }
     }
   }
