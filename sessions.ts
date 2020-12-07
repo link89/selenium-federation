@@ -121,7 +121,7 @@ export class RemoteSession extends Session {
       method: 'POST',
       baseURL: this.baseUrl,
       url: '/session',
-      data: sanitizeCreateSessionRequest(request.body),
+      data: request.body,
     });
     this.id = response?.data?.sessionId || response?.data?.value.sessionId;
     if (!response || !this.id) {

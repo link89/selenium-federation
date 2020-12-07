@@ -20,7 +20,7 @@ port: 4444
 browserIdleTimeout: 60
 
 registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
-registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to the local service
+registerAs: http://192.168.1.2:4444/wd/hub  # required when `registerTo` is set, accessible URL to this service
 
 localDrivers:
   - browserName: firefox
