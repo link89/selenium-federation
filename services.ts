@@ -93,19 +93,27 @@ export abstract class DriverService<D extends object, S extends Session>{
 
 
 export class LocalDriverService extends DriverService<LocalDriver, LocalSession> {
+
+  private async register() {
+    await axios.request({
+      method: 'POST',
+      baseURL: this.config.registerTo,
+      url: '/register',
+      data: {
+        url: this.config.registerAs,
+      }
+    });
+  }
+
   init() {
     console.log(`working on local mode`);
     if (this.config.registerTo) {
+      if (!this.config.registerAs) throw Error(`"registerAs" is required when "registerTo" is set`)
       console.log(`register to ${this.config.registerTo}`);
+      this.register();
       setInterval(async () => {
-        await axios.request({
-          method: 'POST',
-          url: this.config.registerTo,
-          data: {
-            registerAs: this.config.registerAs,
-          }
-        }).catch(console.log);
-      }, this.config.registerTimeout / 3);
+        this.register().catch(console.error);
+      }, 1e3 * this.config.registerTimeout / 3);
     }
   }
 
@@ -142,6 +150,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
     if (found) {
       found.registerAt = Date.now()
     } else {
+      console.log(`register new remote driver: ${driver.url}`);
       this.addDriver(driver);
     }
   }

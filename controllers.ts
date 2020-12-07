@@ -11,9 +11,8 @@ const createSessionLock = new Semaphore(1);
 export const handleRegisterRequest: RequestHandler = async (ctx, next) => {
   logRequest(ctx);
   const driver = {
-    url: getDefaultUpstreamUrl(ctx.request),
     registerAt: Date.now(),
-    ...ctx.body,
+    ...ctx.request.body,
   };
   await driverService.registerDriver(driver);
   ctx.status = 201;
@@ -64,6 +63,7 @@ const setResponse = (ctx: Context, response: AxiosResponse) => {
 }
 
 const getDefaultUpstreamUrl = (request: Request) => {
+  console.log(request);
   return `http://${request.headers.host}/wd/hub`;
 }
 
