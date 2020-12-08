@@ -1,0 +1,17 @@
+#!/usr/bin/env node
+
+const { spawn } = require('child_process');
+const { join } = require('path');
+
+const yargs = require('yargs/yargs')(process.argv.slice(2));
+const argv = yargs.usage('Download webdriver binary with WebDriverManager.').options({
+  'browser': {
+    description: 'browser name',
+    required: true,
+    string: true,
+  },
+}).strict().argv;
+
+const wdmJar = join(__dirname, 'webdrivermanager-4.2.2-fat.jar');
+
+spawn('java', ['-jar', wdmJar, argv.browser], { stdio: 'inherit' });
