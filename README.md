@@ -10,6 +10,7 @@ npm install -g selenium-federation
 # testing
 selenium-federation --help
 selenium-federation-pm2-start --help
+selenium-federation-wdm --help
 ```
 
 ### Start Local Service
