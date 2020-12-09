@@ -19,6 +19,7 @@ Prepare configuration file `local.yaml` with the following content.
 ```yaml
 port: 4444
 browserIdleTimeout: 60
+maxSessions: 5  # limit the max sessions, default to  (Math.max(2, os.cpus().length - 1))
 
 registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
 registerAs: http://192.168.1.2:4444/wd/hub  # required when `registerTo` is set, accessible URL to this service
