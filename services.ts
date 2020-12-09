@@ -4,7 +4,7 @@ import { Request } from "koa";
 import { Watchdog } from "./watchdog";
 import axios, { AxiosResponse } from "axios";
 import Bluebird from "bluebird";
-import { flatten } from "lodash";
+import { flatten, minBy, shuffle } from "lodash";
 
 
 export abstract class DriverService<D extends object, S extends Session>{
@@ -175,9 +175,13 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
     if (!candidates.length) {
       throw Error(`No Drivers Available!`);
     }
-    const driver = candidates[0][0];
+    const driver = this.getTheLeastBusyDriver(candidates);
     const session = new RemoteSession(driver.url);
     return this.startSession(session, request, driver);
+  }
+
+  private getTheLeastBusyDriver(candidates: [RemoteDriver, LocalDriver][]): RemoteDriver {
+    return minBy(shuffle(candidates), ([rd, ld]) => this.getSessionsByDriver(rd)?.size || Number.MAX_VALUE)![0];
   }
 
   private async getCandidates(): Promise<[RemoteDriver, LocalDriver][]> {
