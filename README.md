@@ -39,13 +39,23 @@ localDrivers:
 
   - browserName: chrome
     maxSessions: 2
-    webdriverPath: ./chromedriver88  # Also support relative/absolute path to webdriver.
+    version: stable
+    webdriverPath: ./chromedriver-stable  # Also support relative/absolute path to webdriver.
 
   - browserName: chrome
     maxSessions: 2
+    version: beta
+    webdriverPath: ./chromedriver-beta
+    defaultCapabilities:
+      "goog:chromeOptions":
+        binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
+
+  - browserName: chrome
+    maxSessions: 2
+    version: canary
     tags:
       - canary
-    webdriverPath: ./chromedriver89
+    webdriverPath: ./chromedriver-canary
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary

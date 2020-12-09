@@ -133,7 +133,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
   }
 
   async createSession(request: Request) {
-    const criteria = sanitizeMatchCriteria(request.body);
+    const criteria = getMatchCriteria(request.body);
     const candidates = (await this.getAvailableDrivers())
       .filter(driver => isCriteriaMatch(driver, criteria));
 
@@ -168,7 +168,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
 
   async createSession(request: Request) {
 
-    const criteria = sanitizeMatchCriteria(request.body);
+    const criteria = getMatchCriteria(request.body);
     const candidates: [RemoteDriver, LocalDriver][] = (await this.getCandidates())
       .filter(([remoteDriver, localDriver]) => isCriteriaMatch(localDriver, criteria));
 
@@ -206,14 +206,16 @@ const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): bo
   (driver.browserName === criteria.browserName) &&
   (criteria.tags.every(tag => driver.tags!.includes(tag))) &&
   (criteria.platformName ? driver.platformName === criteria.platformName : true) &&
-  (criteria.uuid ? driver.uuid === criteria.uuid : true)
+  (criteria.uuid ? driver.uuid === criteria.uuid : true) &&
+  (criteria.version ? driver.version === criteria.version : true)
 
-const sanitizeMatchCriteria = (obj: any): DriverMatchCriteria => {
+const getMatchCriteria = (obj: any): DriverMatchCriteria => {
   const capabilities = obj?.desiredCapabilities;
   const browserName: string = capabilities?.browserName;
   if (!browserName || 'string' !== typeof browserName) throw Error(`browserName is invalid!`);
   const extOptions = capabilities?.extOptions;
   const tags = extOptions?.tags || [];
   const uuid = extOptions?.uuid;
-  return { browserName, tags, uuid, platformName: capabilities.platformName};
+  const version = capabilities?.version;
+  return { browserName, tags, uuid, version, platformName: capabilities.platformName};
 }

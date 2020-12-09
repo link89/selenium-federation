@@ -153,8 +153,13 @@ export class RemoteSession extends Session {
 
 const sanitizeCreateSessionRequest = (caps: any, defaultCaps?: any) => {
   const _caps = cloneDeep(caps);
+  // chromedriver is sensitive to invalid fields and values
+  // work around by just removing those fields
   delete _caps?.desiredCapabilities?.extOptions;
   delete _caps?.capabilities?.alwaysMatch?.extOptions;
+  delete _caps?.desiredCapabilities?.version;
+  delete _caps?.capabilities?.alwaysMatch?.version;
+  // merge with default capabilities
   return defaultCaps ? defaultsDeep(_caps, {
     capabilities: {
       alwaysMatch: defaultCaps,

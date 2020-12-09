@@ -41,6 +41,7 @@ export type Driver = LocalDriver | RemoteDriver;
 export interface DriverMatchCriteria {
   browserName: string;
   platformName?: string;
+  version?: string;
   uuid?: string;
   tags: string[];
 }
