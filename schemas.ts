@@ -1,4 +1,5 @@
 import * as yup from 'yup';
+import * as os from 'os';
 import { getW3CPlatformName } from './utils';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,6 +10,7 @@ export const localDriverSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   platformName: yup.string().default(getW3CPlatformName()).defined(),
   uuid: yup.string().default(() => uuidv4()).defined(),
+  version: yup.string(),
   tags: yup.array(yup.string().defined()).default([]),
   webdriverPath: yup.string().defined(),
   args: yup.array(yup.string().defined()).default([]),
@@ -25,6 +27,7 @@ export const configurationSchema = yup.object({
   port: yup.number().default(4444).defined(),
   browserIdleTimeout: yup.number().default(60).defined(),
   localDrivers: yup.array(localDriverSchema).default([]).defined(),
+  maxSessions: yup.number().default(Math.max(2, os.cpus().length - 1)).defined(),
   registerTimeout: yup.number().default(60).defined(),
   registerTo: yup.string().optional(),
   registerAs: yup.string().optional(),

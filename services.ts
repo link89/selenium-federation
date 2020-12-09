@@ -26,6 +26,10 @@ export abstract class DriverService<D extends object, S extends Session>{
     }
   }
 
+  get activeSessions(): number {
+    return this.sessions.size;
+  }
+
   addDriver(driver: D) {
     this.drivers.push(driver);
     this.driverSessionsMap.set(driver, new Set());
@@ -122,7 +126,10 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
   }
 
   async getAvailableDrivers() {
-    return this.drivers.filter(driver => this.getSessionsByDriver(driver)!.size < driver.maxSessions)
+    if (this.activeSessions >= this.config.maxSessions) {
+      return [];
+    }
+    return this.drivers.filter(driver => this.getSessionsByDriver(driver)!.size < driver.maxSessions);
   }
 
   async createSession(request: Request) {
