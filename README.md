@@ -148,3 +148,6 @@ void (async () => {
   await driver.deleteSession();
 })();
 ```
+
+### Others
+* `browserVersion` can be arbitrary string like `alpha`, `beta`, etc, the restriction of webdrivers are ignored.
