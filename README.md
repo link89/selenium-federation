@@ -87,6 +87,7 @@ If there are local driver services register to the remote service by setting `re
 Once there are nodes registered, you can access the selenium compatible service via
 `http://localhost:5555/wd/hub`.
 
+
 ### Start Service in pm2
 
 `pm2` is powerful, but it is tedious to start service with it, especially on Windows system.
@@ -130,7 +131,6 @@ The below script is an example of using this feature with `webdriver.io`.
 
 ```typescript
 import { remote } from "webdriverio";
-
 const opt = {
   hostname: 'localhost', port: 4444, path: '/wd/hub',
   capabilities: {
@@ -140,14 +140,41 @@ const opt = {
     }
   }
 };
-
 const url = "https://github.com";
 void (async () => {
   const driver = await remote(opt);
   await driver.navigateTo(url);
-  await driver.deleteSession();
 })();
 ```
+
+### Customize Environment Variables
+
+When specific environment variables need to be set when starting webdriver process or browsers, for example, enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `localDriver.webdriverEnvs` field in the configuration file, or setting the `envOptions.envs` field in the capabilities.
+
+```typescript
+import { remote } from "webdriverio";
+const opt = {
+  hostname: 'localhost', port: 4444, path: '/wd/hub',
+  capabilities: {
+    browserName: 'firefox',
+    extOptions: {
+      envs: {
+        MOZ_WEBRENDER: '1',
+      }
+    }
+  }
+};
+const url = "https://github.com";
+void (async () => {
+  const driver = await remote(opt);
+  await driver.navigateTo(url);
+})();
+```
+
+You can find `force_enabled by user: Force enabled by envvar` in the `about:support` page of firefox. More [detail](https://wiki.archlinux.org/index.php/Firefox/Tweaks#Enable_WebRender_compositor).
+
+This feature is also useful when you test electron based app that configurable via environment variables.
+
 
 ### Others
 * `browserVersion` can be arbitrary string like `alpha`, `beta`, etc, the restriction of some webdrivers is ignored.
