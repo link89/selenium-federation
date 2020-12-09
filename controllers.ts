@@ -62,11 +62,6 @@ const setResponse = (ctx: Context, response: AxiosResponse) => {
   ctx.status = response?.status || 500;
 }
 
-const getDefaultUpstreamUrl = (request: Request) => {
-  console.log(request);
-  return `http://${request.headers.host}/wd/hub`;
-}
-
 const logRequest = (ctx: Context) => {
   console.log(JSON.stringify({ ...ctx.request.toJSON(), body: ctx.request.body }, null, 2));
 }
