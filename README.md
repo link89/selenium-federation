@@ -38,23 +38,21 @@ localDrivers:
     webdriverPath: msedgedriver
 
   - browserName: chrome
+    browserVersion: stable
     maxSessions: 2
-    version: stable
     webdriverPath: ./chromedriver-stable  # Also support relative/absolute path to webdriver.
 
   - browserName: chrome
+    browserVersion: beta
     maxSessions: 2
-    version: beta
     webdriverPath: ./chromedriver-beta
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
 
   - browserName: chrome
+    browserVersion: canary
     maxSessions: 2
-    version: canary
-    tags:
-      - canary
     webdriverPath: ./chromedriver-canary
     defaultCapabilities:
       "goog:chromeOptions":

@@ -211,7 +211,7 @@ const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): bo
   (criteria.tags.every(tag => driver.tags!.includes(tag))) &&
   (criteria.platformName ? driver.platformName === criteria.platformName : true) &&
   (criteria.uuid ? driver.uuid === criteria.uuid : true) &&
-  (criteria.version ? driver.version === criteria.version : true)
+  (criteria.browserVersion ? driver.browserVersion === criteria.browserVersion : true)
 
 const getMatchCriteria = (obj: any): DriverMatchCriteria => {
   const capabilities = obj?.desiredCapabilities;
@@ -220,6 +220,6 @@ const getMatchCriteria = (obj: any): DriverMatchCriteria => {
   const extOptions = capabilities?.extOptions;
   const tags = extOptions?.tags || [];
   const uuid = extOptions?.uuid;
-  const version = capabilities?.version;
-  return { browserName, tags, uuid, version, platformName: capabilities.platformName};
+  const browserVersion = capabilities?.browserVersion;
+  return { browserName, tags, uuid, browserVersion, platformName: capabilities.platformName};
 }
