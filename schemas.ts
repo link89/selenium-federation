@@ -13,7 +13,8 @@ export const localDriverSchema = yup.object({
   uuid: yup.string().default(() => uuidv4()).defined(),
   tags: yup.array(yup.string().defined()).default([]),
   webdriverPath: yup.string().defined(),
-  args: yup.array(yup.string().defined()).default([]),
+  webdriverArgs: yup.array(yup.string().defined()).default([]),
+  webdriverEnvs: yup.object().default({}).defined(),
   maxSessions: yup.number().default(1).defined(),
   defaultCapabilities: yup.object().default({}).defined(),
 }).defined();

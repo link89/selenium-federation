@@ -141,7 +141,13 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
       throw Error(`No Drivers Available!`);
     }
     const driver = candidates[0];
-    const session = new LocalSession(driver.browserName, driver.webdriverPath, driver.args!, driver.defaultCapabilities);
+    const session = new LocalSession(
+      driver.browserName,
+      driver.webdriverPath,
+      driver.webdriverArgs!,
+      driver.webdriverEnvs,
+      driver.defaultCapabilities
+    );
     return this.startSession(session, request, driver);
   }
 }
@@ -213,8 +219,8 @@ const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): bo
   (criteria.uuid ? driver.uuid === criteria.uuid : true) &&
   (criteria.browserVersion ? driver.browserVersion === criteria.browserVersion : true)
 
-const getMatchCriteria = (obj: any): DriverMatchCriteria => {
-  const capabilities = obj?.desiredCapabilities;
+const getMatchCriteria = (requestBody: any): DriverMatchCriteria => {
+  const capabilities = requestBody?.desiredCapabilities;
   const browserName: string = capabilities?.browserName;
   if (!browserName || 'string' !== typeof browserName) throw Error(`browserName is invalid!`);
   const extOptions = capabilities?.extOptions;

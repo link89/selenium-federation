@@ -28,6 +28,7 @@ export class LocalSession extends Session {
     private browserName: string,
     private webdriverPath: string,
     private args: string[],
+    private envs: any,
     private defaultCapabilities: any,
   ) {
     super();
@@ -65,7 +66,8 @@ export class LocalSession extends Session {
 
   private async _start(request: Request) {
     this.port = await getPort();
-    this.childProcess = spawn(this.webdriverPath, [...this.args, `--port=${this.port}`], { stdio: 'inherit', detached: true });
+    this.childProcess = spawn(this.webdriverPath, [...this.args, `--port=${this.port}`],
+      { stdio: 'inherit', detached: true, env: { ...process.env, ...this.envs, ...getEnvs(request.body) } });
     const response = await retry<AxiosResponse>(
       () => axios.request({ method: 'POST', url: this.baseUrl, data: sanitizeCreateSessionRequest(request.body, this.defaultCapabilities) }),
       {
@@ -166,4 +168,9 @@ const sanitizeCreateSessionRequest = (caps: any, defaultCaps?: any) => {
     },
     desiredCapabilities: defaultCaps,
   }) : _caps;
+}
+
+const getEnvs = (requestBody: any) => {
+  const caps = requestBody.desiredCapabilities || requestBody.capabilities?.alwaysMatch;
+  return caps?.extOptions?.envs || {};
 }
