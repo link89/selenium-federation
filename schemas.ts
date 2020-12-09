@@ -8,9 +8,9 @@ const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
 
 export const localDriverSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
+  browserVersion: yup.string(),
   platformName: yup.string().default(getW3CPlatformName()).defined(),
   uuid: yup.string().default(() => uuidv4()).defined(),
-  version: yup.string(),
   tags: yup.array(yup.string().defined()).default([]),
   webdriverPath: yup.string().defined(),
   args: yup.array(yup.string().defined()).default([]),
@@ -41,7 +41,7 @@ export type Driver = LocalDriver | RemoteDriver;
 export interface DriverMatchCriteria {
   browserName: string;
   platformName?: string;
-  version?: string;
+  browserVersion?: string;
   uuid?: string;
   tags: string[];
 }
