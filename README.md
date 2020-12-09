@@ -150,4 +150,4 @@ void (async () => {
 ```
 
 ### Others
-* `browserVersion` can be arbitrary string like `alpha`, `beta`, etc, the restriction of webdrivers are ignored.
+* `browserVersion` can be arbitrary string like `alpha`, `beta`, etc, the restriction of some webdrivers is ignored.
