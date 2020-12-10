@@ -82,7 +82,7 @@ Then start the server with following command.
 selenium-federation -c remote.yaml
 ```
 
-If there are local driver services register to the remote service by setting `registerTo: http://localhost:5555/wd/hb`, you can find them in `http://localhost:5555/wd/hub/available-drivers`.
+If there are local driver services register to the remote service by setting `registerTo: http://localhost:5555/wd/hub`, you can find them in `http://localhost:5555/wd/hub/available-drivers`.
 
 Once there are nodes registered, you can access the selenium compatible service via
 `http://localhost:5555/wd/hub`.
@@ -90,7 +90,7 @@ Once there are nodes registered, you can access the selenium compatible service 
 
 ### Start Service in pm2
 
-`pm2` is powerful, but it is tedious to start service with it, especially on Windows system.
+`pm2` is a powerful process management tool, but it is tedious to start service with it, especially on Windows system.
 
 Now you can start `selenium-federation` service in `pm2` with the following command
 
@@ -106,6 +106,7 @@ selenium-federation-pm2-start -c ./local.yaml
 The `defaultCapabilities` will be merged with the `desiredCapabilities` received from the client-side before firing the NEW_SESSION request. This is useful when you need to hide the server-side detail from clients.
 
 The below configuration is a real world example to use this feature to support `ChromeCanary`.
+You can also use `browserVersion` for the same purpose.
 
 ```yaml
 port: 4444
@@ -113,9 +114,10 @@ browserIdleTimeout: 60
 
 localDrivers:
   - browserName: chrome
+    browserVersion: canary
     tags:
       - canary
-    webdriverPath: ./chromedriver89
+    webdriverPath: ./chromedriver-canary
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
@@ -149,7 +151,7 @@ void (async () => {
 
 ### Customize Environment Variables
 
-When specific environment variables need to be set when starting webdriver process or browsers, for example, enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `localDriver.webdriverEnvs` field in the configuration file, or setting the `envOptions.envs` field in the capabilities.
+When specific environment variables need to be set when starting webdriver process or browsers, for example, to enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `localDriver.webdriverEnvs` field in the configuration file, or setting the `envOptions.envs` field in the capabilities.
 
 ```typescript
 import { remote } from "webdriverio";
