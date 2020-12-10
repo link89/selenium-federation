@@ -21,6 +21,7 @@
     "type": "git",
     "url": "git+https://github.com/link89/selenium-federation.git"
   },
+  "keywords": ["selenium", "webdriver", "testing"],
   "author": "",
   "license": "ISC",
   "bugs": {
