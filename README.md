@@ -16,6 +16,8 @@ selenium-federation-wdm --help
 ### Start Local Service
 Prepare configuration file `local.yaml` with the following content.
 
+> CAUTIONS: The relative path in the configuration file is relative to the `current working directory` , a.k.a. the path where you run the `selenium-federation` or `selenium-federation-pm2-start` commands.
+
 ```yaml
 port: 4444
 browserIdleTimeout: 60
