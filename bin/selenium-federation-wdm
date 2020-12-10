@@ -9,6 +9,7 @@ const argv = yargs.usage('Download webdriver binary with WebDriverManager.').opt
     description: 'browser name',
     required: true,
     string: true,
+    alias: 'b',
   },
 }).strict().argv;
 
