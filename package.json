@@ -1,6 +1,6 @@
 {
   "name": "selenium-federation",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "A lightweight alternative to selenium-grid.",
   "main": "dist/main.js",
   "files": [
@@ -21,7 +21,11 @@
     "type": "git",
     "url": "git+https://github.com/link89/selenium-federation.git"
   },
-  "keywords": ["selenium", "webdriver", "testing"],
+  "keywords": [
+    "selenium",
+    "webdriver",
+    "testing"
+  ],
   "author": "",
   "license": "ISC",
   "bugs": {
