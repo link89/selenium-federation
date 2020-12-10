@@ -8,7 +8,7 @@ import { flatten, minBy, shuffle } from "lodash";
 
 
 export abstract class DriverService<D extends object, S extends Session>{
-  private sessions: Map<string, S>;
+  private sessionsMap: Map<string, S>;
   private sessionDriverMap: WeakMap<S, D>;
   private sessionWatchdogMap: WeakMap<S, Watchdog>;
   private driverSessionsMap: WeakMap<D, Set<S>>;
@@ -17,7 +17,7 @@ export abstract class DriverService<D extends object, S extends Session>{
     protected readonly drivers: D[],
     protected readonly config: Configuration,
   ) {
-    this.sessions = new Map();
+    this.sessionsMap = new Map();
     this.sessionDriverMap = new WeakMap();
     this.sessionWatchdogMap = new WeakMap();
     this.driverSessionsMap = new WeakMap();
@@ -27,7 +27,7 @@ export abstract class DriverService<D extends object, S extends Session>{
   }
 
   get activeSessions(): number {
-    return this.sessions.size;
+    return this.sessionsMap.size;
   }
 
   addDriver(driver: D) {
@@ -36,22 +36,26 @@ export abstract class DriverService<D extends object, S extends Session>{
   }
 
   addSession(session: S, driver: D, watchdog: Watchdog) {
-    this.sessions.set(session.id!, session);
+    this.sessionsMap.set(session.id!, session);
     this.driverSessionsMap.get(driver)!.add(session);
     this.sessionDriverMap.set(session, driver);
     this.sessionWatchdogMap.set(session, watchdog);
   }
 
   removeSession(session: S) {
-    this.sessions.delete(session.id!);
+    this.sessionsMap.delete(session.id!);
     const driver = this.sessionDriverMap.get(session);
     this.driverSessionsMap.get(driver!)!.delete(session);
     this.sessionDriverMap.delete(session);
     this.sessionWatchdogMap.delete(session);
   }
 
+  get sessions() {
+    return this.sessionsMap.values();
+  }
+
   getSession(id: string) {
-    const session = this.sessions.get(id);
+    const session = this.sessionsMap.get(id);
     if (!session) {
       throw Error(`Session Not Found!`);
     }
@@ -111,6 +115,16 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
 
   init() {
     console.log(`working on local mode`);
+    // kill session process on exit
+    ['SIGTERM', 'SIGINT'].forEach(signal =>
+      process.on(signal, () => {
+        for (const session of this.sessions) {
+          session.kill();
+        }
+        process.exit();
+      })
+    );
+    // register to remote service
     if (this.config.registerTo) {
       if (!this.config.registerAs) throw Error(`"registerAs" is required when "registerTo" is set`)
       console.log(`register to ${this.config.registerTo}`);

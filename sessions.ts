@@ -82,7 +82,7 @@ export class LocalSession extends Session {
     return response;
   }
 
-  private kill() {
+  public kill() {
     if (this.childProcess && !this.childProcess.killed) {
       try {
         if ("win32" === process.platform) {
