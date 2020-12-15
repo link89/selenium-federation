@@ -67,7 +67,7 @@ export class LocalSession extends Session {
   private async _start(request: Request) {
     this.port = await getPort();
     this.childProcess = spawn(this.webdriverPath, [...this.args, `--port=${this.port}`],
-      { stdio: 'inherit', detached: true, env: { ...process.env, ...this.envs, ...getEnvs(request.body) } });
+      { stdio: 'inherit', detached: true, windowsHide: true, env: { ...process.env, ...this.envs, ...getEnvs(request.body) } });
     const response = await retry<AxiosResponse>(
       () => axios.request({ method: 'POST', url: this.baseUrl, data: sanitizeCreateSessionRequest(request.body, this.defaultCapabilities) }),
       {
