@@ -112,6 +112,7 @@ export class LocalSession extends Session {
       // FIX: https://github.com/webdriverio/webdriverio/issues/3187
       // Request failed with status 400 due to Response has empty body on safari
       delete request.data;
+      delete request.headers?.['content-length'];
     }
     return request;
   }
