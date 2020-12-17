@@ -5,6 +5,7 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Request } from "koa";
 import { isNil,} from "lodash";
 import { cloneDeep, defaultsDeep, isEmpty } from "lodash";
+import Bluebird from "bluebird";
 
 
 export abstract class Session {
@@ -71,6 +72,7 @@ export class LocalSession extends Session {
         stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
         env: { ...process.env, ...this.envs, ...getEnvsFromRequest(request.body) }
       });
+    await Bluebird.delay(500); // wait for process ready to serve
     const response = await retry<AxiosResponse>(
       () => axios.request({ method: 'POST', url: this.baseUrl, data: sanitizeCreateSessionRequest(request.body, this.defaultCapabilities) }),
       {
@@ -79,7 +81,7 @@ export class LocalSession extends Session {
         condition: (e) => !e.response,
       });
     this.id = response?.data?.sessionId || response?.data?.value?.sessionId;
-    if (!response || !this.id) {
+    if (!this.id) {
       throw Error(`Invalid response: ${JSON.stringify(response)}`);
     }
     return response;
