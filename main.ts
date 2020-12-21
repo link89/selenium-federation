@@ -23,6 +23,8 @@ const app = new Koa();
 app.use(bodyParser());
 app.use(baseRouter.routes()).use(baseRouter.allowedMethods());
 
-app.listen(config.port, () => {
+// set host to a ipv4 address or else request ip will be ipv6 format
+// https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback
+app.listen(config.port, config.host, () => {
   console.log(`selenium-federation is starting at port ${config.port}`);
 });

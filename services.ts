@@ -111,7 +111,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
       data: {
         url: this.config.registerAs || `http://${DEFAULT_HOST_IP_PLACEHOLDER}:${this.config.port}/wd/hub`,
       }
-    });
+    }).catch(console.error);
   }
 
   init() {
@@ -131,7 +131,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
 
       this.register();
       setInterval(async () => {
-        this.register().catch(console.error);
+        this.register();
       }, 1e3 * this.config.registerTimeout / 3);
     }
   }
