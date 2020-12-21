@@ -26,6 +26,7 @@ export const remoteDriverSchema = yup.object({
 
 export const configurationSchema = yup.object({
   port: yup.number().default(4444).defined(),
+  host: yup.string().default('0.0.0.0').defined(),
   browserIdleTimeout: yup.number().default(60).defined(),
   localDrivers: yup.array(localDriverSchema).default([]).defined(),
   maxSessions: yup.number().default(Math.max(2, os.cpus().length - 1)).defined(),
