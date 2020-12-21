@@ -84,7 +84,7 @@ export class LocalSession extends Session {
     if (!this.id) {
       throw Error(`Invalid response: ${JSON.stringify(response)}`);
     }
-    return response;
+    return response!;
   }
 
   public kill() {
