@@ -210,6 +210,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
         method: 'GET',
         baseURL: remoteDriver.url,
         url: '/available-drivers',
+        timeout: 5e3,
       }).catch((e) => console.log(e));
 
       if (!response) return [];
