@@ -1,5 +1,6 @@
 import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration } from "./schemas";
 import { LocalSession, RemoteSession, Session } from "./sessions";
+import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
 import { Request } from "koa";
 import { Watchdog } from "./watchdog";
 import axios, { AxiosResponse } from "axios";
@@ -108,7 +109,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
       baseURL: this.config.registerTo,
       url: '/register',
       data: {
-        url: this.config.registerAs,
+        url: this.config.registerAs || `http://${DEFAULT_HOST_IP_PLACEHOLDER}:${this.config.port}/wd/hub`,
       }
     });
   }
@@ -126,8 +127,8 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
     );
     // register to remote service
     if (this.config.registerTo) {
-      if (!this.config.registerAs) throw Error(`"registerAs" is required when "registerTo" is set`)
       console.log(`register to ${this.config.registerTo}`);
+
       this.register();
       setInterval(async () => {
         this.register().catch(console.error);
@@ -172,7 +173,17 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
     console.log(`working on remote mode`);
   }
 
+  private async checkHealth(driver: RemoteDriver) {
+    return axios.request({
+      method: 'GET',
+      baseURL: driver.url,
+      url: '/available-drivers',
+      timeout: 5e3,
+    });
+  }
+
   async registerDriver(driver: RemoteDriver) {
+    await this.checkHealth(driver);
     const found = this.drivers.find(d => d.url === driver.url);
     if (found) {
       found.registerAt = Date.now()
