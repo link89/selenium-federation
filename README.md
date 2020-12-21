@@ -24,7 +24,7 @@ browserIdleTimeout: 60
 maxSessions: 5  # limit the max sessions, default to Math.max(2, os.cpus().length - 1)
 
 registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
-registerAs: http://192.168.1.2:4444/wd/hub  # required when `registerTo` is set, accessible URL to this service
+registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
 
 localDrivers:
   - browserName: firefox

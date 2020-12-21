@@ -1,8 +1,9 @@
 import { AxiosResponse } from "axios";
-import { Context, Request } from "koa";
+import { Context } from "koa";
 import { driverService } from "./runtime";
-import { SessionPathParams } from "./schemas";
+import { RemoteDriver, SessionPathParams } from "./schemas";
 import { Semaphore } from "./utils";
+import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
 
 type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void>;
 
@@ -10,10 +11,12 @@ const createSessionLock = new Semaphore(1);
 
 export const handleRegisterRequest: RequestHandler = async (ctx, next) => {
   logRequest(ctx);
-  const driver = {
+  const driver: RemoteDriver = {
     registerAt: Date.now(),
     ...ctx.request.body,
   };
+  // using request ip as default host
+  driver.url = driver.url.replace(DEFAULT_HOST_IP_PLACEHOLDER, ctx.request.ip);
   await driverService.registerDriver(driver);
   ctx.status = 201;
   next();
