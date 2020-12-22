@@ -10,7 +10,6 @@ type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void>;
 const createSessionLock = new Semaphore(1);
 
 export const handleRegisterRequest: RequestHandler = async (ctx, next) => {
-  logRequest(ctx);
   const driver: RemoteDriver = {
     registerAt: Date.now(),
     ...ctx.request.body,
@@ -35,7 +34,6 @@ export const handleCreateSessionRequest: RequestHandler = async (ctx, next) => {
 }
 
 export const handleSessionRequest: RequestHandler = async (ctx, next) => {
-  logRequest(ctx);
   const params = sanitizeSessionParams(ctx.params);
   const response = await driverService.forward(ctx.request, params);
   setResponse(ctx, response);
