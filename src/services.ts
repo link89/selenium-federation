@@ -239,7 +239,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
 }
 
 const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): boolean =>
-  (driver.browserName === criteria.browserName) &&
+  (criteria.browserName? driver.browserName === criteria.browserName: true) &&
   (criteria.tags.every(tag => driver.tags!.includes(tag))) &&
   (criteria.platformName ? driver.platformName === criteria.platformName : true) &&
   (criteria.uuid ? driver.uuid === criteria.uuid : true) &&

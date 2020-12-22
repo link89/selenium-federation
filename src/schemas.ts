@@ -41,7 +41,7 @@ export type RemoteDriver = yup.InferType<typeof remoteDriverSchema>;
 export type Driver = LocalDriver | RemoteDriver;
 
 export interface DriverMatchCriteria {
-  browserName: string;
+  browserName?: string;
   platformName?: string;
   browserVersion?: string;
   uuid?: string;
