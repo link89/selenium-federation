@@ -4,8 +4,9 @@ import { driverService } from "./runtime";
 import { RemoteDriver, SessionPathParams } from "./schemas";
 import { Semaphore } from "./utils";
 import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
+import { newHttpError } from "./error";
 
-type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void>;
+export type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void>;
 
 const createSessionLock = new Semaphore(1);
 
@@ -50,9 +51,8 @@ export const handleQueryAvailableDrivers: RequestHandler = async (ctx, next) => 
   next();
 }
 
-
 const sanitizeSessionParams = (obj: any): SessionPathParams => {
-  if (!obj.sessionId) throw Error(`sessionId is required!`);
+  if (!obj.sessionId) throw newHttpError(400, `sessionId is required in path params.`, obj)
   return { sessionId: obj.sessionId, suffix: obj[0] };
 }
 
