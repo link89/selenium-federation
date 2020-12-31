@@ -4,6 +4,7 @@ import bodyParser from 'koa-bodyparser';
 
 import { config } from "./config";
 import { handleRegisterRequest, handleCreateSessionRequest, handleQueryAvailableDrivers as handleQueryAvailableDriversRequest, handleSessionRequest } from "./controllers";
+import { handleError } from "./error";
 
 
 const router = new Router();
@@ -20,6 +21,7 @@ const baseRouter = new Router()
 baseRouter.use('/wd/hub', router.routes(), router.allowedMethods());
 
 const app = new Koa();
+app.use(handleError);
 app.use(bodyParser());
 app.use(baseRouter.routes()).use(baseRouter.allowedMethods());
 

@@ -6,6 +6,7 @@ import { Request } from "koa";
 import { isNil,} from "lodash";
 import { cloneDeep, defaultsDeep, isEmpty } from "lodash";
 import Bluebird from "bluebird";
+import { newHttpError } from "./error";
 
 
 export abstract class Session {
@@ -40,7 +41,7 @@ export class LocalSession extends Session {
       return await this._start(request);
     } catch (e) {
       this.kill();
-      throw e;
+      throw newHttpError(500, e.message, { stack: e.stack });
     }
   }
 
@@ -60,7 +61,7 @@ export class LocalSession extends Session {
         params: request.query,
       }));
     } catch (e) {
-      if (!e.response) throw e;
+      if (!e.response) throw newHttpError(500, e.message, { stack: e.stack });
       return e.response;
     }
   }
@@ -82,7 +83,7 @@ export class LocalSession extends Session {
       });
     this.id = response?.data?.sessionId || response?.data?.value?.sessionId;
     if (!this.id) {
-      throw Error(`Invalid response: ${JSON.stringify(response)}`);
+      throw newHttpError(500, "Invalid response!", response);
     }
     return response!;
   }
@@ -136,7 +137,7 @@ export class RemoteSession extends Session {
     });
     this.id = response?.data?.sessionId || response?.data?.value.sessionId;
     if (!response || !this.id) {
-      throw Error(`Invalid response: ${JSON.stringify(response)}`);
+      throw newHttpError(500, "Invalid response!", response);
     }
     return response;
   }
@@ -156,7 +157,7 @@ export class RemoteSession extends Session {
         params: request.query,
       });
     } catch (e) {
-      if (!e.response) throw e;
+      if (!e.response) throw newHttpError(500, e.message, { stack: e.stack });
       return e.response;
     }
   }

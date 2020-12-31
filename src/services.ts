@@ -6,6 +6,7 @@ import { Watchdog } from "./watchdog";
 import axios, { AxiosResponse } from "axios";
 import Bluebird from "bluebird";
 import { flatten, minBy, shuffle } from "lodash";
+import { newHttpError } from "./error";
 
 
 export abstract class DriverService<D extends object, S extends Session>{
@@ -58,7 +59,7 @@ export abstract class DriverService<D extends object, S extends Session>{
   getSession(id: string) {
     const session = this.sessionsMap.get(id);
     if (!session) {
-      throw Error(`Session Not Found!`);
+      throw newHttpError(404, `session ${id} is not found.`)
     }
     return session;
   }
@@ -153,8 +154,9 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
       .filter(driver => isCriteriaMatch(driver, criteria));
 
     if (!candidates.length) {
-      throw Error(`No Drivers Available!`);
+      throw newHttpError(404, `No Drivers Available!`)
     }
+
     const driver = candidates[0];
     const session = new LocalSession(
       driver.browserName,
@@ -204,7 +206,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
       .filter(([remoteDriver, localDriver]) => isCriteriaMatch(localDriver, criteria));
 
     if (!candidates.length) {
-      throw Error(`No Drivers Available!`);
+      throw newHttpError(404, `No Drivers Available!`)
     }
     const driver = this.getTheLeastBusyDriver(candidates);
     const session = new RemoteSession(driver.url);
@@ -247,11 +249,11 @@ const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): bo
 
 const getMatchCriteria = (requestBody: any): DriverMatchCriteria => {
   const capabilities = requestBody?.desiredCapabilities;
-  const browserName: string = capabilities?.browserName;
-  if (!browserName || 'string' !== typeof browserName) throw Error(`browserName is invalid!`);
+  const browserName = capabilities?.browserName;
+  const browserVersion = capabilities?.browserVersion;
+  const platformName  = capabilities?.platformName;
   const extOptions = capabilities?.extOptions;
   const tags = extOptions?.tags || [];
   const uuid = extOptions?.uuid;
-  const browserVersion = capabilities?.browserVersion;
-  return { browserName, tags, uuid, browserVersion, platformName: capabilities.platformName};
+  return { browserName, browserVersion, platformName, tags, uuid };
 }
