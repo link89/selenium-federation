@@ -24,17 +24,25 @@ export const handleError: RequestHandler = async (ctx, next) => {
   try {
     await next();
   } catch (err) {
+    // respect W3C standard: https://www.w3.org/TR/webdriver/#errors
     if (isHttpError(err)) {
       ctx.status = err.statusCode;
       ctx.body = {
-        message: err.message,
-        data: err.data,
+        value: {
+          error: err.message,
+          message: err.message,
+          stacktrace: err.stack,
+          data: err.data,
+        }
       }
     } else {
       ctx.status = 500;
       ctx.body = {
-        message: err.message,
-        stack: err.stack,
+        value: {
+          error: err.message,
+          message: err.message,
+          stacktrace: err.stack,
+        }
       };
     }
   }
