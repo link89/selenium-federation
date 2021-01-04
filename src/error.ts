@@ -24,6 +24,7 @@ export const handleError: RequestHandler = async (ctx, next) => {
   try {
     await next();
   } catch (err) {
+    console.error(err);
     // respect W3C standard: https://www.w3.org/TR/webdriver/#errors
     if (isHttpError(err)) {
       ctx.status = err.statusCode;
