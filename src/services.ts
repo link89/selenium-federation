@@ -5,28 +5,27 @@ import { Request } from "koa";
 import { Watchdog } from "./watchdog";
 import axios, { AxiosResponse } from "axios";
 import Bluebird from "bluebird";
-import { flatten, minBy, shuffle } from "lodash";
+import { flatten, minBy, shuffle,} from "lodash";
 import { newHttpError } from "./error";
+import { NodeStatus } from "./schemas";
+import * as si from "systeminformation";
 
 
 export abstract class DriverService<D extends object, S extends Session>{
-  private sessionsMap: Map<string, S>;
-  private sessionDriverMap: WeakMap<S, D>;
-  private sessionWatchdogMap: WeakMap<S, Watchdog>;
-  private driverSessionsMap: WeakMap<D, Set<S>>;
+  private sessionsMap: Map<string, S> = new Map();
+  private sessionDriverMap: WeakMap<S, D> = new WeakMap();
+  private sessionWatchdogMap: WeakMap<S, Watchdog> = new WeakMap();
+  private driverSessionsMap: WeakMap<D, Set<S>> = new WeakMap();
 
   constructor(
     protected readonly drivers: D[],
     protected readonly config: Configuration,
   ) {
-    this.sessionsMap = new Map();
-    this.sessionDriverMap = new WeakMap();
-    this.sessionWatchdogMap = new WeakMap();
-    this.driverSessionsMap = new WeakMap();
     for (const driver of this.drivers) {
       this.driverSessionsMap.set(driver, new Set());
     }
   }
+
 
   get activeSessions(): number {
     return this.sessionsMap.size;
@@ -99,10 +98,26 @@ export abstract class DriverService<D extends object, S extends Session>{
   abstract registerDriver(driver: RemoteDriver): Promise<void>;
   abstract getAvailableDrivers(): Promise<LocalDriver[]>;
   abstract createSession(request: Request): Promise<AxiosResponse>;
+  abstract getStatuses(): Promise<NodeStatus[]>;
 }
 
 
 export class LocalDriverService extends DriverService<LocalDriver, LocalSession> {
+
+  async getStatuses(): Promise<NodeStatus[]> {
+    return [{
+      configuration: { ...this.config, localDrivers: undefined },
+      systemInfo: {
+        os: await si.osInfo(),
+        system: await si.system(),
+        networkInterface: await si.networkInterfaces(),
+      },
+      drivers: this.drivers.map(driver => ({
+        ...driver,
+        sessions: [...this.getSessionsByDriver(driver)!].map(session => session.toSessionDto())
+      })),
+    }];
+  }
 
   private async register() {
     await axios.request({
@@ -195,12 +210,26 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
     }
   }
 
+  async getStatuses(): Promise<NodeStatus[]> {
+    const statuses = await Bluebird.map(this.activeRemoteDriver, async remoteDriver => {
+      const response = await axios.request<NodeStatus[]>({
+        method: 'GET',
+        baseURL: remoteDriver.url,
+        url: '/statuses',
+        timeout: 5e3,
+      }).catch((e) => console.log(e));
+
+      if (!response) return [];
+      return response.data;
+    }, { concurrency: 8 })
+    return flatten(statuses);
+  }
+
   async getAvailableDrivers() {
     return this.getCandidates().then(candidates => candidates.map(([rd, ld]) => ld));
   }
 
   async createSession(request: Request) {
-
     const criteria = getMatchCriteria(request.body);
     const candidates: [RemoteDriver, LocalDriver][] = (await this.getCandidates())
       .filter(([remoteDriver, localDriver]) => isCriteriaMatch(localDriver, criteria));

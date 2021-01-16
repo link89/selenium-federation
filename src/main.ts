@@ -3,13 +3,14 @@ import Router from "koa-router";
 import bodyParser from 'koa-bodyparser';
 
 import { config } from "./config";
-import { handleRegisterRequest, handleCreateSessionRequest, handleQueryAvailableDrivers , handleSessionRequest } from "./controllers";
+import { handleRegisterRequest, handleCreateSessionRequest, handleQueryAvailableDriversRequest , handleSessionRequest, handleGetStatusesRequest } from "./controllers";
 import { handleError } from "./error";
 
 
 const router = new Router();
 router
-  .get('/available-drivers', handleQueryAvailableDrivers)
+  .get('/available-drivers', handleQueryAvailableDriversRequest)
+  .get('/statuses', handleGetStatusesRequest)
   .post('/register', handleRegisterRequest)
   .post('/session', handleCreateSessionRequest)
   .all([

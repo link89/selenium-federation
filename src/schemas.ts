@@ -29,7 +29,7 @@ export const configurationSchema = yup.object({
   host: yup.string().default('0.0.0.0').defined(),
   browserIdleTimeout: yup.number().default(60).defined(),
   localDrivers: yup.array(localDriverSchema).default([]).defined(),
-  maxSessions: yup.number().default(Math.max(2, os.cpus().length - 1)).defined(),
+  maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)).defined(),
   registerTimeout: yup.number().default(60).defined(),
   registerTo: yup.string().optional(),
   registerAs: yup.string().optional(),
@@ -51,4 +51,15 @@ export interface DriverMatchCriteria {
 export interface SessionPathParams {
   sessionId: string,
   suffix?: string,
+}
+
+export interface SessionDto {
+  id: string;
+  option: any;
+}
+
+export interface NodeStatus {
+  configuration: Partial<Configuration>;
+  systemInfo: any;
+  drivers: (LocalDriver & { sessions: SessionDto[] })[];
 }
