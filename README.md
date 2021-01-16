@@ -10,7 +10,6 @@ npm install -g selenium-federation
 # testing
 selenium-federation --help
 selenium-federation-pm2-start --help
-selenium-federation-wdm --help
 ```
 
 ### Start Local Service
@@ -20,8 +19,8 @@ Prepare configuration file `local.yaml` with the following content.
 
 ```yaml
 port: 4444
-browserIdleTimeout: 60
-maxSessions: 5  # limit the max sessions, default to Math.max(2, os.cpus().length - 1)
+browserIdleTimeout: 60  # browser processes will be killed after session inactive after browserIdleTimeout
+maxSessions: 5  # limit the max sessions, default to Math.max(1, os.cpus().length - 1)
 
 registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
 registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
