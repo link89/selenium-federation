@@ -7,13 +7,19 @@ import { isNil,} from "lodash";
 import { cloneDeep, defaultsDeep, isEmpty } from "lodash";
 import Bluebird from "bluebird";
 import { newHttpError } from "./error";
+import { SessionDto } from "./schemas";
 
 
 export abstract class Session {
   public id?: string;
+  public option?: any;
   public abstract start(request: Request): Promise<AxiosResponse>;
   public abstract stop(): Promise<void>;
   public abstract forward(request: Request, path?: string): Promise<AxiosResponse>;
+
+  toSessionDto(): SessionDto {
+    return { id: this.id!, option: this.option };
+  }
 }
 
 
@@ -73,15 +79,17 @@ export class LocalSession extends Session {
         stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
         env: { ...process.env, ...this.envs, ...getEnvsFromRequest(request.body) }
       });
-    await Bluebird.delay(500); // wait for process ready to serve
+    await Bluebird.delay(200); // wait for process ready to serve
+    const requestData = sanitizeCreateSessionRequest(request.body, this.defaultCapabilities);
     const response = await retry<AxiosResponse>(
-      () => axios.request({ method: 'POST', url: this.baseUrl, data: sanitizeCreateSessionRequest(request.body, this.defaultCapabilities) }),
+      () => axios.request({ method: 'POST', url: this.baseUrl, data: requestData }),
       {
         max: 5,
         interval: 1e3,
         condition: (e) => !e.response,
       });
     this.id = response?.data?.sessionId || response?.data?.value?.sessionId;
+    this.option = requestData;
     if (!this.id) {
       throw newHttpError(500, "Invalid response!", response);
     }
@@ -101,6 +109,7 @@ export class LocalSession extends Session {
       }
     }
   }
+
   private get isWindows() {
     return "win32" === process.platform;
   }
