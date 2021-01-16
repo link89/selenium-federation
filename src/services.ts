@@ -1,4 +1,4 @@
-import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration } from "./schemas";
+import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration, SessionDto } from "./schemas";
 import { LocalSession, RemoteSession, Session } from "./sessions";
 import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
 import { Request } from "koa";
@@ -7,7 +7,7 @@ import axios, { AxiosResponse } from "axios";
 import Bluebird from "bluebird";
 import { flatten, minBy, shuffle,} from "lodash";
 import { newHttpError } from "./error";
-import { NodeStatus } from "./schemas";
+import { NodeStatus, SessionStats } from "./schemas";
 import * as si from "systeminformation";
 
 
@@ -16,6 +16,7 @@ export abstract class DriverService<D extends object, S extends Session>{
   private sessionDriverMap: WeakMap<S, D> = new WeakMap();
   private sessionWatchdogMap: WeakMap<S, Watchdog> = new WeakMap();
   private driverSessionsMap: WeakMap<D, Set<S>> = new WeakMap();
+  private sessionStatsMap: WeakMap<D, SessionStats> = new WeakMap();
 
   constructor(
     protected readonly drivers: D[],
@@ -23,9 +24,9 @@ export abstract class DriverService<D extends object, S extends Session>{
   ) {
     for (const driver of this.drivers) {
       this.driverSessionsMap.set(driver, new Set());
+      this.sessionStatsMap.set(driver, { total: 0, failed: 0 });
     }
   }
-
 
   get activeSessions(): number {
     return this.sessionsMap.size;
@@ -71,6 +72,10 @@ export abstract class DriverService<D extends object, S extends Session>{
     return this.driverSessionsMap.get(driver);
   }
 
+  getStatsByDriver(driver: D) {
+    return this.sessionStatsMap.get(driver)!;
+  }
+
   async startSession(session: S, request: Request, driver: D) {
     const response = await session.start(request);
     const watchdog = new Watchdog(() => {
@@ -110,11 +115,12 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
       systemInfo: {
         os: await si.osInfo(),
         system: await si.system(),
-        networkInterface: await si.networkInterfaces(),
+        networkInterfaces: (await si.networkInterfaces()).filter(net => (net.ip4 || net.ip6) && !net.internal),
       },
       drivers: this.drivers.map(driver => ({
         ...driver,
-        sessions: [...this.getSessionsByDriver(driver)!].map(session => session.toSessionDto())
+        sessions: [...this.getSessionsByDriver(driver)!].map(session => session.toSessionDto()),
+        stats: this.getStatsByDriver(driver),
       })),
     }];
   }
@@ -171,7 +177,6 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
     if (!candidates.length) {
       throw newHttpError(404, `No Drivers Available!`)
     }
-
     const driver = candidates[0];
     const session = new LocalSession(
       driver.browserName,
@@ -180,7 +185,14 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
       driver.webdriverEnvs,
       driver.defaultCapabilities
     );
-    return this.startSession(session, request, driver);
+    const stats = this.getStatsByDriver(driver);
+    stats.total += 1;
+    try {
+      return this.startSession(session, request, driver);
+    } catch (e) {
+      stats.failed += 1;
+      throw e;
+    }
   }
 }
 

@@ -61,5 +61,10 @@ export interface SessionDto {
 export interface NodeStatus {
   configuration: Partial<Configuration>;
   systemInfo: any;
-  drivers: (LocalDriver & { sessions: SessionDto[] })[];
+  drivers: (LocalDriver & { sessions: SessionDto[], stats: SessionStats })[];
+}
+
+export interface SessionStats {
+  total: number;
+  failed: number;
 }
