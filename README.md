@@ -97,8 +97,18 @@ Now you can start `selenium-federation` service in `pm2` with the following comm
 
 ```bash
 npm install -g pm2  # ensure you have pm2 installed
+pm2 startup  # auto start pm2 on boot
 selenium-federation-pm2-start -c ./local.yaml
+pm2 save  # dump current apps so that they will be brought up automatically after rebooting
 ```
+
+#### Tips for Windows
+To enable the auto startup on windows, you need to create a bat script in the `Startup` folder.
+
+To open the `Startup` folder the easy way, just hit Windows+R to open the “Run” box, type `shell:startup`, and then press Enter.
+
+Then you can create a file named `pm2.bat` and write a single line command `pm2 resurrect` in it.
+
 
 ## Differentiation from Selenium 4
 

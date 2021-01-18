@@ -108,6 +108,7 @@ export abstract class DriverService<D extends object, S extends Session>{
 
 
 export class LocalDriverService extends DriverService<LocalDriver, LocalSession> {
+  public stopNewSessionCreation: boolean = false;
 
   async getStatuses(): Promise<NodeStatus[]> {
     return [{
@@ -163,6 +164,9 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
   }
 
   async getAvailableDrivers() {
+    if (this.stopNewSessionCreation) {
+      return [];
+    }
     if (this.activeSessions >= this.config.maxSessions) {
       return [];
     }
