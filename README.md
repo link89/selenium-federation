@@ -117,7 +117,6 @@ Then you can create a file named `pm2.bat` and write a single line command `pm2 
 The `defaultCapabilities` will be merged with the `desiredCapabilities` received from the client-side before firing the NEW_SESSION request. This is useful when you need to hide the server-side detail from clients.
 
 The below configuration is a real world example to use this feature to support `ChromeCanary`.
-You can also use `browserVersion` for the same purpose.
 
 ```yaml
 port: 4444
@@ -134,11 +133,17 @@ localDrivers:
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
 ```
 
-Address this [issue](https://github.com/SeleniumHQ/selenium/issues/8745) of selenium.
+Address this [limitation](https://github.com/SeleniumHQ/selenium/issues/8745) of selenium.
+
+### Restart host machine automatically
+Errors are found after a host machine running as `selenium-node` for a long time. Reboot host machines regularly are good for stability.
+
 
 ### Matching with Tags
 
 `tags` fields can be used in `localDrivers` to distinguish the configuration items with same `browserName`. The client-side can set the `extOptions.tags` in capabilities to make use of this feature.
+
+You can also use `browserVersion` fields for the same purpose, but `tags` mechanism provides more flexibility.
 
 The below script is an example of using this feature with `webdriver.io`.
 
@@ -191,3 +196,4 @@ This feature is also useful when you test electron based app that configurable v
 
 ### Others
 * `browserVersion` can be arbitrary string like `alpha`, `beta`, etc, the restriction of some webdrivers is ignored.
+* Read statuses of clusters from the `/wd/hub/statuses` endpoint.
