@@ -1,5 +1,5 @@
 import { execSync, spawn, ChildProcess } from "child_process";
-import { retry } from "./utils";
+import { retry, Semaphore } from "./utils";
 import getPort from "get-port";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Request } from "koa";
@@ -27,6 +27,7 @@ export class LocalSession extends Session {
 
   private port?: number;
   private childProcess?: ChildProcess;
+  private semaphore: Semaphore;
 
   get baseUrl() {
     return `http://localhost:${this.port}/session`;
@@ -40,6 +41,7 @@ export class LocalSession extends Session {
     private defaultCapabilities: any,
   ) {
     super();
+    this.semaphore = new Semaphore(1);
   }
 
   public async start(request: Request) {
@@ -58,6 +60,7 @@ export class LocalSession extends Session {
   public async forward(request: Request, path?: string) {
     const url = `/${this.id}${isNil(path) ? '' : ('/' + path)}`;
     try {
+      await this.semaphore.wait();
       return await axios.request(this.sanitizeRequest({
         baseURL: this.baseUrl,
         url,
@@ -65,10 +68,13 @@ export class LocalSession extends Session {
         data: request.body,
         headers: request.headers,
         params: request.query,
+        timeout: 120e3,
       }));
     } catch (e) {
       if (!e.response) throw newHttpError(500, e.message, { stack: e.stack });
       return e.response;
+    } finally {
+      this.semaphore.signal();
     }
   }
 
@@ -82,7 +88,7 @@ export class LocalSession extends Session {
     await Bluebird.delay(200); // wait for process ready to serve
     const requestData = sanitizeCreateSessionRequest(request.body, this.defaultCapabilities);
     const response = await retry<AxiosResponse>(
-      () => axios.request({ method: 'POST', url: this.baseUrl, data: requestData }),
+      () => axios.request({ method: 'POST', url: this.baseUrl, data: requestData, timeout: 5e3 }),
       {
         max: 5,
         interval: 1e3,
@@ -143,6 +149,7 @@ export class RemoteSession extends Session {
       baseURL: this.baseUrl,
       url: '/session',
       data: request.body,
+      timeout: 60e3,
     });
     this.id = response?.data?.sessionId || response?.data?.value.sessionId;
     if (!response || !this.id) {
@@ -164,6 +171,7 @@ export class RemoteSession extends Session {
         data: request.body,
         headers: request.headers,
         params: request.query,
+        timeout: 120e3,
       });
     } catch (e) {
       if (!e.response) throw newHttpError(500, e.message, { stack: e.stack });
