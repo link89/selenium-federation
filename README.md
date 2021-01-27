@@ -29,6 +29,8 @@ registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this s
 autoRebootThreshold: 1000  # optional, auto reboot the host machine after start this many sessions, default is 0 (disable)
 autoRebootCommand: shutdown /r  # optional, customize auto reboot command, default command depends on the operating system
 
+# sentryDSN: # optional, upload message and exception to sentry
+
 localDrivers:
   - browserName: firefox
     maxSessions: 2  # limit the max session of specific driver, default value is 1
