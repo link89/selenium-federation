@@ -25,9 +25,12 @@ maxSessions: 5  # limit the max sessions, default to Math.max(1, os.cpus().lengt
 registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
 registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
 
+autoRebootThreshold: 1000  # optional, auto reboot the host machine after start this many sessions, default is 0 (disable)
+autoRebootCommand: shutdown /r  # optional, customize auto reboot command, default command depends on the operating system
+
 localDrivers:
   - browserName: firefox
-    maxSessions: 2
+    maxSessions: 2  # limit the max session of specific driver, default value is 1
     webdriverPath: geckodriver # Support global webdriver command.
 
   - browserName: safari
@@ -39,7 +42,7 @@ localDrivers:
     webdriverPath: msedgedriver
 
   - browserName: chrome
-    browserVersion: stable
+    browserVersion: stable # support customized version value
     maxSessions: 2
     webdriverPath: ./chromedriver-stable  # Also support relative/absolute path to webdriver.
 
@@ -136,7 +139,8 @@ localDrivers:
 Address this [limitation](https://github.com/SeleniumHQ/selenium/issues/8745) of selenium.
 
 ### Restart host machine automatically
-Errors are found after a host machine running as `selenium-node` for a long time. Reboot host machines regularly are good for stability.
+
+Errors are found after a host machine running as a selenium node for a long time. `selenium-federation` provide an auto reboot mechanism to work around this problem by setting the `autoRebootThreshold` and `autoRebootCommand`.
 
 
 ### Matching with Tags
@@ -147,14 +151,16 @@ You can also use `browserVersion` fields for the same purpose, but `tags` mechan
 
 The below script is an example of using this feature with `webdriver.io`.
 
+
 ```typescript
 import { remote } from "webdriverio";
 const opt = {
   hostname: 'localhost', port: 4444, path: '/wd/hub',
   capabilities: {
     browserName: 'chrome',
+    browserVersion: 'canary',  // example of using browserVersion
     extOptions: {
-      tags: ['canary'],
+      tags: ['canary'],  // example of using tags
     }
   }
 };
