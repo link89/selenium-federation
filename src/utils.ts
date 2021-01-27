@@ -1,4 +1,5 @@
 import Bluebird from "bluebird";
+import * as Sentry from "@sentry/node";
 
 interface IRetryOption {
   max?: number;
@@ -57,4 +58,14 @@ export function getDefaultRebootCommand() {
     case "darwin": return `osascript -e 'tell app "System Events" to restart'`;
     default: return `sudo reboot`;
   }
+}
+
+export function logMessage(s: string) {
+  console.log(s);
+  Sentry.captureMessage(s);
+}
+
+export function logException(e: Error) {
+  console.error(e);
+  Sentry.captureException(e);
 }

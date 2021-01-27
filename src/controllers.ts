@@ -2,7 +2,7 @@ import { AxiosResponse } from "axios";
 import { Context } from "koa";
 import { driverService } from "./runtime";
 import { RemoteDriver, SessionPathParams } from "./schemas";
-import { Semaphore } from "./utils";
+import { logMessage, Semaphore } from "./utils";
 import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
 import { newHttpError } from "./error";
 
@@ -70,5 +70,5 @@ const setResponse = (ctx: Context, response: AxiosResponse) => {
 }
 
 const logRequest = (ctx: Context) => {
-  console.log(JSON.stringify({ ...ctx.request.toJSON(), body: ctx.request.body }, null, 2));
+  logMessage(JSON.stringify({ ...ctx.request.toJSON(), body: ctx.request.body }, null, 2));
 }

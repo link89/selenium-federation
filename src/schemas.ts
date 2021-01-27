@@ -35,6 +35,8 @@ export const configurationSchema = yup.object({
   registerAs: yup.string().optional(),
   autoRebootThreshold: yup.number().default(0).defined(),
   autoRebootCommand: yup.string().default(getDefaultRebootCommand()).defined(),
+  sentryDSN: yup.string().optional(),
+  sentryDebug: yup.boolean().default(false).defined(),
 }).defined();
 
 export type Configuration = yup.InferType<typeof configurationSchema>;
