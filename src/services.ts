@@ -10,6 +10,7 @@ import { newHttpError } from "./error";
 import { NodeStatus, SessionStats } from "./schemas";
 import * as si from "systeminformation";
 import { exec } from "child_process";
+import { logException, logMessage } from "./utils";
 
 
 export abstract class DriverService<D extends object, S extends Session>{
@@ -157,7 +158,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
   }
 
   init() {
-    console.log(`working on local mode`);
+    logMessage(`working on local mode`);
     // kill session process on exit
     ['SIGTERM', 'SIGINT'].forEach(signal =>
       process.on(signal, () => {
@@ -169,7 +170,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
     );
     // register to remote service
     if (this.config.registerTo) {
-      console.log(`register to ${this.config.registerTo}`);
+      logMessage(`register to ${this.config.registerTo}`);
 
       this.register();
       setInterval(async () => {
@@ -234,7 +235,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
 
 export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSession> {
   init() {
-    console.log(`working on remote mode`);
+    logMessage(`working on remote mode`);
   }
 
   private async checkHealth(driver: RemoteDriver) {
@@ -252,7 +253,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
     if (found) {
       found.registerAt = Date.now()
     } else {
-      console.log(`register new remote driver: ${driver.url}`);
+      logMessage(`register new remote driver: ${driver.url}`);
       this.addDriver(driver);
     }
   }
@@ -264,7 +265,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
         baseURL: remoteDriver.url,
         url: '/statuses',
         timeout: 5e3,
-      }).catch((e) => console.log(e));
+      }).catch(logException);
 
       if (!response) return [];
       return response.data;
@@ -300,7 +301,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
         baseURL: remoteDriver.url,
         url: '/available-drivers',
         timeout: 5e3,
-      }).catch((e) => console.log(e));
+      }).catch(logException);
 
       if (!response) return [];
       return response.data.
