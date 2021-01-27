@@ -1,5 +1,5 @@
 import { execSync, spawn, ChildProcess } from "child_process";
-import { retry, Semaphore } from "./utils";
+import { logException, retry, Semaphore } from "./utils";
 import getPort from "get-port";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { Request } from "koa";
@@ -54,6 +54,7 @@ export class LocalSession extends Session {
   }
 
   public async stop() {
+    await Bluebird.delay(500);
     this.kill();
   }
 
@@ -111,7 +112,7 @@ export class LocalSession extends Session {
           process.kill(-this.childProcess.pid);
         }
       } catch (e) {
-        console.error(e);
+        logException(e);
       }
     }
   }
