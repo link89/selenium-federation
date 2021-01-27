@@ -12,6 +12,7 @@ selenium-federation --help
 selenium-federation-pm2-start --help
 ```
 
+
 ### Start Local Service
 Prepare configuration file `local.yaml` with the following content.
 
@@ -105,13 +106,6 @@ selenium-federation-pm2-start -c ./local.yaml
 pm2 save  # dump current apps so that they will be brought up automatically after rebooting
 ```
 
-#### Tips for Windows
-To enable the auto startup on windows, you need to create a bat script in the `Startup` folder.
-
-To open the `Startup` folder the easy way, just hit Windows+R to open the “Run” box, type `shell:startup`, and then press Enter.
-
-Then you can create a file named `pm2.bat` and write a single line command `pm2 resurrect` in it.
-
 
 ## Differentiation from Selenium 4
 
@@ -203,3 +197,5 @@ This feature is also useful when you test electron based app that configurable v
 ### Others
 * `browserVersion` can be arbitrary string like `alpha`, `beta`, etc, the restriction of some webdrivers is ignored.
 * Read statuses of clusters from the `/wd/hub/statuses` endpoint.
+
+## [FAQ](/FAQ.md)
