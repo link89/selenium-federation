@@ -87,7 +87,7 @@ Then start the server with following command.
 selenium-federation -c remote.yaml
 ```
 
-If there are local driver services register to the remote service by setting `registerTo: http://localhost:5555/wd/hub`, you can find them in `http://localhost:5555/wd/hub/available-drivers`.
+If there are local driver services register to the remote service by setting `registerTo: http://localhost:5555/wd/hub`, you can find them in `http://localhost:5555/wd/hub/statuses`.
 
 Once there are nodes registered, you can access the selenium compatible service via
 `http://localhost:5555/wd/hub`.
