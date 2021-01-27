@@ -1,6 +1,6 @@
 {
   "name": "selenium-federation",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "A lightweight alternative to selenium-grid.",
   "main": "dist/main.js",
   "files": [
