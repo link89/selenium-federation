@@ -50,3 +50,11 @@ export function getW3CPlatformName() {
     default: return "linux";
   }
 }
+
+export function getDefaultRebootCommand() {
+  switch (process.platform) {
+    case "win32": return `shutdown /r`;
+    case "darwin": return `osascript -e 'tell app "System Events" to restart'`;
+    default: return `sudo reboot`;
+  }
+}

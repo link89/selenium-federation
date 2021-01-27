@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 import * as os from 'os';
-import { getW3CPlatformName } from './utils';
+import { getDefaultRebootCommand, getW3CPlatformName } from './utils';
 import { v4 as uuidv4 } from 'uuid';
 
 
@@ -33,6 +33,8 @@ export const configurationSchema = yup.object({
   registerTimeout: yup.number().default(60).defined(),
   registerTo: yup.string().optional(),
   registerAs: yup.string().optional(),
+  autoRebootThreshold: yup.number().default(0).defined(),
+  autoRebootCommand: yup.string().default(getDefaultRebootCommand()).defined(),
 }).defined();
 
 export type Configuration = yup.InferType<typeof configurationSchema>;
@@ -58,10 +60,12 @@ export interface SessionDto {
   option: any;
 }
 
+export type DriverStats = LocalDriver & { sessions: SessionDto[], stats: SessionStats };
+
 export interface NodeStatus {
   configuration: Partial<Configuration>;
   systemInfo: any;
-  drivers: (LocalDriver & { sessions: SessionDto[], stats: SessionStats })[];
+  drivers: DriverStats[];
 }
 
 export interface SessionStats {

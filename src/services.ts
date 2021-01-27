@@ -1,14 +1,15 @@
-import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration, SessionDto } from "./schemas";
+import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration, DriverStats } from "./schemas";
 import { LocalSession, RemoteSession, Session } from "./sessions";
 import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
 import { Request } from "koa";
 import { Watchdog } from "./watchdog";
 import axios, { AxiosResponse } from "axios";
 import Bluebird from "bluebird";
-import { flatten, minBy, shuffle,} from "lodash";
+import { flatten, minBy, shuffle, sumBy,} from "lodash";
 import { newHttpError } from "./error";
 import { NodeStatus, SessionStats } from "./schemas";
 import * as si from "systeminformation";
+import { exec } from "child_process";
 
 
 export abstract class DriverService<D extends object, S extends Session>{
@@ -28,7 +29,7 @@ export abstract class DriverService<D extends object, S extends Session>{
     }
   }
 
-  get activeSessions(): number {
+  get activeSessionsCount(): number {
     return this.sessionsMap.size;
   }
 
@@ -90,6 +91,7 @@ export abstract class DriverService<D extends object, S extends Session>{
     await session.stop();
     this.getWatchdogBySession(session)?.stop();
     this.removeSession(session);
+    this.onSessionDelete();
   }
 
   async forward(request: Request, params: SessionPathParams) {
@@ -99,6 +101,8 @@ export abstract class DriverService<D extends object, S extends Session>{
     return await session.forward(request, params.suffix);
   }
 
+  onSessionDelete() {}
+
   abstract init(): void;
   abstract registerDriver(driver: RemoteDriver): Promise<void>;
   abstract getAvailableDrivers(): Promise<LocalDriver[]>;
@@ -107,8 +111,27 @@ export abstract class DriverService<D extends object, S extends Session>{
 }
 
 
+
 export class LocalDriverService extends DriverService<LocalDriver, LocalSession> {
-  public stopNewSessionCreation: boolean = false;
+
+  public sessionsUpdateListeners: (() => any)[] = [];
+
+  get cumulativeSessionsCount(): number {
+    return sumBy(this.driversStats, driverStats => driverStats.stats.total);
+  }
+
+  get isReadyToReboot(): boolean {
+    if (!this.config.autoRebootThreshold) return false;
+    return this.cumulativeSessionsCount > this.config.autoRebootThreshold && !this.activeSessionsCount;
+  }
+
+  get driversStats(): DriverStats[] {
+    return this.drivers.map(driver => ({
+      ...driver,
+      sessions: [...this.getSessionsByDriver(driver)!].map(session => session.toSessionDto()),
+      stats: this.getStatsByDriver(driver),
+    }));
+  }
 
   async getStatuses(): Promise<NodeStatus[]> {
     return [{
@@ -118,11 +141,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
         system: await si.system(),
         networkInterfaces: (await si.networkInterfaces()).filter(net => (net.ip4 || net.ip6) && !net.internal),
       },
-      drivers: this.drivers.map(driver => ({
-        ...driver,
-        sessions: [...this.getSessionsByDriver(driver)!].map(session => session.toSessionDto()),
-        stats: this.getStatsByDriver(driver),
-      })),
+      drivers: this.driversStats,
     }];
   }
 
@@ -164,10 +183,10 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
   }
 
   async getAvailableDrivers() {
-    if (this.stopNewSessionCreation) {
+    if (this.activeSessionsCount >= this.config.maxSessions) {
       return [];
     }
-    if (this.activeSessions >= this.config.maxSessions) {
+    if (this.isReadyToReboot) {
       return [];
     }
     return this.drivers.filter(driver => this.getSessionsByDriver(driver)!.size < driver.maxSessions);
@@ -197,6 +216,18 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
       stats.failed += 1;
       throw e;
     }
+  }
+
+  onSessionDelete() {
+    if (this.isReadyToReboot) {
+      this.reboot();
+    }
+  }
+
+  reboot() {
+    const ps = exec(this.config.autoRebootCommand);
+    ps.stdout?.pipe(process.stdout);
+    ps.stderr?.pipe(process.stderr);
   }
 }
 
