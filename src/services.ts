@@ -122,7 +122,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
 
   get isReadyToReboot(): boolean {
     if (!this.config.autoRebootThreshold) return false;
-    return this.cumulativeSessionsCount > this.config.autoRebootThreshold && !this.activeSessionsCount;
+    return this.cumulativeSessionsCount >= this.config.autoRebootThreshold && !this.activeSessionsCount;
   }
 
   get driversStats(): DriverStats[] {
