@@ -62,7 +62,7 @@ export function getDefaultRebootCommand() {
 
 export function logMessage(s: string) {
   console.log(s);
-  Sentry.captureMessage(s);
+  // Sentry.captureMessage(s);
 }
 
 export function logException(e: Error) {
