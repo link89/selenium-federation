@@ -1,6 +1,21 @@
 # Selenium Federation
 A lightweight alternative to selenium-grid.
 
+## Introduction
+`selenium-federation` is a lightweight solution to set up a cross-platform browser farm that are compatible with `selenium-grid`.
+
+The followings are the goals of this project:
+
+* Simple: It should be easy enough to run or make contribution to this project.
+* Lightweight: It is designed to support a browser farm with at most 20 nodes.
+* Unblock Limitations of Existed Solutions: see [here](#differentiation-from-selenium-4).
+
+The following are NOT this project's main focus (at this for now):
+
+* Zero configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools.
+* Distributed architecture: The project chooses federated architecture for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
+  * I guess it won't be hard to support the distributed mode via `etcd` in the future when there are requirements for this feature.
+
 ## Usage
 
 ### Install
@@ -11,7 +26,6 @@ npm install -g selenium-federation
 selenium-federation --help
 selenium-federation-pm2-start --help
 ```
-
 
 ### Start Local Service
 Prepare configuration file `local.yaml` with the following content.
