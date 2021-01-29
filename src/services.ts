@@ -212,7 +212,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
     const stats = this.getStatsByDriver(driver);
     stats.total += 1;
     try {
-      return this.startSession(session, request, driver);
+      return await this.startSession(session, request, driver);
     } catch (e) {
       stats.failed += 1;
       throw e;
