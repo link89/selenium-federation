@@ -14,7 +14,7 @@ The following are NOT this project's main focus (at this for now):
 
 * Zero configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools.
 * Distributed architecture: The project chooses federated architecture for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
-  * I guess it won't be hard to support the distributed mode via `etcd` in the future when there are requirements for this feature.
+  * I guess it won't be hard to support the distributed mode via `etcd` when there are requirements in the future.
 
 ## Usage
 
@@ -89,7 +89,7 @@ selenium-federation -c local.yaml
 Now you can access the selenium compatible service via
 `http://localhost:4444/wd/hub`.
 
-It is suggested to run the health check to validate the configuration
+It is suggested to run the health check to validate the setup.
 ```bash
 selenium-federation-check
 ```
@@ -114,7 +114,7 @@ Once there are nodes registered, you can access the selenium compatible service 
 `http://localhost:5555/wd/hub`.
 
 
-It is suggested to run the health check to validate the configuration
+It is suggested to run the health check to validate the setup.
 ```bash
 selenium-federation-check --url http://localhost:5555/wd/hub
 ```
