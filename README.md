@@ -2,7 +2,7 @@
 A lightweight alternative to selenium-grid.
 
 ## Introduction
-`selenium-federation` is a lightweight solution to set up a cross-platform browser farm that are compatible with `selenium-grid`.
+`selenium-federation` is a lightweight solution to set up a cross-platform browser farm which is compatible with `selenium-grid`.
 
 The followings are the goals of this project:
 
@@ -24,6 +24,7 @@ npm install -g selenium-federation
 
 # testing
 selenium-federation --help
+selenium-federation-check --help
 selenium-federation-pm2-start --help
 ```
 
@@ -88,6 +89,10 @@ selenium-federation -c local.yaml
 Now you can access the selenium compatible service via
 `http://localhost:4444/wd/hub`.
 
+It is suggested to run the health check to validate the configuration
+```bash
+selenium-federation-check
+```
 
 ### Start Remote Service
 
@@ -108,6 +113,11 @@ If there are local driver services register to the remote service by setting `re
 Once there are nodes registered, you can access the selenium compatible service via
 `http://localhost:5555/wd/hub`.
 
+
+It is suggested to run the health check to validate the configuration
+```bash
+selenium-federation-check --url http://localhost:5555/wd/hub
+```
 
 ### Start Service in pm2
 
