@@ -2,7 +2,7 @@
 A lightweight alternative to selenium-grid.
 
 ## Introduction
-`selenium-federation` is a lightweight solution to set up a cross-platform browser farm which is compatible with `selenium-grid`.
+`selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is compatible with `selenium-grid`.
 
 The followings are the major goals of this project:
 
@@ -31,7 +31,7 @@ selenium-federation-pm2-start --help
 ### Start Local Service
 Prepare configuration file `local.yaml` with the following content.
 
-> CAUTIONS: The relative path in the configuration file is relative to the `current working directory` , a.k.a. the path where you run the `selenium-federation` or `selenium-federation-pm2-start` commands.
+> CAUTIONS: The relative path in the configuration file is relative to the `current working directory`, a.k.a. the path where you run the `selenium-federation` or `selenium-federation-pm2-start` commands.
 
 ```yaml
 port: 4444
@@ -42,7 +42,7 @@ registerTo: http://localhost:5555/wd/hub  # optional, register to a remote servi
 registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
 
 autoRebootThreshold: 1000  # optional, auto reboot the host machine after start this many sessions, default is 0 (disable)
-autoRebootCommand: shutdown /r  # optional, customize auto reboot command, default command depends on the operating system
+autoRebootCommand: shutdown /r  # optional, customize auto-reboot command, default command depends on the operating system
 
 # sentryDSN: # optional, upload message and exception to sentry
 
