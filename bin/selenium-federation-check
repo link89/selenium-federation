@@ -32,7 +32,7 @@ const argv = yargs.usage('Check health of selenium-federation service.').options
 
   console.log(`total nodes: ${res.data.length}`);
 
-  const results = await Bluebird.map(flatMap(res.data, node => node.drivers), async (opts) => {
+  const results = await Bluebird.map( flatMap(res.data, node => node.drivers.map(drv => ({ remoteUrl: node.remoteUrl, ...drv }))), async (opts) => {
     let driver;
     let result = {
       remoteUrl : opts.remoteUrl,
