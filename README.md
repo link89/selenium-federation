@@ -8,11 +8,11 @@ The followings are the major goals of this project:
 
 * Simple: It should be easy enough to run or make contributions to this project.
 * Lightweight: It is designed to support a browser farm with at most 20 nodes.
-* Unblock Limitations of Existed Solutions: see [here](#differentiation-from-selenium-4).
+* Unblock limitations of existed solutions: see [here](#differentiation-from-selenium-4).
 
 The following are NOT this project's main focus (at least for now):
 
-* Zero configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools.
+* Zero-configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools to start a local service to run tests.
 * Distributed architecture: The project chooses federated architecture for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
   * I guess it won't be hard to support the distributed mode via `etcd` when there are requirements in the future.
 
