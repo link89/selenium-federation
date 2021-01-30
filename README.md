@@ -4,13 +4,13 @@ A lightweight alternative to selenium-grid.
 ## Introduction
 `selenium-federation` is a lightweight solution to set up a cross-platform browser farm which is compatible with `selenium-grid`.
 
-The followings are the goals of this project:
+The followings are the major goals of this project:
 
-* Simple: It should be easy enough to run or make contribution to this project.
+* Simple: It should be easy enough to run or make contributions to this project.
 * Lightweight: It is designed to support a browser farm with at most 20 nodes.
 * Unblock Limitations of Existed Solutions: see [here](#differentiation-from-selenium-4).
 
-The following are NOT this project's main focus (at this for now):
+The following are NOT this project's main focus (at least for now):
 
 * Zero configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools.
 * Distributed architecture: The project chooses federated architecture for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
@@ -81,7 +81,7 @@ localDrivers:
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
 ```
 
-And start the server with following command.
+And start the server with the following command.
 ```bash
 selenium-federation -c local.yaml
 ```
@@ -139,7 +139,7 @@ pm2 save  # dump current apps so that they will be brought up automatically afte
 
 The `defaultCapabilities` will be merged with the `desiredCapabilities` received from the client-side before firing the NEW_SESSION request. This is useful when you need to hide the server-side detail from clients.
 
-The below configuration is a real world example to use this feature to support `ChromeCanary`.
+The below configuration is a real-world example to use this feature to support `ChromeCanary`.
 
 ```yaml
 port: 4444
