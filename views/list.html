@@ -1,0 +1,77 @@
+{% extends 'layout.html' %}
+
+{% block title %}Selenium Federation Nodes statuses{% endblock %}
+
+{% block content %}
+<div class="header">
+  <h1>Selenium Federation Nodes statuses</h1>
+  <p align="right">You have <strong>{{ nodeStatuses.length }}</strong> nodes!</p>
+</div>
+<section class="parent">
+  {% for nodeStatus in nodeStatuses %}
+  <article class="son">
+    <div>
+      <div class="tab-parent">
+        <div class="tab-son show">Basic</div>
+        <div class="tab-son">Details</div>
+      </div>
+      <div>
+        <span class="title">IP:</span><span>{{ nodeStatus.configuration.registerAs }}</span>
+        <span>OS:</span><span>{{ nodeStatus.systemInfo.os.platform }}</span>
+      </div>
+      <hr>
+      <div class="content show">
+        <span>Drivers:</span> <br>
+        {% for driver  in nodeStatus.drivers %}
+        <div>
+          <div class="title">
+            <span> {{driver.platformName}}:<span
+                style="color:coral">{{driver.browserName}}</span><span>{{driver.browserVersion}}</span>
+              <span>
+          </div>
+          <div>
+            <span>Failed / Total / MaxSessions:</span>
+            <span style="color: red;">{{ driver.stats.failed}} /</span>
+            <span style="color:blue">{{driver.maxSessions- driver.stats.total}} /</span>
+            <span>{{driver.maxSessions}}</span>
+          </div>
+
+          </span>
+          </span>
+        </div>
+
+        {% endfor %}
+      </div>
+      <pre class="content json">{{ JSON.stringify(nodeStatus, null, 2)}}</pre>
+    </div>
+  </article>
+
+  {% endfor %}
+</section>
+<script>
+  window.onload = function () {
+    var boxArr = document.getElementsByClassName("son");
+    for (var i = 0; i < boxArr.length; i++) {
+      showTab(boxArr[i]);
+    }
+
+    function showTab(element) {
+      var menuArr = element.getElementsByClassName("tab-son");
+      var contentArr = element.getElementsByClassName("content");
+      for (var i = 0; i < menuArr.length; i++) {
+        menuArr[i].index = i;
+        menuArr[i].onclick = function () {
+          for (var j = 0; j < menuArr.length; j++) {
+            menuArr[j].classList.remove("show");
+            contentArr[j].classList.remove("show")
+          }
+          this.classList.add("show");
+          contentArr[this.index].classList.add("show");
+        }
+      }
+    }
+
+  }
+
+</script>
+{% endblock %}

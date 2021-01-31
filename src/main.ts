@@ -1,9 +1,11 @@
-import Koa from "koa";
+import Koa, { Context, DefaultState } from "koa";
 import Router from "koa-router";
 import bodyParser from 'koa-bodyparser';
+import views from 'koa-views';
+import path from 'path';
 
 import { config } from "./config";
-import { handleRegisterRequest, handleCreateSessionRequest, handleQueryAvailableDriversRequest , handleSessionRequest, handleGetStatusesRequest } from "./controllers";
+import { handleRegisterRequest, handleCreateSessionRequest, handleQueryAvailableDriversRequest, handleSessionRequest, handleGetStatusesRequest, RequestHandler, handleGetStatusesUi } from "./controllers";
 import { handleError } from "./error";
 import * as Sentry from "@sentry/node";
 import { logMessage } from "./utils";
@@ -13,8 +15,15 @@ Sentry.init({
   debug: config.sentryDebug,
 });
 
-const router = new Router();
+const render = views(path.join(__dirname, '/../views'), {
+  map: {
+    html: 'swig'
+  }
+});
+
+const router = new Router<DefaultState, Context>();
 router
+  .get('/', handleGetStatusesUi)
   .get('/available-drivers', handleQueryAvailableDriversRequest)
   .get('/statuses', handleGetStatusesRequest)
   .post('/register', handleRegisterRequest)
@@ -24,10 +33,11 @@ router
     '/session/:sessionId/(.*)',
   ], handleSessionRequest);
 
-const baseRouter = new Router()
+const baseRouter = new Router<DefaultState, Context>();
 baseRouter.use('/wd/hub', router.routes(), router.allowedMethods());
 
 const app = new Koa();
+app.use(render as RequestHandler);
 app.use(handleError);
 app.use(bodyParser());
 app.use(baseRouter.routes()).use(baseRouter.allowedMethods());

@@ -5,7 +5,8 @@
   "main": "dist/main.js",
   "files": [
     "bin",
-    "dist"
+    "dist",
+    "views"
   ],
   "bin": {
     "selenium-federation": "./bin/selenium-federation",
@@ -53,6 +54,8 @@
     "koa": "^2.13.0",
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^10.0.0",
+    "koa-swig": "^2.2.1",
+    "koa-views": "^7.0.0",
     "lodash": "^4.17.20",
     "systeminformation": "^4.32.0",
     "uuid": "^8.3.1",

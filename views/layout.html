@@ -1,0 +1,105 @@
+<html>
+
+<head>
+  <title>{% block title %}Selenium Federation{% endblock %}</title>
+  <style>
+    html * {
+      margin: 0;
+      padding: 0;
+    }
+
+    .header {
+      padding: 0px 0px 20px, 20px;
+      margin: 10px;
+    }
+
+    h1 {
+      background: #2B6695;
+      border-radius: 6px 6px 6px 6px;
+      box-shadow: 0 0 0 1px #5F5A4B, 1px 1px 6px 1px rgba(10, 10, 0, 0.5);
+      color: #FFFFFF;
+      font-family: "微软雅黑", "宋体", "黑体", Arial;
+      font-size: 18px;
+      font-weight: bold;
+      height: 25px;
+      line-height: 25px;
+      margin: 10px 0 !important;
+      padding: 20px;
+      text-shadow: 2px 2px 3px #222222;
+    }
+
+    strong {
+      font: italic 2em Georgia, serif;
+      color: royalblue
+    }
+
+    .parent {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .son {
+      flex: 1 1 auto;
+      min-width: 300px;
+      min-height: 200px;
+      box-sizing: border-box;
+      border: 1px solid #ffcc00;
+      background: #fffff7;
+      padding: 10px;
+      margin: 20px;
+    }
+
+    .title {
+      font-size: 20px;
+      color: #c03035;
+    }
+
+    .content {
+      font-size: 15px;
+      color: #323232;
+      display: none;
+    }
+
+    .tab-parent {
+      flex-direction: row;
+      display: flex;
+    }
+
+    .tab-son {
+      flex-basis: 100%;
+      flex: 0 1 300px;
+      box-sizing: border-box;
+      padding: 10px;
+      justify-content: space-between;
+      background-color: #ffcc00;
+      cursor: pointer;
+      font: italic 1em Georgia, serif;
+    }
+
+    .show {
+      background-color: #fffff7;
+      display: block;
+    }
+
+    span {
+      margin: 5px;
+    }
+
+    .json {
+      word-wrap：break-word;
+    }
+  </style>
+
+
+</head>
+
+<body>
+  <section id="content">
+    {% block content %}
+    <p>Missing content!</p>
+    {% endblock %}
+  </section>
+</body>
+
+</html>
