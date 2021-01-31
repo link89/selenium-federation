@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+
+const Bluebird = require('bluebird');
+const axios = require('axios');
+const { Builder, By, Key, until } = require('selenium-webdriver');
+const { flatMap, result } = require('lodash');
+const YAML = require('yaml');
+
+
+const yargs = require('yargs/yargs')(process.argv.slice(2));
+const argv = yargs.usage('Check health of selenium-federation service.').options({
+  'url': {
+    description: 'url of selenium-federation service',
+    string: true,
+    default: 'http://localhost:4444/wd/hub',
+  },
+  'concurrency': {
+    description: 'concurrency',
+    default: 1,
+    string: true,
+    alias: 'c',
+  }
+}).strict().argv;
+
+(async function example() {
+
+  const res = await axios.request({
+    method: 'GET',
+    url: '/statuses',
+    baseURL: argv.url,
+  });
+
+  console.log(`total nodes: ${res.data.length}`);
+
+  const results = await Bluebird.map( flatMap(res.data, node => node.drivers.map(drv => ({ remoteUrl: node.remoteUrl, ...drv }))), async (opts) => {
+    let driver;
+    let result = {
+      remoteUrl : opts.remoteUrl,
+      browserName: opts.browserName,
+      uuid: opts.uuid,
+    };
+
+    console.log(`start to checking remote driver ${opts.uuid} ${opts.browserName} on ${opts.remoteUrl}`);
+    try {
+      driver = await new Builder()
+        .usingServer(argv.url)
+        .withCapabilities({
+          browserName: opts.browserName,
+          extOptions: { uuid: opts.uuid }
+        }).build();
+      const userAgent = await driver.executeScript("return navigator.userAgent");
+      result.userAgent = userAgent;
+    } catch (e) {
+      console.error(e);
+      result.error = String(e);
+    } finally {
+      if (driver) await driver.close();
+    }
+    return result;
+  }, { concurrency: argv.concurrency });
+  console.log(`Result:\n`);
+  console.log(YAML.stringify(results));
+})().catch(console.error);

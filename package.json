@@ -1,6 +1,6 @@
 {
   "name": "selenium-federation",
-  "version": "0.6.1",
+  "version": "0.6.3",
   "description": "A lightweight alternative to selenium-grid.",
   "main": "dist/main.js",
   "files": [
@@ -10,6 +10,7 @@
   ],
   "bin": {
     "selenium-federation": "./bin/selenium-federation",
+    "selenium-federation-check": "./bin/selenium-federation-check",
     "selenium-federation-pm2-start": "./bin/selenium-federation-pm2-start"
   },
   "scripts": {
@@ -57,6 +58,7 @@
     "koa-swig": "^2.2.1",
     "koa-views": "^7.0.0",
     "lodash": "^4.17.20",
+    "selenium-webdriver": "^4.0.0-alpha.8",
     "systeminformation": "^4.32.0",
     "uuid": "^8.3.1",
     "yaml": "^1.10.0",

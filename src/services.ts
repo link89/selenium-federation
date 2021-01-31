@@ -1,4 +1,4 @@
-import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration, DriverStats } from "./schemas";
+import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration, DriverStats, } from "./schemas";
 import { LocalSession, RemoteSession, Session } from "./sessions";
 import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
 import { Request } from "koa";
@@ -212,7 +212,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
     const stats = this.getStatsByDriver(driver);
     stats.total += 1;
     try {
-      return this.startSession(session, request, driver);
+      return await this.startSession(session, request, driver);
     } catch (e) {
       stats.failed += 1;
       throw e;
@@ -268,7 +268,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
       }).catch(logException);
 
       if (!response) return [];
-      return response.data;
+      return response.data.map(opts => ({ ...opts, remoteUrl: remoteDriver.url }));
     }, { concurrency: 8 })
     return flatten(statuses);
   }

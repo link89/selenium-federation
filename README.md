@@ -1,6 +1,21 @@
 # Selenium Federation
 A lightweight alternative to selenium-grid.
 
+## Introduction
+`selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is compatible with `selenium-grid`.
+
+The followings are the major goals of this project:
+
+* Simple: It should be easy enough to run or make contributions to this project.
+* Lightweight: It is designed to support a browser farm with at most 20 nodes.
+* Unblock limitations of existed solutions: see [here](#differentiation-from-selenium-4).
+
+The following are NOT this project's main focus (at least for now):
+
+* Zero-configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools to start a local service to run tests.
+* Distributed architecture: The project chooses federated architecture for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
+  * I guess it won't be hard to support the distributed mode via `etcd` when there are requirements in the future.
+
 ## Usage
 
 ### Install
@@ -9,14 +24,14 @@ npm install -g selenium-federation
 
 # testing
 selenium-federation --help
+selenium-federation-check --help
 selenium-federation-pm2-start --help
 ```
-
 
 ### Start Local Service
 Prepare configuration file `local.yaml` with the following content.
 
-> CAUTIONS: The relative path in the configuration file is relative to the `current working directory` , a.k.a. the path where you run the `selenium-federation` or `selenium-federation-pm2-start` commands.
+> CAUTIONS: The relative path in the configuration file is relative to the `current working directory`, a.k.a. the path where you run the `selenium-federation` or `selenium-federation-pm2-start` commands.
 
 ```yaml
 port: 4444
@@ -27,7 +42,7 @@ registerTo: http://localhost:5555/wd/hub  # optional, register to a remote servi
 registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
 
 autoRebootThreshold: 1000  # optional, auto reboot the host machine after start this many sessions, default is 0 (disable)
-autoRebootCommand: shutdown /r  # optional, customize auto reboot command, default command depends on the operating system
+autoRebootCommand: shutdown /r  # optional, customize auto-reboot command, default command depends on the operating system
 
 # sentryDSN: # optional, upload message and exception to sentry
 
@@ -66,7 +81,7 @@ localDrivers:
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
 ```
 
-And start the server with following command.
+And start the server with the following command.
 ```bash
 selenium-federation -c local.yaml
 ```
@@ -74,6 +89,10 @@ selenium-federation -c local.yaml
 Now you can access the selenium compatible service via
 `http://localhost:4444/wd/hub`.
 
+It is suggested to run the health check to validate the setup.
+```bash
+selenium-federation-check
+```
 
 ### Start Remote Service
 
@@ -95,6 +114,11 @@ Once there are nodes registered, you can access the selenium compatible service 
 `http://localhost:5555/wd/hub`.
 
 
+It is suggested to run the health check to validate the setup.
+```bash
+selenium-federation-check --url http://localhost:5555/wd/hub
+```
+
 ### Start Service in pm2
 
 `pm2` is a powerful process management tool, but it is tedious to start service with it, especially on Windows system.
@@ -115,7 +139,7 @@ pm2 save  # dump current apps so that they will be brought up automatically afte
 
 The `defaultCapabilities` will be merged with the `desiredCapabilities` received from the client-side before firing the NEW_SESSION request. This is useful when you need to hide the server-side detail from clients.
 
-The below configuration is a real world example to use this feature to support `ChromeCanary`.
+The below configuration is a real-world example to use this feature to support `ChromeCanary`.
 
 ```yaml
 port: 4444

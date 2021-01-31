@@ -65,6 +65,7 @@ export interface SessionDto {
 export type DriverStats = LocalDriver & { sessions: SessionDto[], stats: SessionStats };
 
 export interface NodeStatus {
+  remoteUrl?: string;
   configuration: Partial<Configuration>;
   systemInfo: any;
   drivers: DriverStats[];
