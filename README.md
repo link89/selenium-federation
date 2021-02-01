@@ -221,7 +221,11 @@ This feature is also useful when you test electron based app that configurable v
 
 
 ### Others
-* `browserVersion` can be arbitrary string like `alpha`, `beta`, etc, the restriction of some webdrivers is ignored.
+* `browserVersion` can be an arbitrary string like `alpha`, `beta`, etc, the restriction of some webdrivers is ignored.
 * Read statuses of clusters from the `/wd/hub/statuses` endpoint.
+
+## Know Limitations
+* Using `deleteSession` instead of `closeWindows` or else the service will consider the session still active.
+
 
 ## [FAQ](/FAQ.md)
