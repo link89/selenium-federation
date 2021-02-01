@@ -54,7 +54,7 @@ const argv = yargs.usage('Check health of selenium-federation service.').options
       console.error(e);
       result.error = String(e);
     } finally {
-      if (driver) await driver.close();
+      if (driver) await driver.quit();
     }
     return result;
   }, { concurrency: argv.concurrency });
