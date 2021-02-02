@@ -20,7 +20,7 @@ export const handleRegisterRequest: RequestHandler = async (ctx, next) => {
   await driverService.registerDriver(driver);
   ctx.status = 201;
   next();
-}
+};
 
 export const handleCreateSessionRequest: RequestHandler = async (ctx, next) => {
   logRequest(ctx);
@@ -32,7 +32,7 @@ export const handleCreateSessionRequest: RequestHandler = async (ctx, next) => {
     createSessionLock.signal();
   }
   next();
-}
+};
 
 export const handleSessionRequest: RequestHandler = async (ctx, next) => {
   const params = sanitizeSessionParams(ctx.params);
@@ -43,32 +43,40 @@ export const handleSessionRequest: RequestHandler = async (ctx, next) => {
   if ('DELETE' === ctx.method.toUpperCase() && !params.suffix) {
     await driverService.deleteSession(params.sessionId);
   }
-}
+};
 
 export const handleQueryAvailableDriversRequest: RequestHandler = async (ctx, next) => {
   ctx.body = JSON.stringify(await driverService.getAvailableDrivers());
   ctx.status = 200;
   next();
-}
+};
 
 export const handleGetStatusesRequest: RequestHandler = async (ctx, next) => {
   ctx.body = JSON.stringify(await driverService.getStatuses());
   ctx.status = 200;
   next();
-}
+};
+
+export const handleGetStatusesUi: RequestHandler = async (ctx) => {
+  const nodeStatuses = await driverService.getStatuses();
+  await ctx.render('list', {
+    nodeStatuses: nodeStatuses
+  });
+};
 
 const sanitizeSessionParams = (obj: any): SessionPathParams => {
-  if (!obj.sessionId) throw newHttpError(400, `sessionId is required in path params.`, obj)
+  if (!obj.sessionId) throw newHttpError(400, `sessionId is required in path params.`, obj);
   return { sessionId: obj.sessionId, suffix: obj[0] };
-}
+};
 
 const setResponse = (ctx: Context, response: AxiosResponse) => {
   const data = response?.data;
   ctx.set(response?.headers || {});
   ctx.body = data ? JSON.stringify(data) : data;
   ctx.status = response?.status || 500;
-}
+};
 
 const logRequest = (ctx: Context) => {
   logMessage(JSON.stringify({ ...ctx.request.toJSON(), body: ctx.request.body }, null, 2));
-}
+};
+
