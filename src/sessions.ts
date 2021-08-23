@@ -191,9 +191,6 @@ const sanitizeCreateSessionRequest = (caps: any, defaultCaps?: any) => {
   delete _caps?.capabilities?.alwaysMatch?.browserVersion;
   // merge with default capabilities
   return defaultCaps ? defaultsDeep(_caps, {
-    capabilities: {
-      alwaysMatch: defaultCaps,
-    },
     desiredCapabilities: defaultCaps,
   }) : _caps;
 }
