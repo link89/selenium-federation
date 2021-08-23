@@ -5,8 +5,8 @@ import { Session } from "./sessions";
 
 let driverService: DriverService<Driver, Session>
 
-if (config.localDrivers.length > 0) {
-  driverService = new LocalDriverService(config.localDrivers, config);
+if (config.localDrivers!.length > 0) {
+  driverService = new LocalDriverService(config.localDrivers!, config);
 } else {
   driverService = new RemoteDriverService([], config);
 }

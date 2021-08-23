@@ -109,7 +109,7 @@ export class LocalSession extends Session {
         if (this.isWindows) {
           execSync(`taskkill /T /F /PID ${this.childProcess.pid}`);
         } else {
-          process.kill(-this.childProcess.pid);
+          process.kill(-this.childProcess.pid!);
         }
       } catch (e) {
         logException(e);

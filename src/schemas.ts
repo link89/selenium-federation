@@ -28,7 +28,7 @@ export const configurationSchema = yup.object({
   port: yup.number().default(4444).defined(),
   host: yup.string().default('0.0.0.0').defined(),
   browserIdleTimeout: yup.number().default(60).defined(),
-  localDrivers: yup.array(localDriverSchema).default([]).defined(),
+  localDrivers: yup.array(localDriverSchema).ensure(),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)).defined(),
   registerTimeout: yup.number().default(60).defined(),
   registerTo: yup.string().optional(),
