@@ -34,7 +34,14 @@ const WEBDRIVER_ERRORS = {
 };
 
 const AUTO_CMD_ERRORS = {
-
+  NOT_SUPPORTED: {
+    code: 500,
+    error: 'not supported'
+  },
+  UNKNOWN_ERROR: {
+    code: 500,
+    error: 'unknown error',
+  },
 }
 
 const rmAsync = promisify(fs.rm);
@@ -55,11 +62,16 @@ interface AutoCmdError<T = unknown> extends WebdriverError<T> {
 
 
 class AutoCmdProcess {
+  public readonly axios: AxiosInstance;
 
   constructor(
     private readonly process: ChildProcess,
     public readonly port: number,
-  ) { }
+  ) {
+    this.axios = axios.create({
+      baseURL: `http://localhost:${port}/auto-cmd`,
+    })
+  }
 
   get isActive() {
     return !this.process.killed;
@@ -564,19 +576,31 @@ export class LocalService {
     return await webdriverSession?.getCdpEndpoint();
   }
 
-  public async forwardAutoCmdRequest(req: AxiosRequestConfig): Promise<Either<AutoCmdError,  AxiosResponse>> {
+  public async forwardAutoCmdRequest(request: AxiosRequestConfig): Promise<Either<AutoCmdError,  AxiosResponse>> {
     if (!this.config.autoCmdPath) {
       return Left({
-
-
+        ...AUTO_CMD_ERRORS.NOT_SUPPORTED,
+        message: `auto-cmd not supported due to autoCmdPath is not found in the configuration`,
+        stacktrace: new Error().stack || '',
       })
-
     }
 
+    const autoCmdProcess = await this.processManager.getOrSpawnAutoCmdProcess({ path: this.config.autoCmdPath, args: this.config.autoCmdArgs });
 
+    try {
+      request.validateStatus = alwaysTrue;
+      request.transformRequest = identity;
+      request.transformResponse = identity;
+      const res = await autoCmdProcess.axios.request(request);
+      return Right(res);
+    } catch(e) {
+      return Left({
+        ...AUTO_CMD_ERRORS.UNKNOWN_ERROR,
+        message: e.message || '',
+        stacktrace: e.stack || '',
+      });
+    }
   }
-
-
 }
 
 interface HttpResponse {
