@@ -582,7 +582,6 @@ export class LocalServiceController {
         jsonBody: response.jsonObject,
       });
     });
-    next();
   }
 
   onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
@@ -619,7 +618,6 @@ export class LocalServiceController {
         headers: response.headers,
       });
     });
-    next();
   }
 
   onError: RequestHandler = (ctx, next) => {
