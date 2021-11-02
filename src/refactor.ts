@@ -621,7 +621,7 @@ export class LocalServiceController {
     result.ifLeft(err => {
       this.setHttpResponse(ctx, {
         status: err.code,
-        jsonBody: err,
+        jsonBody: { value: err },
       });
     }).ifRight(response => {
       this.setHttpResponse(ctx, {
@@ -649,13 +649,13 @@ export class LocalServiceController {
       headers: fromRequest.headers,
       params: fromRequest.query,
       timeout: 30e3,
-    }
+    };
 
     const result = await this.localService.forwardWebdriverRequest(sessionId, path, toRequest);
     result.ifLeft(err => {
       this.setHttpResponse(ctx, {
         status: err.code,
-        jsonBody: err,
+        jsonBody: { value: err },
       });
     }).ifRight(response => {
       this.setHttpResponse(ctx, {
@@ -710,7 +710,7 @@ export class LocalServiceController {
     result.ifLeft(err => {
       this.setHttpResponse(ctx, {
         status: err.code,
-        jsonBody: err,
+        jsonBody: { value: err },
       });
     }).ifRight(response => {
       this.setHttpResponse(ctx, {
