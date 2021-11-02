@@ -1,39 +1,46 @@
 import Koa from "koa";
-import Router from "koa-router";
-import bodyParser from 'koa-bodyparser';
+import Router from "@koa/router";
+import bodyparser from "koa-bodyparser";
 
+import * as ws from 'ws';
 import { config } from "./config";
-import { handleRegisterRequest, handleCreateSessionRequest, handleQueryAvailableDriversRequest , handleSessionRequest, handleGetStatusesRequest } from "./controllers";
-import { handleError } from "./error";
 import * as Sentry from "@sentry/node";
-import { logMessage } from "./utils";
+
+import { LocalService, LocalServiceController, ProcessManager } from "./refactor";
 
 Sentry.init({
   dsn: config.sentryDSN,
   debug: config.sentryDebug,
 });
 
-const router = new Router();
-router
-  .get('/available-drivers', handleQueryAvailableDriversRequest)
-  .get('/statuses', handleGetStatusesRequest)
-  .post('/register', handleRegisterRequest)
-  .post('/session', handleCreateSessionRequest)
-  .all([
-    '/session/:sessionId',
-    '/session/:sessionId/(.*)',
-  ], handleSessionRequest);
+const processManager = new ProcessManager();
+const localService = LocalService.of(config, processManager);
+localService.init();
+const localServiceController = new LocalServiceController(localService);
 
-const baseRouter = new Router()
-baseRouter.use('/wd/hub', router.routes(), router.allowedMethods());
+const webdirverRouter = new Router();
+webdirverRouter
+  .post('/session', localServiceController.onNewWebdriverSessionRequest)
+  .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
+  .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onForwardWebdirverSessionRqeust)
+  // TODO
+  .get('/best-match')
+  .get('/statuses');
+
+
+const router = new Router()
+router.use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods());
 
 const app = new Koa();
-app.use(handleError);
-app.use(bodyParser());
-app.use(baseRouter.routes()).use(baseRouter.allowedMethods());
+app.use(bodyparser());
+app.use(router.routes()).use(router.allowedMethods());
+app.use(localServiceController.onError);
 
 // set host to a ipv4 address or else request ip will be ipv6 format
 // https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback
-app.listen(config.port, config.host, () => {
-  logMessage(`selenium-federation is starting at port ${config.port}`);
+const server = app.listen(config.port, config.host, () => {
+  console.log(`selenium-federation is starting at port ${config.port}`);
 });
+
+// handle websocket connection
+server.on('upgrade', localServiceController.onWebsocketUpgrade);

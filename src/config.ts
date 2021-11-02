@@ -10,6 +10,4 @@ export const argv = yargs(process.argv.slice(2)).
   }).argv;
 
 const rawConfig = argv.c ? parse(fs.readFileSync(argv.c, 'utf-8')) : {}
-
-configurationSchema.validateSync(rawConfig);
-export const config = configurationSchema.cast(rawConfig);
+export const config = configurationSchema.validateSync(rawConfig);

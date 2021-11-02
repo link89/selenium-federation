@@ -1,17 +1,20 @@
 import { AxiosResponse } from "axios";
 import { Context } from "koa";
 import { driverService } from "./runtime";
-import { RemoteDriver, SessionPathParams } from "./schemas";
+import { RemoteDriverConfiguration, SessionPathParams } from "./schemas";
 import { logMessage, Semaphore } from "./utils";
 import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
 import { newHttpError } from "./error";
 
-export type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void>;
+import {IncomingMessage} from 'http'
+
+
+export type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void> | void;
 
 const createSessionLock = new Semaphore(1);
 
 export const handleRegisterRequest: RequestHandler = async (ctx, next) => {
-  const driver: RemoteDriver = {
+  const driver: RemoteDriverConfiguration = {
     registerAt: Date.now(),
     ...ctx.request.body,
   };

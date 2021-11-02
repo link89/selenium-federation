@@ -1,4 +1,4 @@
-import { RemoteDriver, LocalDriver, DriverMatchCriteria, SessionPathParams, localDriverSchema, Configuration, DriverStats, } from "./schemas";
+import { RemoteDriverConfiguration, LocalDriverConfiguration, DriverMatchCriteria, SessionPathParams, localDriverConfigurationSchema, Configuration, DriverStats, } from "./schemas";
 import { LocalSession, RemoteSession, Session } from "./sessions";
 import { DEFAULT_HOST_IP_PLACEHOLDER } from "./constants";
 import { Request } from "koa";
@@ -105,15 +105,15 @@ export abstract class DriverService<D extends object, S extends Session>{
   onSessionDelete() {}
 
   abstract init(): void;
-  abstract registerDriver(driver: RemoteDriver): Promise<void>;
-  abstract getAvailableDrivers(): Promise<LocalDriver[]>;
+  abstract registerDriver(driver: RemoteDriverConfiguration): Promise<void>;
+  abstract getAvailableDrivers(): Promise<LocalDriverConfiguration[]>;
   abstract createSession(request: Request): Promise<AxiosResponse>;
   abstract getStatuses(): Promise<NodeStatus[]>;
 }
 
 
 
-export class LocalDriverService extends DriverService<LocalDriver, LocalSession> {
+export class LocalDriverService extends DriverService<LocalDriverConfiguration, LocalSession> {
 
   public sessionsUpdateListeners: (() => any)[] = [];
 
@@ -179,7 +179,7 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
     }
   }
 
-  async registerDriver(driver: RemoteDriver) {
+  async registerDriver(driver: RemoteDriverConfiguration) {
     throw Error("This node is running on local mode.");
   }
 
@@ -233,12 +233,12 @@ export class LocalDriverService extends DriverService<LocalDriver, LocalSession>
 }
 
 
-export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSession> {
+export class RemoteDriverService extends DriverService<RemoteDriverConfiguration, RemoteSession> {
   init() {
     logMessage(`working on remote mode`);
   }
 
-  private async checkHealth(driver: RemoteDriver) {
+  private async checkHealth(driver: RemoteDriverConfiguration) {
     return axios.request({
       method: 'GET',
       baseURL: driver.url,
@@ -247,7 +247,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
     });
   }
 
-  async registerDriver(driver: RemoteDriver) {
+  async registerDriver(driver: RemoteDriverConfiguration) {
     await this.checkHealth(driver);
     const found = this.drivers.find(d => d.url === driver.url);
     if (found) {
@@ -279,7 +279,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
 
   async createSession(request: Request) {
     const criteria = getMatchCriteria(request.body);
-    const candidates: [RemoteDriver, LocalDriver][] = (await this.getCandidates())
+    const candidates: [RemoteDriverConfiguration, LocalDriverConfiguration][] = (await this.getCandidates())
       .filter(([remoteDriver, localDriver]) => isCriteriaMatch(localDriver, criteria));
 
     if (!candidates.length) {
@@ -290,13 +290,13 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
     return this.startSession(session, request, driver);
   }
 
-  private getTheLeastBusyDriver(candidates: [RemoteDriver, LocalDriver][]): RemoteDriver {
+  private getTheLeastBusyDriver(candidates: [RemoteDriverConfiguration, LocalDriverConfiguration][]): RemoteDriverConfiguration {
     return minBy(shuffle(candidates), ([rd, ld]) => this.getSessionsByDriver(rd)?.size || Number.MAX_VALUE)![0];
   }
 
-  private async getCandidates(): Promise<[RemoteDriver, LocalDriver][]> {
-    const packedCandidates: [RemoteDriver, LocalDriver][][] = await Bluebird.map(this.activeRemoteDriver, async remoteDriver => {
-      const response = await axios.request<LocalDriver[]>({
+  private async getCandidates(): Promise<[RemoteDriverConfiguration, LocalDriverConfiguration][]> {
+    const packedCandidates: [RemoteDriverConfiguration, LocalDriverConfiguration][][] = await Bluebird.map(this.activeRemoteDriver, async remoteDriver => {
+      const response = await axios.request<LocalDriverConfiguration[]>({
         method: 'GET',
         baseURL: remoteDriver.url,
         url: '/available-drivers',
@@ -305,7 +305,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
 
       if (!response) return [];
       return response.data.
-        filter(localDriver => localDriverSchema.isValidSync(localDriver)).
+        filter(localDriver => localDriverConfigurationSchema.isValidSync(localDriver)).
         map(localDriver => [remoteDriver, localDriver]);
     }, { concurrency: 8 });
     return flatten(packedCandidates);
@@ -317,7 +317,7 @@ export class RemoteDriverService extends DriverService<RemoteDriver, RemoteSessi
   }
 }
 
-const isCriteriaMatch = (driver: LocalDriver, criteria: DriverMatchCriteria): boolean =>
+const isCriteriaMatch = (driver: LocalDriverConfiguration, criteria: DriverMatchCriteria): boolean =>
   (criteria.browserName? driver.browserName === criteria.browserName: true) &&
   (criteria.tags.every(tag => driver.tags!.includes(tag))) &&
   (criteria.platformName ? driver.platformName === criteria.platformName : true) &&
