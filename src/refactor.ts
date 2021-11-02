@@ -580,14 +580,13 @@ export class LocalService {
     if (!this.config.autoCmdPath) {
       return Left({
         ...AUTO_CMD_ERRORS.NOT_SUPPORTED,
-        message: `auto-cmd not supported due to autoCmdPath is not found in the configuration`,
+        message: `auto-cmd not supported on this node due to miss autoCmdPath in configuration`,
         stacktrace: new Error().stack || '',
-      })
+      });
     }
 
-    const autoCmdProcess = await this.processManager.getOrSpawnAutoCmdProcess({ path: this.config.autoCmdPath, args: this.config.autoCmdArgs });
-
     try {
+      const autoCmdProcess = await this.processManager.getOrSpawnAutoCmdProcess({ path: this.config.autoCmdPath, args: this.config.autoCmdArgs });
       request.validateStatus = alwaysTrue;
       request.transformRequest = identity;
       request.transformResponse = identity;
