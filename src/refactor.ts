@@ -33,6 +33,10 @@ const WEBDRIVER_ERRORS = {
   },
 };
 
+const AUTO_CMD_ERRORS = {
+
+}
+
 const rmAsync = promisify(fs.rm);
 const alwaysTrue = () => true;
 const identity = (i: any) => i;
@@ -43,6 +47,10 @@ interface WebdriverError<T = unknown> {
   message: string;
   stacktrace: string;
   data?: T;
+}
+
+// just a alias
+interface AutoCmdError<T = unknown> extends WebdriverError<T> {
 }
 
 
@@ -428,12 +436,14 @@ export class LocalService {
     return new LocalService(
       config,
       config.localDrivers.map(localDriver => new LocalWebdriverManager(config, localDriver, processManager)),
+      processManager,
     );
   }
 
   constructor(
     private readonly config: Configuration,
     private readonly localDriverManagers: LocalWebdriverManager[],
+    private readonly processManager: ProcessManager,
   ) { }
 
   init() {
@@ -503,7 +513,7 @@ export class LocalService {
     await driverManager.destroySession(sessiondId);
   }
 
-  public async forwardWebdriverSession(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
+  public async forwardWebdriverRequest(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
     const session = this.getWebdriverSessionById(sessionId);
     if (!session) {
       return Left({
@@ -553,6 +563,20 @@ export class LocalService {
     const webdriverSession = this.getWebdriverSessionById(sessionId);
     return await webdriverSession?.getCdpEndpoint();
   }
+
+  public async forwardAutoCmdRequest(req: AxiosRequestConfig): Promise<Either<AutoCmdError,  AxiosResponse>> {
+    if (!this.config.autoCmdPath) {
+      return Left({
+
+
+      })
+
+    }
+
+
+  }
+
+
 }
 
 interface HttpResponse {
@@ -605,7 +629,7 @@ export class LocalServiceController {
       timeout: 30e3,
     }
 
-    const result = await this.localService.forwardWebdriverSession(sessionId, path, toRequest);
+    const result = await this.localService.forwardWebdriverRequest(sessionId, path, toRequest);
     result.ifLeft(err => {
       this.setHttpResponse(ctx, {
         status: err.code,

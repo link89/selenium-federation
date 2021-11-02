@@ -20,12 +20,13 @@ const localServiceController = new LocalServiceController(localService);
 
 const webdirverRouter = new Router();
 webdirverRouter
-  .post('/session', localServiceController.onNewWebdriverSessionRequest)
-  .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
   .post('/session/:sessionId/auto-cmd', () => null)
-  .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onForwardWebdirverSessionRqeust)
   .post('/node/:nodeId/auto-cmd', () => null)
   .post('/node/auto-cmd', () => null)
+
+  .post('/session', localServiceController.onNewWebdriverSessionRequest)
+  .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
+  .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onForwardWebdirverSessionRqeust)
 
   // TODO
   .get('/best-match')

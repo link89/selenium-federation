@@ -40,7 +40,8 @@ export const configurationSchema = yup.object({
   sentryDSN: yup.string().optional(),
   sentryDebug: yup.boolean().default(false),
 
-  autoCmdCommand: yup.string().optional(),
+  autoCmdPath: yup.string().optional(),
+  autoCmdArgs: yup.array(yup.string().defined()).default([]),
 }).defined();
 
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
