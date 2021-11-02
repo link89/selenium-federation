@@ -639,10 +639,9 @@ export class LocalServiceController {
       status: 200,
       jsonBody: { value: null },
     });
-    // don't call next() to workaroud koa-router's multiple match bug
   }
 
-  onForwardWebdirverSessionRqeust: RequestHandler = async (ctx, next) => {
+  onWebdirverSessionRqeust: RequestHandler = async (ctx, next) => {
     const { sessionId, path } = this.getSessionParams(ctx);
     const fromRequest: Request = ctx.request;
     const toRequest: AxiosRequestConfig = {
@@ -696,6 +695,31 @@ export class LocalServiceController {
       target: cdpEndpoint,
     });
     proxy.ws(req, socket, header);
+  }
+
+  onAutoCmdRequest: RequestHandler = async (ctx, next) => {
+    const fromRequest: Request = ctx.request;
+    const toRequest: AxiosRequestConfig = {
+      method: fromRequest.method as any,
+      data: fromRequest.rawBody,
+      headers: fromRequest.headers,
+      params: fromRequest.query,
+      timeout: 30e3,
+    }
+
+    const result = await this.localService.forwardAutoCmdRequest(toRequest);
+    result.ifLeft(err => {
+      this.setHttpResponse(ctx, {
+        status: err.code,
+        jsonBody: err,
+      });
+    }).ifRight(response => {
+      this.setHttpResponse(ctx, {
+        status: 200,
+        body: response.data,
+        headers: response.headers,
+      });
+    });
   }
 
   private cdpPathPattern = match<{ sessionId: string }>('/wd/hub/session/:sessionId/se/cdp', { decode: decodeURIComponent });

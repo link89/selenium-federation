@@ -20,18 +20,17 @@ const localServiceController = new LocalServiceController(localService);
 
 const webdirverRouter = new Router();
 webdirverRouter
-  .post('/session/:sessionId/auto-cmd', () => null)
-  .post('/node/:nodeId/auto-cmd', () => null)
-  .post('/node/auto-cmd', () => null)
-
+  // handle auto-cmd request
+  .post('/session/:sessionId/auto-cmd', localServiceController.onAutoCmdRequest)
+  .post('/node/:nodeId/auto-cmd', localServiceController.onAutoCmdRequest)
+  .post('/node/auto-cmd', localServiceController.onAutoCmdRequest)
+  // handle webdriver session
   .post('/session', localServiceController.onNewWebdriverSessionRequest)
   .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
-  .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onForwardWebdirverSessionRqeust)
-
-  // TODO
-  .get('/best-match')
+  .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionRqeust)
+  // handle federation
+  .post('/register')
   .get('/statuses');
-
 
 const router = new Router()
 router.use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods());
