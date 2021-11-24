@@ -88,10 +88,11 @@ export class ProcessManager {
   ) { }
 
   async init() {
-    const autoCmdProcess = await this.getOrSpawnAutoCmdProcess()
+    const autoCmdProcess = await this.getOrSpawnAutoCmdProcess();
     if (autoCmdProcess) {
-
-
+      const data = JSON.stringify({args: 'health_check'});
+      // wait for auto-cmd-http server ready
+      await retry(async () => await autoCmdProcess.axios.post('/', data), { max: 10, interval: 1e3 });
     }
   }
 
