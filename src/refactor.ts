@@ -316,6 +316,7 @@ export class WebdirverSession {
 
   private async createSession(request: RequestCapabilities) {
     const res = await this.axios.post('/session', this.withDefaultCaps(request.sanitizedCapbilities));
+
     return new ResponseCapabilities(res.data, request);
   }
 

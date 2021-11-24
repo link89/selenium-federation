@@ -1,8 +1,8 @@
 import Koa from "koa";
 import Router from "@koa/router";
 import bodyparser from "koa-bodyparser";
+import logger from  "koa-logger";
 
-import * as ws from 'ws';
 import { config } from "./config";
 import * as Sentry from "@sentry/node";
 
@@ -37,6 +37,7 @@ router.use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods()
 
 const app = new Koa();
 app.use(bodyparser());
+app.use(logger());
 app.use(router.routes()).use(router.allowedMethods());
 app.use(localServiceController.onError);
 
