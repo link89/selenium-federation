@@ -69,7 +69,7 @@ class AutoCmdProcess {
     public readonly port: number,
   ) {
     this.axios = axios.create({
-      baseURL: `http://localhost:${port}/auto-cmd`,
+      baseURL: `http://localhost:${port}/auto-cmd/`,
     })
   }
 
@@ -113,11 +113,12 @@ export class ProcessManager {
     if (this.autoCmdProcess && this.autoCmdProcess.isActive) return this.autoCmdProcess;
     const port = await getPort();
     const autoCmdprocess = spawn(params.path, [...params.args, `--port=${port}`],
-      { stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows, env: process.env }
+      { stdio: 'inherit', windowsHide: this.isWindows, env: process.env }
     );
     this.autoCmdProcess = new AutoCmdProcess(autoCmdprocess, port);
     return this.autoCmdProcess;
   }
+
 }
 
 const CUSTOM_CAPS = {

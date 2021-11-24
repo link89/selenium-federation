@@ -23,7 +23,7 @@ webdirverRouter
   // handle auto-cmd request
   .post('/session/:sessionId/auto-cmd', localServiceController.onAutoCmdRequest)
   .post('/node/:nodeId/auto-cmd', localServiceController.onAutoCmdRequest)
-  .post('/node/auto-cmd', localServiceController.onAutoCmdRequest)
+  .all('/auto-cmd', localServiceController.onAutoCmdRequest)
   // handle webdriver session
   .post('/session', localServiceController.onNewWebdriverSessionRequest)
   .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
