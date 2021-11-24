@@ -139,11 +139,14 @@ pm2 save  # dump current apps so that they will be brought up automatically afte
 ```
 
 
-## Differentiation from Selenium 4
+## Differentiation from Selenium4 and other solutions
 
 ### Support provider specificed capabilities (start with sf:)
-* sf:tags
-* sf:envs
+Currently support:
+* sf:tags: use tags for matching
+* sf:envs: set environment variable for browser or electron app
+
+The detail can be found in the foloowing sections.
 
 
 ### Default Capabilities
@@ -184,7 +187,7 @@ const opt = {
   capabilities: {
     browserName: 'chrome',
     browserVersion: 'canary',  // example of using browserVersion as tag
-    sf:tags: [97],             // example of using tags
+    "sf:tags": [97],             // example of using tags
   }
 };
 const url = "https://github.com";
@@ -204,7 +207,7 @@ const opt = {
   hostname: 'localhost', port: 4444, path: '/wd/hub',
   capabilities: {
     browserName: 'firefox',
-    sf:envs: {
+    "sf:envs": {
       MOZ_WEBRENDER: '1',
     }
   }
