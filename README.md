@@ -1,11 +1,12 @@
 # Selenium Federation
-A lightweight alternative to selenium4.
+A lightweight alternative to `selenium4`.
 
 ## Introduction
 `selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is 95% compatible with `selenium4`.
 
-### Selenium 4 Compatibility Highlight
-* CDP proxy
+### Feature Highlight
+* CDP proxy (compatible with `selenium4`)
+* Support desktop native function with `auto-cmd`
 
 The followings are the major goals of this project:
 
@@ -46,8 +47,7 @@ registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this s
 
 sentryDSN: # optional, upload error to sentry
 
-autoCmdPath: auto-cmd-http  # optional, use with 
-
+autoCmdPath: auto-cmd-http  # optional, use with auto-cmd
 
 localDrivers:
   - browserName: firefox
