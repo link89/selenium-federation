@@ -4,17 +4,17 @@ A lightweight alternative to `selenium4`.
 ## Introduction
 `selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is 95% compatible with `selenium4`.
 
-### Feature Highlight
+### Highlights
 * CDP proxy (compatible with `selenium4`)
-* Support desktop native function with `auto-cmd`
+* Extend desktop support with `auto-cmd`
 
-The followings are the major goals of this project:
+**The followings are the major goals of this project:**
 
 * Simple: It should be easy enough to run or make contributions to this project.
 * Lightweight: It is designed to support a browser farm with at most 20 nodes.
 * Unblock limitations of existed solutions: see [here](#differentiation-from-selenium-4).
 
-The following are NOT this project's main focus (at least for now):
+**The following are *NOT* this project's main focus (at least for now):**
 
 * Zero-configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools to start a local service to run tests.
 * Distributed architecture: The project chooses federated architecture for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
