@@ -1,6 +1,7 @@
 import yargs from 'yargs/yargs';
 import { parse } from 'yaml';
 import fs from 'fs';
+import path from 'path';
 import { configurationSchema } from './schemas';
 
 export const argv = yargs(process.argv.slice(2)).
@@ -9,5 +10,9 @@ export const argv = yargs(process.argv.slice(2)).
     c: { type: 'string', demandOption: true, description: 'configuration file' },
   }).argv;
 
-const rawConfig = argv.c ? parse(fs.readFileSync(argv.c, 'utf-8')) : {}
+const configFilePath = path.resolve(argv.c);
+
+const rawConfig = parse(fs.readFileSync(argv.c, 'utf-8'));
+rawConfig.configFilePath = configFilePath;
+
 export const config = configurationSchema.validateSync(rawConfig);

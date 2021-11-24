@@ -2,8 +2,9 @@ import { spawn, execSync, ChildProcess } from 'child_process';
 import { Duplex } from "stream";
 import { promisify } from 'util';
 import * as yup from 'yup';
-import * as fs from 'fs';
-import * as _ from 'lodash';
+import fs from 'fs';
+import _ from 'lodash';
+import { join as joinPath, dirname } from 'path';
 import { createProxyServer } from 'http-proxy';
 
 import { IncomingMessage } from 'http';
@@ -113,7 +114,14 @@ export class ProcessManager {
 
   async spawnWebdriverProcess(params: { path: string, args: string[], envs: { [key: string]: string } }) {
     const port = await getPort();
-    const webdriverProcess = spawn(params.path, [...params.args, `--port=${port}`],
+    let path = params.path;
+    // a path start with // means relative to the configuration file
+    if (path.startsWith('//')) {
+      path = joinPath(dirname(this.config.configFilePath), params.path.substring(1));
+    }
+    console.log(`start webdriver process ${path} ${params.args}`);
+
+    const webdriverProcess = spawn(path, [...params.args, `--port=${port}`],
       {
         stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
         env: { ...process.env, ...params.envs, }

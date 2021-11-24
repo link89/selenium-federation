@@ -42,6 +42,7 @@ export const configurationSchema = yup.object({
 
   autoCmdPath: yup.string().optional(),
   autoCmdArgs: yup.array(yup.string().defined()).default([]),
+  configFilePath: yup.string().defined(),
 }).defined();
 
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
