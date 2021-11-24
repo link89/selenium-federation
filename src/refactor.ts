@@ -83,7 +83,18 @@ export class ProcessManager {
 
   private autoCmdProcess?: AutoCmdProcess;
 
-  constructor() { }
+  constructor(
+    private config: Configuration,
+  ) { }
+
+  async init() {
+    const autoCmdProcess = await this.getOrSpawnAutoCmdProcess()
+    if (autoCmdProcess) {
+
+
+    }
+  }
+
 
   get isWindows() {
     return "win32" === process.platform;
@@ -109,10 +120,14 @@ export class ProcessManager {
     return { port, webdriverProcess };
   }
 
-  async getOrSpawnAutoCmdProcess(params: { path: string, args: string[] }) {
+  async getOrSpawnAutoCmdProcess() {
+    const path = this.config.autoCmdPath;
+    if (!path) return null;
+    const args = this.config.autoCmdArgs;
+
     if (this.autoCmdProcess && this.autoCmdProcess.isActive) return this.autoCmdProcess;
     const port = await getPort();
-    const autoCmdprocess = spawn(params.path, [...params.args, `--port=${port}`],
+    const autoCmdprocess = spawn(path, [...args, `--port=${port}`],
       { stdio: 'inherit', windowsHide: this.isWindows, env: process.env }
     );
     this.autoCmdProcess = new AutoCmdProcess(autoCmdprocess, port);
@@ -579,16 +594,16 @@ export class LocalService {
   }
 
   public async forwardAutoCmdRequest(request: AxiosRequestConfig): Promise<Either<AutoCmdError,  AxiosResponse>> {
-    if (!this.config.autoCmdPath) {
-      return Left({
-        ...AUTO_CMD_ERRORS.NOT_SUPPORTED,
-        message: `auto-cmd not supported on this node due to miss autoCmdPath in configuration`,
-        stacktrace: new Error().stack || '',
-      });
-    }
 
     try {
-      const autoCmdProcess = await this.processManager.getOrSpawnAutoCmdProcess({ path: this.config.autoCmdPath, args: this.config.autoCmdArgs });
+      const autoCmdProcess = await this.processManager.getOrSpawnAutoCmdProcess();
+      if (!autoCmdProcess) {
+        return Left({
+          ...AUTO_CMD_ERRORS.NOT_SUPPORTED,
+          message: `auto-cmd not supported on this node due to miss autoCmdPath in configuration`,
+          stacktrace: new Error().stack || '',
+        });
+      }
       request.validateStatus = alwaysTrue;
       request.transformRequest = identity;
       request.transformResponse = identity;
