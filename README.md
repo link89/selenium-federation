@@ -17,8 +17,8 @@ A lightweight alternative to `selenium4`.
 **The following are *NOT* this project's main focus (at least for now):**
 
 * Zero-configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools to start a local service to run tests.
-* Distributed architecture: The project chooses federated architecture for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
-  * I guess it won't be hard to support the distributed mode via `etcd` when there are requirements in the future.
+* Distributed architecture: I choose **federated architecture** for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
+  * I don't think it will be hard to support distributed mode by using `etcd` to share state in the future, if necessary.
 
 ## Usage
 
