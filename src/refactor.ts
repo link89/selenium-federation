@@ -714,7 +714,7 @@ export class LocalServiceController {
     if (!cdpEndpoint) {
       return socket.destroy();
     }
-    // FIXME: I'am not should if the proxy will never reclaim by the system.
+    // FIXME: I'am not should if the proxy will get reclaimed by the system.
     // Potential memory leak risk alert!
     const proxy = createProxyServer({
       target: cdpEndpoint,

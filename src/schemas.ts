@@ -1,6 +1,6 @@
 import * as yup from 'yup';
 import * as os from 'os';
-import { getDefaultRebootCommand, getW3CPlatformName } from './utils';
+import { getW3CPlatformName } from './utils';
 import { v4 as uuidv4 } from 'uuid';
 
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
@@ -30,7 +30,6 @@ export const configurationSchema = yup.object({
   host: yup.string().default('0.0.0.0'),
   uuid: yup.string().default(() => uuidv4()),
   browserIdleTimeout: yup.number().default(60),
-  localDrivers: yup.array(localDriverConfigurationSchema).optional(),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
 
   registerTimeout: yup.number().default(60),
@@ -43,6 +42,8 @@ export const configurationSchema = yup.object({
   autoCmdPath: yup.string().optional(),
   autoCmdArgs: yup.array(yup.string().defined()).default([]),
   configFilePath: yup.string().defined(),
+
+  localDrivers: yup.array(localDriverConfigurationSchema).optional(),
 }).defined();
 
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };

@@ -1,8 +1,11 @@
 # Selenium Federation
-A lightweight alternative to selenium-grid.
+A lightweight alternative to selenium4.
 
 ## Introduction
-`selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is compatible with `selenium-grid`.
+`selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is 95% compatible with `selenium4`.
+
+### Selenium 4 Compatibility Highlight
+* CDP proxy
 
 The followings are the major goals of this project:
 
@@ -41,15 +44,15 @@ maxSessions: 5  # limit the max sessions, default to Math.max(1, os.cpus().lengt
 registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
 registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
 
-autoRebootThreshold: 1000  # optional, auto reboot the host machine after start this many sessions, default is 0 (disable)
-autoRebootCommand: shutdown /r  # optional, customize auto-reboot command, default command depends on the operating system
+sentryDSN: # optional, upload error to sentry
 
-# sentryDSN: # optional, upload message and exception to sentry
+autoCmdPath: auto-cmd-http  # optional, use with 
+
 
 localDrivers:
   - browserName: firefox
     maxSessions: 2  # limit the max session of specific driver, default value is 1
-    webdriverPath: geckodriver # Support global webdriver command.
+    webdriverPath: geckodriver 
 
   - browserName: safari
     maxSessions: 1
@@ -57,25 +60,28 @@ localDrivers:
 
   - browserName: MicrosoftEdge
     maxSessions: 2
-    webdriverPath: msedgedriver
+    webdriverPath: msedgedriver # Support global webdriver command (can be found in PATH envvar)
 
   - browserName: chrome
-    browserVersion: stable # support customized version value
+    browserVersion: stable # support customized version value (or you can use tags)
     maxSessions: 2
-    webdriverPath: ./chromedriver-stable  # Also support relative/absolute path to webdriver.
+    tags: [95]
+    webdriverPath: ./chromedriver-stable  # support relative (to CWD) path to webdriver (start with ./)
 
   - browserName: chrome
     browserVersion: beta
+    tags: [96]
     maxSessions: 2
-    webdriverPath: ./chromedriver-beta
+    webdriverPath: //chromedriver-beta  # support relative to THIS configuration file (start with //)
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
 
   - browserName: chrome
     browserVersion: canary
+    tags: [97]
     maxSessions: 2
-    webdriverPath: ./chromedriver-canary
+    webdriverPath: /usr/local/bin/chromedriver-canary  # support absolute path
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
@@ -135,6 +141,11 @@ pm2 save  # dump current apps so that they will be brought up automatically afte
 
 ## Differentiation from Selenium 4
 
+### Support provider specificed capabilities (start with sf:)
+* sf:tags
+* sf:envs
+
+
 ### Default Capabilities
 
 The `defaultCapabilities` will be merged with the `desiredCapabilities` received from the client-side before firing the NEW_SESSION request. This is useful when you need to hide the server-side detail from clients.
@@ -148,9 +159,8 @@ browserIdleTimeout: 60
 localDrivers:
   - browserName: chrome
     browserVersion: canary
-    tags:
-      - canary
-    webdriverPath: ./chromedriver-canary
+    tags: [97]
+    webdriverPath: //chromedriver-canary
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
@@ -158,14 +168,9 @@ localDrivers:
 
 Address this [limitation](https://github.com/SeleniumHQ/selenium/issues/8745) of selenium.
 
-### Restart host machine automatically
-
-Errors are found after a host machine running as a selenium node for a long time. `selenium-federation` provide an auto reboot mechanism to work around this problem by setting the `autoRebootThreshold` and `autoRebootCommand`.
-
-
 ### Matching with Tags
 
-`tags` fields can be used in `localDrivers` to distinguish the configuration items with same `browserName`. The client-side can set the `extOptions.tags` in capabilities to make use of this feature.
+`tags` fields can be used in `localDrivers` to distinguish the configuration items with same `browserName`. The client-side can set the `sf:tags` in capabilities to make use of this feature.
 
 You can also use `browserVersion` fields for the same purpose, but `tags` mechanism provides more flexibility.
 
@@ -178,10 +183,8 @@ const opt = {
   hostname: 'localhost', port: 4444, path: '/wd/hub',
   capabilities: {
     browserName: 'chrome',
-    browserVersion: 'canary',  // example of using browserVersion
-    extOptions: {
-      tags: ['canary'],  // example of using tags
-    }
+    browserVersion: 'canary',  // example of using browserVersion as tag
+    sf:tags: [97],             // example of using tags
   }
 };
 const url = "https://github.com";
@@ -193,7 +196,7 @@ void (async () => {
 
 ### Customize Environment Variables
 
-When specific environment variables need to be set when starting webdriver process or browsers, for example, to enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `localDriver.webdriverEnvs` field in the configuration file, or setting the `envOptions.envs` field in the capabilities.
+When specific environment variables need to be set when starting webdriver process or browsers, for example, to enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `localDriver.webdriverEnvs` field in the configuration file, or setting the `sf:envs` field in the capabilities.
 
 ```typescript
 import { remote } from "webdriverio";
@@ -201,10 +204,8 @@ const opt = {
   hostname: 'localhost', port: 4444, path: '/wd/hub',
   capabilities: {
     browserName: 'firefox',
-    extOptions: {
-      envs: {
-        MOZ_WEBRENDER: '1',
-      }
+    sf:envs: {
+      MOZ_WEBRENDER: '1',
     }
   }
 };
