@@ -91,12 +91,11 @@ export class ProcessManager {
   async init() {
     const autoCmdProcess = await this.getOrSpawnAutoCmdProcess();
     if (autoCmdProcess) {
-      const data = JSON.stringify({args: 'health_check'});
+      const data = { args: 'health_check' };
       // wait for auto-cmd-http server ready
-      await retry(async () => await autoCmdProcess.axios.post('/', data), { max: 10, interval: 1e3 });
+      await retry(async () => await autoCmdProcess.axios.post('/', data), { max: 20, interval: 1e3 });
     }
   }
-
 
   get isWindows() {
     return "win32" === process.platform;
@@ -150,7 +149,6 @@ const CUSTOM_CAPS = {
   ENVS: 'sf:envs',
   CLEAN_DATA: 'sf:cleanData',
 };
-
 
 
 class RequestCapabilities {
