@@ -1,0 +1,13 @@
+port: 4444
+browserIdleTimeout: 60  # browser processes will be killed after session inactive after browserIdleTimeout
+maxSessions: 5  # limit the max sessions, default to Math.max(1, os.cpus().length - 1)
+
+
+sentryDSN: # optional, upload error to sentry
+
+autoCmdPath: auto-cmd-http  # optional, use with auto-cmd
+
+localDrivers:
+  - browserName: chrome
+    maxSessions: 2  # limit the max session of specific driver, default value is 1
+    webdriverPath: geckodriver 

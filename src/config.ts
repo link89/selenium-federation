@@ -11,6 +11,8 @@ export const argv = yargs(process.argv.slice(2)).
   }).argv;
 
 const configFilePath = path.resolve(argv.c);
+console.log(configFilePath)
+const data = fs.readFileSync(argv.c, 'utf-8')
 
 const rawConfig = parse(fs.readFileSync(argv.c, 'utf-8'));
 rawConfig.configFilePath = configFilePath;
