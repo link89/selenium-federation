@@ -6,7 +6,8 @@ import logger from  "koa-logger";
 import { config } from "./config";
 import * as Sentry from "@sentry/node";
 
-import { LocalService, LocalServiceController, ProcessManager } from "./refactor";
+import { LocalService, ProcessManager } from "./refactor";
+import { LocalServiceController } from "./controllers";
 
 Sentry.init({
   dsn: config.sentryDSN,

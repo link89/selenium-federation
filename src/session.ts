@@ -1,11 +1,11 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import _ from 'lodash';
 import { retry, rmAsync } from "./utils";
 import { ChildProcess } from 'child_process';
 import { ProcessManager } from "./refactor";
 import { LocalDriverConfiguration } from "./schemas";
 import { Request } from 'koa';
 import * as yup from 'yup';
+import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 
 const CUSTOM_CAPS_FIELDS = {
@@ -16,13 +16,10 @@ const CUSTOM_CAPS_FIELDS = {
 
 export class RequestCapabilities {
 
-  get data(): any {
-    return this.request.body;
-  }
+  get data() { return this.request.body as any; }
+  get href() { return this.request.href.replace(/\/$/, ""); }
 
   constructor(private request: Request) { }
-
-  get href() { return this.request.href.replace(/\/$/, ""); }
 
   getSessionBaseUrl(isWebsocket: boolean) {
     let proto = this.request.protocol;
@@ -52,9 +49,6 @@ export class RequestCapabilities {
     }
   }
 
-  get isChrome() { return 'chrome' == this.browserName }
-  get isAutoCmd() { return 'auto-cmd' == this.browserName }
-
   private getValue(key: string): unknown {
     const caps = this.data.capabilities?.alwaysMatch || this.data.desiredCapabilities || {};
     return caps[key];
@@ -62,7 +56,6 @@ export class RequestCapabilities {
 
   get sanitizedCapbilities() {
     const caps = _.cloneDeep(this.data || {});
-
     for (const key of ['browserVersion', 'extOptions', 'tags', ...Object.values(CUSTOM_CAPS_FIELDS)]) {
       if (caps.desiredCapabilities) {
         delete caps.desiredCapabilities[key];
@@ -123,7 +116,7 @@ export class ResponseCapabilities {
 
 export interface ISession {
   id: string;
-  getCdpEndpoint: () => Promise<string | null>;
+  getCdpEndpoint: () => Promise<string | void>;
   start: () => Promise<ResponseCapabilities>;
   stop: () => Promise<void>;
   forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any>>;
@@ -131,12 +124,12 @@ export interface ISession {
 }
 
 export function createSession(
-    request: RequestCapabilities,
-    webdriverConfiguration: LocalDriverConfiguration,
-    processManager: ProcessManager,
-    axios: AxiosInstance,
+  request: RequestCapabilities,
+  webdriverConfiguration: LocalDriverConfiguration,
+  processManager: ProcessManager,
+  axios: AxiosInstance,
 ) {
-  switch(request.browserName) {
+  switch (request.browserName) {
     case 'chrome': return new ChromeDriverSession(request, webdriverConfiguration, processManager, axios);
     case 'auto-cmd': return new AutoCmdSession(request, webdriverConfiguration, processManager, axios);
     default: return new CommonWebdriverSession(request, webdriverConfiguration, processManager, axios);
@@ -156,13 +149,19 @@ class AutoCmdSession implements ISession {
     this.id = uuidv4();
   }
 
-  async getCdpEndpoint() { return null; }
+  async getCdpEndpoint() { return; }
 
   async start() {
     const autoCmd = await this.processManager.getOrSpawnAutoCmdProcess();
     if (!autoCmd) throw Error(`auto-cmd is not supported`);
     this.axios.defaults.baseURL = `http://localhost:${autoCmd.port}/auto-cmd/`;
-    return new ResponseCapabilities({}, this.request)
+    const res = {
+      sesssionId: this.id,
+      value: {
+        sessionId: this.id,
+      }
+    };
+    return new ResponseCapabilities(res, this.request)
   }
 
   async stop() { }
@@ -220,9 +219,7 @@ abstract class AbstractWebdriveSession implements ISession {
     return await this.axios.request(request);
   }
 
-  async getCdpEndpoint(): Promise<string|null> {
-    return null;
-  }
+  async getCdpEndpoint(): Promise<string | undefined> { return; }
 
   async afterStop() { }
 
@@ -253,9 +250,10 @@ abstract class AbstractWebdriveSession implements ISession {
 class CommonWebdriverSession extends AbstractWebdriveSession { }
 
 class ChromeDriverSession extends AbstractWebdriveSession {
+
   get shouldCleanUserData(): boolean {
     const cleanUserData = this.request?.shouldcleanUserData;
-    return _.isNil(cleanUserData) ? this.webdriverConfiguration.cleanUserData: cleanUserData;
+    return _.isNil(cleanUserData) ? this.webdriverConfiguration.cleanUserData : cleanUserData;
   }
 
   get debuggerAddress() {
@@ -263,7 +261,7 @@ class ChromeDriverSession extends AbstractWebdriveSession {
   }
 
   async getCdpEndpoint() {
-    if (!this.debuggerAddress) return null;
+    if (!this.debuggerAddress) return;
     const res = await this.axios.request({
       baseURL: 'http://' + this.debuggerAddress,
       url: '/json/version',
