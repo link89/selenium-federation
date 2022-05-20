@@ -6,6 +6,7 @@ import { ProcessManager } from "./refactor";
 import { LocalDriverConfiguration } from "./schemas";
 import { Request } from 'koa';
 import * as yup from 'yup';
+import { v4 as uuidv4 } from 'uuid';
 
 const CUSTOM_CAPS_FIELDS = {
   TAGS: 'sf:tags',
@@ -40,27 +41,28 @@ export class RequestCapabilities {
 
   get tags(): string[] | undefined {
     const tags = this.getValue(CUSTOM_CAPS_FIELDS.TAGS);
-    if (yup.array(yup.string().defined()).defined().isValidSync(tags)) {
-      return tags;
+    if (yup.array(yup.string().defined()).defined().isValidSync(tags)) return tags;
+  }
+  get environmentVariables(): any { return this.getValue(CUSTOM_CAPS_FIELDS.ENVS) || {}; }
+
+  get shouldcleanUserData(): boolean | undefined {
+    const cleanUserData = this.getValue(CUSTOM_CAPS_FIELDS.CLEAN_USER_DATA);
+    if ('boolean' == typeof cleanUserData) {
+      return cleanUserData;
     }
   }
 
-  get envs(): any { return this.getValue(CUSTOM_CAPS_FIELDS.ENVS) || {}; }
+  get isChrome() { return 'chrome' == this.browserName }
+  get isAutoCmd() { return 'auto-cmd' == this.browserName }
 
-  get cleanData(): boolean | undefined {
-    const cleanData = this.getValue(CUSTOM_CAPS_FIELDS.CLEAN_USER_DATA);
-    if ('boolean' == typeof cleanData) {
-      return cleanData;
-    }
-  }
-
-  getValue(key: string): unknown {
+  private getValue(key: string): unknown {
     const caps = this.data.capabilities?.alwaysMatch || this.data.desiredCapabilities || {};
     return caps[key];
   }
 
   get sanitizedCapbilities() {
     const caps = _.cloneDeep(this.data || {});
+
     for (const key of ['browserVersion', 'extOptions', 'tags', ...Object.values(CUSTOM_CAPS_FIELDS)]) {
       if (caps.desiredCapabilities) {
         delete caps.desiredCapabilities[key];
@@ -119,15 +121,61 @@ export class ResponseCapabilities {
   }
 }
 
-export interface IWebdriverSession {
+export interface ISession {
   id: string;
   getCdpEndpoint: () => Promise<string | null>;
   start: () => Promise<ResponseCapabilities>;
   stop: () => Promise<void>;
   forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any>>;
+  cost: number;
 }
 
-export class BaseBrowserWebdriveSession implements IWebdriverSession {
+export function createSession(
+    request: RequestCapabilities,
+    webdriverConfiguration: LocalDriverConfiguration,
+    processManager: ProcessManager,
+    axios: AxiosInstance,
+) {
+  switch(request.browserName) {
+    case 'chrome': return new ChromeDriverSession(request, webdriverConfiguration, processManager, axios);
+    case 'auto-cmd': return new AutoCmdSession(request, webdriverConfiguration, processManager, axios);
+    default: return new CommonWebdriverSession(request, webdriverConfiguration, processManager, axios);
+  }
+}
+
+class AutoCmdSession implements ISession {
+  public readonly cost = 0;  // auto cmd session won't have any cost
+  public readonly id: string;
+
+  constructor(
+    public request: RequestCapabilities,
+    protected webdriverConfiguration: LocalDriverConfiguration,
+    protected processManager: ProcessManager,
+    protected axios: AxiosInstance,
+  ) {
+    this.id = uuidv4();
+  }
+
+  async getCdpEndpoint() { return null; }
+
+  async start() {
+    const autoCmd = await this.processManager.getOrSpawnAutoCmdProcess();
+    if (!autoCmd) throw Error(`auto-cmd is not supported`);
+    this.axios.defaults.baseURL = `http://localhost:${autoCmd.port}/auto-cmd/`;
+    return new ResponseCapabilities({}, this.request)
+  }
+
+  async stop() { }
+
+  async forward(request: AxiosRequestConfig) {
+    return await this.axios.request(request);
+  }
+}
+
+
+abstract class AbstractWebdriveSession implements ISession {
+  public readonly cost = 1;
+
   public response?: ResponseCapabilities;
   protected process?: ChildProcess;
   protected port?: number;
@@ -150,7 +198,7 @@ export class BaseBrowserWebdriveSession implements IWebdriverSession {
   async start() {
     const { port, webdriverProcess } = await this.processManager.spawnWebdriverProcess({
       path: this.webdriverConfiguration.webdriverPath,
-      envs: { ...this.webdriverConfiguration.webdriverEnvs, ...this.request.envs },
+      envs: { ...this.webdriverConfiguration.webdriverEnvs, ...this.request.environmentVariables },
       args: this.webdriverConfiguration.webdriverArgs,
     });
     this.port = port;
@@ -178,18 +226,16 @@ export class BaseBrowserWebdriveSession implements IWebdriverSession {
 
   async afterStop() { }
 
-
   private async waitForReady() {
     await retry(async () => await this.axios.get('/status'), { max: 10, interval: 1e2 });
   }
 
   private async createSession(request: RequestCapabilities) {
-    const res = await this.axios.post('/session', this.withDefaultCaps(request.sanitizedCapbilities));
-
+    const res = await this.axios.post('/session', this.mergeDefaultCaps(request.sanitizedCapbilities));
     return new ResponseCapabilities(res.data, request);
   }
 
-  private withDefaultCaps(caps: any) {
+  private mergeDefaultCaps(caps: any) {
     return _.defaultsDeep(this.webdriverConfiguration.defaultCapabilities || {}, caps || {});
   }
 
@@ -204,13 +250,12 @@ export class BaseBrowserWebdriveSession implements IWebdriverSession {
   }
 }
 
+class CommonWebdriverSession extends AbstractWebdriveSession { }
 
-export class WebdirverSession extends BaseBrowserWebdriveSession {
-
-  get cleanData(): boolean {
-    const cleanData = this.request?.cleanData;
-    // priority: request > config > default (true)
-    return _.isNil(cleanData) ? this.webdriverConfiguration.cleanData : cleanData;
+class ChromeDriverSession extends AbstractWebdriveSession {
+  get shouldCleanUserData(): boolean {
+    const cleanUserData = this.request?.shouldcleanUserData;
+    return _.isNil(cleanUserData) ? this.webdriverConfiguration.cleanUserData: cleanUserData;
   }
 
   get debuggerAddress() {
@@ -229,9 +274,9 @@ export class WebdirverSession extends BaseBrowserWebdriveSession {
 
   async afterStop() {
     const userDataDir = this.response?.chromeUserDataDir;
-    if (this.cleanData && userDataDir) {
+    if (this.shouldCleanUserData && userDataDir) {
       try {
-        console.log(`clean data: ${userDataDir}`);
+        console.log(`clean user data: ${userDataDir}`);
         await rmAsync(userDataDir, { recursive: true, force: true });
       } catch (e) {
         console.warn(`ignore error during rm ${userDataDir}`, e);

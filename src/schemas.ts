@@ -17,7 +17,7 @@ export const localDriverConfigurationSchema = yup.object({
   webdriverEnvs: yup.object().default({}),
   maxSessions: yup.number().default(1),
   defaultCapabilities: yup.object().default({}),
-  cleanData: yup.boolean().default(true),
+  cleanUserData: yup.boolean().default(true),
 }).defined();
 
 export const remoteDriverConfigurationSchema = yup.object({

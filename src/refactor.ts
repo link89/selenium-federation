@@ -15,7 +15,7 @@ import { RequestHandler } from './controllers';
 import { Context, Request } from 'koa';
 import Bluebird from 'bluebird';
 import { Watchdog } from './watchdog';
-import { RequestCapabilities, ResponseCapabilities, WebdirverSession } from './session';
+import { RequestCapabilities, ResponseCapabilities, createSession, ISession} from './session';
 
 const WEBDRIVER_ERRORS = {
   INVALID_SESSION_ID: {
@@ -138,8 +138,8 @@ export class ProcessManager {
 }
 
 export class LocalWebdriverManager {
-  private readonly sessions: Map<string, WebdirverSession> = new Map();
-  private readonly watchDogs: WeakMap<WebdirverSession, Watchdog> = new WeakMap();
+  private readonly sessions: Map<string, ISession> = new Map();
+  private readonly watchDogs: WeakMap<ISession, Watchdog> = new WeakMap();
   private pendingSessions: number = 0;
 
   constructor(
@@ -189,10 +189,10 @@ export class LocalWebdriverManager {
   }
 
   public async makeSession(request: RequestCapabilities): Promise<ResponseCapabilities> {
-    let session!: WebdirverSession;
+    let session!: ISession;
     try {
       this.pendingSessions++;
-      session = new WebdirverSession(
+      session = createSession(
         request,
         this.driverConfig,
         this.processManager,
@@ -234,7 +234,7 @@ export class LocalWebdriverManager {
     return session;
   }
 
-  private addSession(session: WebdirverSession) {
+  private addSession(session: ISession) {
     this.sessions.set(session.id, session);
   }
 
