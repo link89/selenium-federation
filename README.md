@@ -45,7 +45,7 @@ registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this s
 
 sentryDSN: # optional, upload error to sentry
 
-autoCmdPath: auto-cmd-http  # optional, use with auto-cmd
+autoCmdHttpPath: auto-cmd-http  # optional, path to auto-cmd-http executable file
 
 localDrivers:
   - browserName: firefox
