@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosRequestConfig } from "axios";
+import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import _ from 'lodash';
 import { retry, rmAsync } from "./utils";
 import { ChildProcess } from 'child_process';
@@ -7,12 +7,11 @@ import { LocalDriverConfiguration } from "./schemas";
 import { Request } from 'koa';
 import * as yup from 'yup';
 
-const CUSTOM_CAPS = {
+const CUSTOM_CAPS_FIELDS = {
   TAGS: 'sf:tags',
   ENVS: 'sf:envs',
-  CLEAN_DATA: 'sf:cleanData',
+  CLEAN_USER_DATA: 'sf:cleanUserData',
 };
-
 
 export class RequestCapabilities {
 
@@ -40,16 +39,16 @@ export class RequestCapabilities {
   get platformName() { return this.getValue('platformName'); }
 
   get tags(): string[] | undefined {
-    const tags = this.getValue(CUSTOM_CAPS.TAGS);
+    const tags = this.getValue(CUSTOM_CAPS_FIELDS.TAGS);
     if (yup.array(yup.string().defined()).defined().isValidSync(tags)) {
       return tags;
     }
   }
 
-  get envs(): any { return this.getValue(CUSTOM_CAPS.ENVS) || {}; }
+  get envs(): any { return this.getValue(CUSTOM_CAPS_FIELDS.ENVS) || {}; }
 
   get cleanData(): boolean | undefined {
-    const cleanData = this.getValue(CUSTOM_CAPS.CLEAN_DATA);
+    const cleanData = this.getValue(CUSTOM_CAPS_FIELDS.CLEAN_USER_DATA);
     if ('boolean' == typeof cleanData) {
       return cleanData;
     }
@@ -62,7 +61,7 @@ export class RequestCapabilities {
 
   get sanitizedCapbilities() {
     const caps = _.cloneDeep(this.data || {});
-    for (const key of ['browserVersion', 'extOptions', 'tags', ...Object.values(CUSTOM_CAPS)]) {
+    for (const key of ['browserVersion', 'extOptions', 'tags', ...Object.values(CUSTOM_CAPS_FIELDS)]) {
       if (caps.desiredCapabilities) {
         delete caps.desiredCapabilities[key];
       }
@@ -120,20 +119,24 @@ export class ResponseCapabilities {
   }
 }
 
+export interface IWebdriverSession {
+  id: string;
+  getCdpEndpoint: () => Promise<string | null>;
+  start: () => Promise<ResponseCapabilities>;
+  stop: () => Promise<void>;
+  forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any>>;
+}
 
-
-
-export class WebdirverSession {
-
+export class BaseBrowserWebdriveSession implements IWebdriverSession {
   public response?: ResponseCapabilities;
-  private process?: ChildProcess;
-  private port?: number;
+  protected process?: ChildProcess;
+  protected port?: number;
 
   constructor(
     public request: RequestCapabilities,
-    private webdriverConfiguration: LocalDriverConfiguration,
-    private processManager: ProcessManager,
-    private axios: AxiosInstance,
+    protected webdriverConfiguration: LocalDriverConfiguration,
+    protected processManager: ProcessManager,
+    protected axios: AxiosInstance,
   ) { }
 
   get id(): string {
@@ -142,26 +145,6 @@ export class WebdirverSession {
       throw new Error(`sessionId is invalid: ${sessionId}`);
     }
     return sessionId;
-  }
-
-  get cleanData(): boolean {
-    const cleanData = this.request?.cleanData;
-    // priority: request > config > default (true)
-    return _.isNil(cleanData) ? this.webdriverConfiguration.cleanData : cleanData;
-  }
-
-  get debuggerAddress() {
-    return this.response?.chromeDebuggerAddress;
-  }
-
-  async getCdpEndpoint() {
-    if (!this.debuggerAddress) return;
-    const res = await this.axios.request({
-      baseURL: 'http://' + this.debuggerAddress,
-      url: '/json/version',
-      method: 'GET',
-    });
-    return res.data?.webSocketDebuggerUrl as string;
   }
 
   async start() {
@@ -182,20 +165,19 @@ export class WebdirverSession {
   async stop() {
     await this.axios.delete(`/session/${this.id}`);
     this.killProcessGroup();
-    const userDataDir = this.response?.chromeUserDataDir;
-    if (this.cleanData && userDataDir) {
-      try {
-        console.log(`clean data: ${userDataDir}`);
-        await rmAsync(userDataDir, { recursive: true, force: true });
-      } catch (e) {
-        console.warn(`ignore error during rm ${userDataDir}`, e);
-      }
-    }
+    await this.afterStop();
   }
 
   async forward(request: AxiosRequestConfig) {
     return await this.axios.request(request);
   }
+
+  async getCdpEndpoint(): Promise<string|null> {
+    return null;
+  }
+
+  async afterStop() { }
+
 
   private async waitForReady() {
     await retry(async () => await this.axios.get('/status'), { max: 10, interval: 1e2 });
@@ -217,6 +199,42 @@ export class WebdirverSession {
         this.processManager.killProcessGroup(this.process)
       } catch (e) {
         console.warn(`ingore error during kill process`, e);
+      }
+    }
+  }
+}
+
+
+export class WebdirverSession extends BaseBrowserWebdriveSession {
+
+  get cleanData(): boolean {
+    const cleanData = this.request?.cleanData;
+    // priority: request > config > default (true)
+    return _.isNil(cleanData) ? this.webdriverConfiguration.cleanData : cleanData;
+  }
+
+  get debuggerAddress() {
+    return this.response?.chromeDebuggerAddress;
+  }
+
+  async getCdpEndpoint() {
+    if (!this.debuggerAddress) return null;
+    const res = await this.axios.request({
+      baseURL: 'http://' + this.debuggerAddress,
+      url: '/json/version',
+      method: 'GET',
+    });
+    return res.data?.webSocketDebuggerUrl as string;
+  }
+
+  async afterStop() {
+    const userDataDir = this.response?.chromeUserDataDir;
+    if (this.cleanData && userDataDir) {
+      try {
+        console.log(`clean data: ${userDataDir}`);
+        await rmAsync(userDataDir, { recursive: true, force: true });
+      } catch (e) {
+        console.warn(`ignore error during rm ${userDataDir}`, e);
       }
     }
   }
