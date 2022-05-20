@@ -118,7 +118,7 @@ export interface ISession {
   getCdpEndpoint: () => Promise<string | void>;
   start: () => Promise<ResponseCapabilities>;
   stop: () => Promise<void>;
-  forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any>>;
+  forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any> | void>;
   cost: number;
 }
 
@@ -153,7 +153,6 @@ class AutoCmdSession implements ISession {
   async start() {
     const autoCmd = await this.processManager.getOrSpawnAutoCmdProcess();
     if (!autoCmd) throw Error(`auto-cmd is not supported`);
-    this.axios.defaults.baseURL = `http://localhost:${autoCmd.port}/auto-cmd/`;
     const res = {
       sesssionId: this.id,
       value: {
@@ -166,7 +165,9 @@ class AutoCmdSession implements ISession {
   async stop() { }
 
   async forward(request: AxiosRequestConfig) {
-    return await this.axios.request(request);
+    // request to auto-cmd is handle on service layer
+    // this is just a placeholder
+    return;
   }
 }
 

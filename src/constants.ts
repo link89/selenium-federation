@@ -1,6 +1,11 @@
 export const DEFAULT_HOST_IP_PLACEHOLDER = '__HOST_IP__';
 
 export const WEBDRIVER_ERRORS = {
+  UNKNOWN_COMMAND: {
+    code: 404,
+    error: 'unknown command'
+  },
+
   INVALID_SESSION_ID: {
     code: 404,
     error: 'invalid session id'
