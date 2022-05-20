@@ -33,9 +33,6 @@ Sentry.init({
     .post('/session', localServiceController.onNewWebdriverSessionRequest)
     .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
     .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionRqeust)
-    // handle federation
-    .post('/register')
-    .get('/statuses');
 
   const router = new Router()
   router.use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods());

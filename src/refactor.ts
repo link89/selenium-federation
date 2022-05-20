@@ -9,7 +9,7 @@ import { match } from "path-to-regexp";
 import getPort from "get-port";
 import { Configuration, LocalDriverConfiguration } from './schemas';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { alwaysTrue, identity, retry } from './utils';
+import { alwaysTrue, identity, logMessage, retry } from './utils';
 import { Either, Left, Right } from 'purify-ts';
 import { RequestHandler } from './controllers';
 import { Context, Request } from 'koa';
@@ -483,7 +483,7 @@ export class LocalServiceController {
   }
 
   onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
-    const sessionId = this.getSessionIdFromPath(req.url);
+    const sessionId = this.getSessionIdFromCdpPath(req.url);
     if (!sessionId) {
       return socket.destroy();
     }
@@ -496,6 +496,7 @@ export class LocalServiceController {
     const proxy = createProxyServer({
       target: cdpEndpoint,
     });
+    logMessage(`create websocket proxy to ${cdpEndpoint}`);
     proxy.ws(req, socket, header);
   }
 
@@ -526,7 +527,7 @@ export class LocalServiceController {
 
   private cdpPathPattern = match<{ sessionId: string }>('/wd/hub/session/:sessionId/se/cdp', { decode: decodeURIComponent });
 
-  private getSessionIdFromPath(pathname?: string) {
+  private getSessionIdFromCdpPath(pathname?: string) {
     if (!pathname) return;
     const match = this.cdpPathPattern(pathname);
     return match ? match?.params?.sessionId : undefined;

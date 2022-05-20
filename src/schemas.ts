@@ -39,8 +39,9 @@ export const configurationSchema = yup.object({
   sentryDSN: yup.string().optional(),
   sentryDebug: yup.boolean().default(false),
 
-  autoCmdPath: yup.string().optional(),
-  autoCmdArgs: yup.array(yup.string().defined()).default([]),
+  autoCmdHttpPath: yup.string().optional(),
+  autoCmdHttpArgs: yup.array(yup.string().defined()).default([]),
+
   configFilePath: yup.string().defined(),
 
   localDrivers: yup.array(localDriverConfigurationSchema).optional(),

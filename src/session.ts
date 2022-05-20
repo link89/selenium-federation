@@ -7,7 +7,6 @@ import { LocalDriverConfiguration } from "./schemas";
 import { Request } from 'koa';
 import * as yup from 'yup';
 
-
 const CUSTOM_CAPS = {
   TAGS: 'sf:tags',
   ENVS: 'sf:envs',
@@ -90,7 +89,6 @@ export class ResponseCapabilities {
 
   get sessionBaseUrl() {
     return `${this.request}`
-
   }
 
   get browserVersion() {
@@ -111,16 +109,19 @@ export class ResponseCapabilities {
 
   get jsonObject() {
     const raw = _.cloneDeep(this.raw);
-    // w3c || json wired
+    // patch capabilities
     const data = raw.value || raw;
-    // TODO: firefox in the future
+    // set cdp endpoint
     if (this.chromeDebuggerAddress) {
       data.capabilities['se:cdp'] = this.cdpEndpoint;
-      data.capabilities['se:cdpVersion'] = this.browserVersion;
+      data.capabilities['se:cdpVersion'] = 'FIXME';  // FIXME
     }
     return raw;
   }
 }
+
+
+
 
 export class WebdirverSession {
 
