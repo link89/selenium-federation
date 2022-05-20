@@ -6,4 +6,4 @@ localDrivers:
   - browserName: chrome
     browserVersion: stable
     maxSessions: 2
-    webdriverPath: chromdriver.exe
+    webdriverPath: //../chromedriver.exe
