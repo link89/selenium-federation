@@ -4,8 +4,8 @@ import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity } from './utils';
 import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
-import { Watchdog } from './watchdog';
-import { RequestCapabilities, ResponseCapabilities, createSession, ISession} from './session';
+import { Watchdog } from './utils';
+import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
 import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
@@ -252,7 +252,7 @@ export class LocalService {
     return await webdriverSession?.getCdpEndpoint();
   }
 
-  public async forwardAutoCmdRequest(request: AxiosRequestConfig): Promise<Either<AutoCmdError,  AxiosResponse>> {
+  public async forwardAutoCmdRequest(request: AxiosRequestConfig): Promise<Either<AutoCmdError, AxiosResponse>> {
 
     try {
       const autoCmdProcess = await this.processManager.getOrSpawnAutoCmdProcess();
@@ -268,7 +268,7 @@ export class LocalService {
       request.transformResponse = identity;
       const res = await autoCmdProcess.axios.request(request);
       return Right(res);
-    } catch(e) {
+    } catch (e) {
       return Left({
         ...AUTO_CMD_ERRORS.UNKNOWN_ERROR,
         message: e.message || '',

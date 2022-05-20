@@ -1,5 +1,4 @@
 import Bluebird from "bluebird";
-import * as Sentry from "@sentry/node";
 
 import { promisify } from 'util';
 import fs from 'fs';
@@ -30,7 +29,7 @@ export async function retry<T>(cb: () => Promise<T> | T, option: IRetryOption = 
 export class Semaphore {
   queue: ((value?: any) => void)[] = [];
 
-  constructor(private size: number) {}
+  constructor(private size: number) { }
 
   async wait() {
     if (this.size - 1 < 0) {
@@ -46,6 +45,30 @@ export class Semaphore {
   }
 }
 
+export class Watchdog {
+
+  private timestamp: number = 0;
+  private timer: NodeJS.Timeout;
+
+  constructor(private onTimeout: () => any, private timeout: number = 60, interval: number = 5e3) {
+    this.feed();
+    this.timer = setInterval(() => {
+      if (this.timestamp < Date.now()) {
+        console.log('Watchdog timeout!');
+        this.stop();
+        this.onTimeout();
+      }
+    }, interval);
+  }
+
+  feed() {
+    this.timestamp = Date.now() + this.timeout * 1e3;
+  }
+
+  stop() {
+    clearInterval(this.timer);
+  }
+}
 
 export function getW3CPlatformName() {
   switch (process.platform) {
@@ -65,12 +88,10 @@ export function getDefaultRebootCommand() {
 
 export function logMessage(s: string) {
   console.log(s);
-  // Sentry.captureMessage(s);
 }
 
 export function logException(e: Error) {
   console.error(e);
-  Sentry.captureException(e);
 }
 
 export const rmAsync = promisify(fs.rm);
