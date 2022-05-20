@@ -9,113 +9,13 @@ import { RequestCapabilities, ResponseCapabilities, createSession, ISession } fr
 import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
-export class WebdriverManager {
-  private readonly sessions: Map<string, ISession> = new Map();
-  private readonly watchDogs: WeakMap<ISession, Watchdog> = new WeakMap();
-  private pendingSessions: number = 0;
+export interface IService {
 
-  constructor(
-    private config: Configuration,
-    private driverConfig: DriverConfiguration,
-    private readonly processManager: ProcessManager,
-  ) { }
-
-  isMatch(request: RequestCapabilities): boolean {
-    if (request.browserName && request.browserName != this.driverConfig.browserName) {
-      return false;
-    }
-    if (request.browserVersion && this.driverConfig.browserVersion && request.browserVersion != this.driverConfig.browserVersion) {
-      return false;
-    }
-    if (request.platformName && request.platformName != this.driverConfig.platformName) {
-      return false;
-    }
-    if (request.tags && request.tags.every(tag => !this.driverConfig.tags.includes(tag))) {
-      return false;
-    }
-    return true;
-  }
-
-  getScore(request: RequestCapabilities) {
-    return this.availableSlots / this.driverConfig.maxSessions;
-  }
-
-  get busySlots() {
-    return this.sessions.size + this.pendingSessions;
-  }
-
-  get availableSlots() {
-    return this.driverConfig.maxSessions - this.busySlots;
-  }
-
-  get activeSessions() {
-    return this.sessions.values();
-  }
-
-  get sessionTimeoutInSeconds() {
-    return this.driverConfig.browserIdleTimeout || this.config.browserIdleTimeout;
-  }
-
-  public hasSession(sessionId: string) {
-    return this.sessions.has(sessionId);
-  }
-
-  public async makeSession(request: RequestCapabilities): Promise<ResponseCapabilities> {
-    let session!: ISession;
-    try {
-      this.pendingSessions++;
-      session = createSession(
-        request,
-        this.driverConfig,
-        this.processManager,
-        axios.create({ timeout: 30e3 })
-      );
-      const res = await session.start();
-      this.addSession(session);
-
-      const watchDog = new Watchdog(() => this.destroySession(session.id), this.sessionTimeoutInSeconds);
-      this.watchDogs.set(session, watchDog);
-
-      return res;
-    } catch (e) {
-      if (session) {
-        await session.stop();
-      }
-      throw e;
-    } finally {
-      this.pendingSessions--;
-    }
-  }
-
-  public async destroySession(sessionId: string) {
-    const session = this.getSession(sessionId);
-    if (!session) {
-      console.warn(`No session with id ${sessionId} to destroy!`)
-      return;
-    }
-    this.watchDogs.get(session)?.stop();
-    await session.stop();
-    this.deleteSession(sessionId);
-  }
-
-  public getSession(sessionId: string) {
-    const session = this.sessions.get(sessionId);
-    if (session) {
-      this.watchDogs.get(session)?.feed();
-    }
-    return session;
-  }
-
-  private addSession(session: ISession) {
-    this.sessions.set(session.id, session);
-  }
-
-  private deleteSession(id: string) {
-    this.sessions.delete(id);
-  }
 }
 
-export class LocalService {
+
+
+export class LocalService implements IService {
 
   static of(config: Configuration, processManager: ProcessManager) {
     return new LocalService(
@@ -271,5 +171,111 @@ export class LocalService {
         stacktrace: e.stack || '',
       });
     }
+  }
+}
+
+class WebdriverManager {
+  private readonly sessions: Map<string, ISession> = new Map();
+  private readonly watchDogs: WeakMap<ISession, Watchdog> = new WeakMap();
+  private pendingSessions: number = 0;
+
+  constructor(
+    private config: Configuration,
+    private driverConfig: DriverConfiguration,
+    private readonly processManager: ProcessManager,
+  ) { }
+
+  isMatch(request: RequestCapabilities): boolean {
+    if (request.browserName && request.browserName != this.driverConfig.browserName) {
+      return false;
+    }
+    if (request.browserVersion && this.driverConfig.browserVersion && request.browserVersion != this.driverConfig.browserVersion) {
+      return false;
+    }
+    if (request.platformName && request.platformName != this.driverConfig.platformName) {
+      return false;
+    }
+    if (request.tags && request.tags.every(tag => !this.driverConfig.tags.includes(tag))) {
+      return false;
+    }
+    return true;
+  }
+
+  getScore(request: RequestCapabilities) {
+    return this.availableSlots / this.driverConfig.maxSessions;
+  }
+
+  get busySlots() {
+    return this.sessions.size + this.pendingSessions;
+  }
+
+  get availableSlots() {
+    return this.driverConfig.maxSessions - this.busySlots;
+  }
+
+  get activeSessions() {
+    return this.sessions.values();
+  }
+
+  get sessionTimeoutInSeconds() {
+    return this.driverConfig.browserIdleTimeout || this.config.browserIdleTimeout;
+  }
+
+  public hasSession(sessionId: string) {
+    return this.sessions.has(sessionId);
+  }
+
+  public async makeSession(request: RequestCapabilities): Promise<ResponseCapabilities> {
+    let session!: ISession;
+    try {
+      this.pendingSessions++;
+      session = createSession(
+        request,
+        this.driverConfig,
+        this.processManager,
+        axios.create({ timeout: 30e3 })
+      );
+      const res = await session.start();
+      this.addSession(session);
+
+      const watchDog = new Watchdog(() => this.destroySession(session.id), this.sessionTimeoutInSeconds);
+      this.watchDogs.set(session, watchDog);
+
+      return res;
+    } catch (e) {
+      if (session) {
+        await session.stop();
+      }
+      throw e;
+    } finally {
+      this.pendingSessions--;
+    }
+  }
+
+  public async destroySession(sessionId: string) {
+    const session = this.getSession(sessionId);
+    if (!session) {
+      console.warn(`No session with id ${sessionId} to destroy!`)
+      return;
+    }
+    this.watchDogs.get(session)?.stop();
+    await session.stop();
+    this.deleteSession(sessionId);
+  }
+
+  public getSession(sessionId: string) {
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      this.watchDogs.get(session)?.feed();
+    }
+    return session;
+  }
+
+  private addSession(session: ISession) {
+    this.sessions.set(session.id, session);
+  }
+
+  private deleteSession(id: string) {
+    this.sessions.delete(id);
   }
 }

@@ -17,7 +17,19 @@ interface HttpResponse {
   status: number;
 }
 
-export class LocalServiceController {
+export interface IController {
+  onNewWebdriverSessionRequest: RequestHandler;
+  onDeleteWebdirverSessionRequest: RequestHandler;
+  onWebdirverSessionCommandRqeust: RequestHandler;
+  onError: RequestHandler;
+  onAutoCmdRequest: RequestHandler;
+
+  onWebsocketUpgrade?: (req: IncomingMessage, socket: Duplex, header: Buffer) => Promise<void>;
+  onNodeRegiester?: RequestHandler;
+  onGetDrivers?: RequestHandler;
+}
+
+export class LocalController implements IController {
 
   constructor(
     private readonly localService: LocalService,
@@ -48,7 +60,7 @@ export class LocalServiceController {
     });
   }
 
-  onWebdirverSessionRqeust: RequestHandler = async (ctx, next) => {
+  onWebdirverSessionCommandRqeust: RequestHandler = async (ctx, next) => {
     const { sessionId, path } = this.getSessionParams(ctx);
     const fromRequest: Request = ctx.request;
     const toRequest: AxiosRequestConfig = {
@@ -90,11 +102,13 @@ export class LocalServiceController {
   onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
     const sessionId = this.getSessionIdFromCdpPath(req.url);
     if (!sessionId) {
-      return socket.destroy();
+      socket.destroy();
+      return;
     }
     const cdpEndpoint = await this.localService.getCdpEndpointBySessionId(sessionId);
     if (!cdpEndpoint) {
-      return socket.destroy();
+      socket.destroy();
+      return;
     }
     // FIXME: I'am not should if the proxy will get reclaimed by the system.
     // Potential memory leak risk alert!

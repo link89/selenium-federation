@@ -7,7 +7,7 @@ import { config } from "./config";
 import * as Sentry from "@sentry/node";
 
 import { LocalService } from "./service";
-import { LocalServiceController } from "./controllers";
+import { LocalController } from "./controllers";
 import { ProcessManager } from "./process";
 
 Sentry.init({
@@ -17,12 +17,13 @@ Sentry.init({
 
 // Get started
 (async () => {
+
   const processManager = new ProcessManager(config);
   await processManager.init();
 
   const localService = LocalService.of(config, processManager);
   localService.init();
-  const localServiceController = new LocalServiceController(localService);
+  const localServiceController = new LocalController(localService);
 
   const webdirverRouter = new Router();
   webdirverRouter
@@ -33,7 +34,7 @@ Sentry.init({
     // handle webdriver session
     .post('/session', localServiceController.onNewWebdriverSessionRequest)
     .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
-    .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionRqeust)
+    .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
 
   const router = new Router()
   router.use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods());
