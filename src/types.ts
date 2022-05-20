@@ -83,3 +83,13 @@ export interface SessionStats {
   total: number;
   failed: number;
 }
+
+export interface WebdriverError<T = unknown> {
+  code: number;
+  error: string;
+  message: string;
+  stacktrace: string;
+  data?: T;
+}
+
+export interface AutoCmdError<T = unknown> extends WebdriverError<T> { }

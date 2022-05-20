@@ -1,12 +1,12 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { retry, rmAsync } from "./utils";
 import { ChildProcess } from 'child_process';
-import { ProcessManager } from "./refactor";
-import { LocalDriverConfiguration } from "./schemas";
+import { LocalDriverConfiguration } from "./types";
 import { Request } from 'koa';
 import * as yup from 'yup';
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
+import { ProcessManager } from "./process";
 
 const CUSTOM_CAPS_FIELDS = {
   TAGS: 'sf:tags',
@@ -70,15 +70,14 @@ export class RequestCapabilities {
 
 export class ResponseCapabilities {
 
-  private data: any
+  private rawResponseData: any
 
-  constructor(private raw: any, private request: RequestCapabilities) {
-    // w3c || json wired
-    this.data = raw?.value || raw;
+  constructor(private rawResponse: any, private request: RequestCapabilities) {
+    this.rawResponseData = rawResponse?.value || rawResponse; //  w3c format || json wired format
   }
 
   get sessionId() {
-    return this.data?.sessionId;
+    return this.rawResponseData?.sessionId;
   }
 
   get sessionBaseUrl() {
@@ -86,11 +85,11 @@ export class ResponseCapabilities {
   }
 
   get browserVersion() {
-    return this.data?.capabilities?.browserVersion;
+    return this.rawResponseData?.capabilities?.browserVersion;
   }
 
   get chromeDebuggerAddress() {
-    return this.data?.capabilities?.["goog:chromeOptions"]?.debuggerAddress;
+    return this.rawResponseData?.capabilities?.["goog:chromeOptions"]?.debuggerAddress;
   }
 
   get cdpEndpoint() {
@@ -98,17 +97,17 @@ export class ResponseCapabilities {
   }
 
   get chromeUserDataDir() {
-    return this.data?.capabilities?.chrome?.userDataDir;
+    return this.rawResponseData?.capabilities?.chrome?.userDataDir;
   }
 
   get jsonObject() {
-    const raw = _.cloneDeep(this.raw);
+    const raw = _.cloneDeep(this.rawResponse);
     // patch capabilities
-    const data = raw.value || raw;
+    const newResponseData = raw.value || raw;
     // set cdp endpoint
     if (this.chromeDebuggerAddress) {
-      data.capabilities['se:cdp'] = this.cdpEndpoint;
-      data.capabilities['se:cdpVersion'] = 'FIXME';  // FIXME
+      newResponseData.capabilities['se:cdp'] = this.cdpEndpoint;
+      newResponseData.capabilities['se:cdpVersion'] = 'FIXME';  // FIXME
     }
     return raw;
   }

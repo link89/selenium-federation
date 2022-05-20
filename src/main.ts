@@ -6,14 +6,14 @@ import logger from  "koa-logger";
 import { config } from "./config";
 import * as Sentry from "@sentry/node";
 
-import { LocalService, ProcessManager } from "./refactor";
+import { LocalService } from "./service";
 import { LocalServiceController } from "./controllers";
+import { ProcessManager } from "./process";
 
 Sentry.init({
   dsn: config.sentryDSN,
   debug: config.sentryDebug,
 });
-
 
 // Get started
 (async () => {

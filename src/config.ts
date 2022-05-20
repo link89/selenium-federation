@@ -2,7 +2,7 @@ import yargs from 'yargs/yargs';
 import { parse } from 'yaml';
 import fs from 'fs';
 import path from 'path';
-import { configurationSchema } from './schemas';
+import { configurationSchema } from './types';
 
 export const argv = yargs(process.argv.slice(2)).
   usage('start selenium-federation service').

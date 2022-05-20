@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from "axios";
-import { LocalService } from "./refactor";
+import { LocalService } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
 import { createProxyServer } from 'http-proxy';
