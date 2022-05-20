@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { AutoCmdError, Configuration, LocalDriverConfiguration, WebdriverError } from './types';
+import { AutoCmdError, Configuration, DriverConfiguration, WebdriverError } from './types';
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity } from './utils';
 import { Either, Left, Right } from 'purify-ts';
@@ -9,14 +9,14 @@ import { RequestCapabilities, ResponseCapabilities, createSession, ISession } fr
 import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
-export class LocalWebdriverManager {
+export class WebdriverManager {
   private readonly sessions: Map<string, ISession> = new Map();
   private readonly watchDogs: WeakMap<ISession, Watchdog> = new WeakMap();
   private pendingSessions: number = 0;
 
   constructor(
     private config: Configuration,
-    private driverConfig: LocalDriverConfiguration,
+    private driverConfig: DriverConfiguration,
     private readonly processManager: ProcessManager,
   ) { }
 
@@ -120,14 +120,14 @@ export class LocalService {
   static of(config: Configuration, processManager: ProcessManager) {
     return new LocalService(
       config,
-      config.drivers.map(localDriver => new LocalWebdriverManager(config, localDriver, processManager)),
+      config.drivers.map(driver => new WebdriverManager(config, driver, processManager)),
       processManager,
     );
   }
 
   constructor(
     private readonly config: Configuration,
-    private readonly localDriverManagers: LocalWebdriverManager[],
+    private readonly webdriverManagers: WebdriverManager[],
     private readonly processManager: ProcessManager,
   ) { }
 
@@ -143,18 +143,18 @@ export class LocalService {
   }
 
   public get busySlots() {
-    return _.sumBy(this.localDriverManagers, driver => driver.busySlots);
+    return _.sumBy(this.webdriverManagers, driver => driver.busySlots);
   }
 
   public get availableSlots() {
     return this.config.maxSessions - this.busySlots;
   }
 
-  public getMatchedWebdrivers(request: RequestCapabilities): LocalWebdriverManager[] {
-    return this.localDriverManagers.filter(driver => driver.isMatch(request));
+  public getMatchedWebdrivers(request: RequestCapabilities): WebdriverManager[] {
+    return this.webdriverManagers.filter(driver => driver.isMatch(request));
   }
 
-  public getAvailableWebdrivers(request: RequestCapabilities): LocalWebdriverManager[] {
+  public getAvailableWebdrivers(request: RequestCapabilities): WebdriverManager[] {
     return this.getMatchedWebdrivers(request).filter(driver => driver.availableSlots > 0);
   }
 
@@ -224,18 +224,18 @@ export class LocalService {
   }
 
   public getWebdirverBySessionId(sessionId: string) {
-    return this.localDriverManagers.find(driver => driver.hasSession(sessionId));
+    return this.webdriverManagers.find(driver => driver.hasSession(sessionId));
   }
 
   public getWebdriverSessionById(sessiondId: string) {
-    for (const driverManager of this.localDriverManagers) {
+    for (const driverManager of this.webdriverManagers) {
       const session = driverManager.getSession(sessiondId);
       if (session) return session;
     }
   }
 
   private get activeSessions() {
-    return _.flatMap(this.localDriverManagers, driver => [...driver.activeSessions]);
+    return _.flatMap(this.webdriverManagers, driver => [...driver.activeSessions]);
   }
 
   public async forceTerminate() {

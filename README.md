@@ -205,7 +205,7 @@ void (async () => {
 
 ### Customize Environment Variables
 
-When specific environment variables need to be set when starting webdriver process or browsers, for example, to enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `localDriver.webdriverEnvs` field in the configuration file, or setting the `sf:envs` field in the capabilities.
+When specific environment variables need to be set when starting webdriver process or browsers, for example, to enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `drivers.webdriver.envs` field in the configuration file, or setting the `sf:envs` field in the capabilities.
 
 ```typescript
 import { remote } from "webdriverio";

@@ -1,7 +1,7 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { retry, rmAsync } from "./utils";
 import { ChildProcess } from 'child_process';
-import { LocalDriverConfiguration } from "./types";
+import { DriverConfiguration } from "./types";
 import { Request } from 'koa';
 import * as yup from 'yup';
 import _ from 'lodash';
@@ -122,7 +122,7 @@ export interface ISession {
 
 export function createSession(
   request: RequestCapabilities,
-  webdriverConfiguration: LocalDriverConfiguration,
+  webdriverConfiguration: DriverConfiguration,
   processManager: ProcessManager,
   axios: AxiosInstance,
 ) {
@@ -143,7 +143,7 @@ abstract class AbstractWebdriveSession implements ISession {
 
   constructor(
     public request: RequestCapabilities,
-    protected webdriverConfiguration: LocalDriverConfiguration,
+    protected webdriverConfiguration: DriverConfiguration,
     protected processManager: ProcessManager,
     protected axios: AxiosInstance,
   ) { }

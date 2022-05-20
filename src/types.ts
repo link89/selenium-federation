@@ -57,9 +57,9 @@ export const configurationSchema = yup.object({
 }).defined();
 
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
-export interface LocalDriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
+export interface DriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
 export interface RemoteDriverConfiguration extends yup.Asserts<typeof remoteDriverConfigurationSchema> { };
-export type Driver = LocalDriverConfiguration | RemoteDriverConfiguration;
+export type Driver = DriverConfiguration | RemoteDriverConfiguration;
 
 export interface DriverMatchCriteria {
   browserName?: string;
@@ -79,7 +79,7 @@ export interface SessionDto {
   option: any;
 }
 
-export type DriverStats = LocalDriverConfiguration & { sessions: SessionDto[], stats: SessionStats };
+export type DriverStats = DriverConfiguration & { sessions: SessionDto[], stats: SessionStats };
 
 export interface NodeStatus {
   remoteUrl?: string;
