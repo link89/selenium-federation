@@ -119,7 +119,6 @@ export interface ISession {
   start: () => Promise<ResponseCapabilities>;
   stop: () => Promise<void>;
   forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any> | void>;
-  cost: number;
 }
 
 export function createSession(
@@ -130,50 +129,14 @@ export function createSession(
 ) {
   switch (request.browserName) {
     case 'chrome': return new ChromeDriverSession(request, webdriverConfiguration, processManager, axios);
-    case 'auto-cmd': return new AutoCmdSession(request, webdriverConfiguration, processManager, axios);
-    default: return new CommonWebdriverSession(request, webdriverConfiguration, processManager, axios);
+    case 'firefox': ;
+    case 'MicrosoftEdge': ;
+    case 'safari': return new CommonWebdriverSession(request, webdriverConfiguration, processManager, axios);
+    default: throw Error(`browser ${request.browserName} is not supported`)
   }
 }
-
-class AutoCmdSession implements ISession {
-  public readonly cost = 0;  // auto cmd session won't have any cost
-  public readonly id: string;
-
-  constructor(
-    public request: RequestCapabilities,
-    protected webdriverConfiguration: LocalDriverConfiguration,
-    protected processManager: ProcessManager,
-    protected axios: AxiosInstance,
-  ) {
-    this.id = uuidv4();
-  }
-
-  async getCdpEndpoint() { return; }
-
-  async start() {
-    const autoCmd = await this.processManager.getOrSpawnAutoCmdProcess();
-    if (!autoCmd) throw Error(`auto-cmd is not supported`);
-    const res = {
-      sesssionId: this.id,
-      value: {
-        sessionId: this.id,
-      }
-    };
-    return new ResponseCapabilities(res, this.request)
-  }
-
-  async stop() { }
-
-  async forward(request: AxiosRequestConfig) {
-    // request to auto-cmd is handle on service layer
-    // this is just a placeholder
-    return;
-  }
-}
-
 
 abstract class AbstractWebdriveSession implements ISession {
-  public readonly cost = 1;
 
   public response?: ResponseCapabilities;
   protected process?: ChildProcess;
@@ -196,9 +159,9 @@ abstract class AbstractWebdriveSession implements ISession {
 
   async start() {
     const { port, webdriverProcess } = await this.processManager.spawnWebdriverProcess({
-      path: this.webdriverConfiguration.webdriverPath,
-      envs: { ...this.webdriverConfiguration.webdriverEnvs, ...this.request.environmentVariables },
-      args: this.webdriverConfiguration.webdriverArgs,
+      path: this.webdriverConfiguration.webdriver.path,
+      envs: { ...this.webdriverConfiguration.webdriver.envs, ...this.request.environmentVariables },
+      args: this.webdriverConfiguration.webdriver.args,
     });
     this.port = port;
     this.process = webdriverProcess;

@@ -118,12 +118,9 @@ export class LocalWebdriverManager {
 export class LocalService {
 
   static of(config: Configuration, processManager: ProcessManager) {
-    if (!config.localDrivers || config.localDrivers.length < 1) {
-      throw new Error(`At least one localDrivers must be configed!`);
-    }
     return new LocalService(
       config,
-      config.localDrivers.map(localDriver => new LocalWebdriverManager(config, localDriver, processManager)),
+      config.drivers.map(localDriver => new LocalWebdriverManager(config, localDriver, processManager)),
       processManager,
     );
   }

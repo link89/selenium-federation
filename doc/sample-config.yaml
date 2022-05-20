@@ -1,9 +1,12 @@
+role: node
+
 port: 4444
 browserIdleTimeout: 60
 maxSessions: 5
 
-localDrivers:
+drivers:
   - browserName: chrome
     browserVersion: stable
     maxSessions: 2
-    webdriverPath: //../chromedriver.exe
+    webdriver:
+      path: //../chromedriver.exe

@@ -72,11 +72,13 @@ export class ProcessManager {
 
   async getOrSpawnAutoCmdProcess() {
     if (this.autoCmdProcess && this.autoCmdProcess.isActive) return this.autoCmdProcess;
+    if(!this.config.autoCmdHttp) return null;
+    if(this.config.autoCmdHttp.disable) return null;
 
-    const path = this.config.autoCmdHttpPath;
+    const path = this.config.autoCmdHttp.path;
     if (!path) return null;
-    const args = this.config.autoCmdHttpArgs;
 
+    const args = this.config.autoCmdHttp.args;
     const port = await getPort();
     const autoCmdprocess = spawn(path, [...args, `--port=${port}`],
       { stdio: 'inherit', windowsHide: this.isWindows, env: process.env }

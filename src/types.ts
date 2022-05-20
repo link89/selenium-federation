@@ -5,17 +5,20 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Context } from 'koa';
 
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
+const ROLES = ['hub', 'node'];
 
-export const localDriverConfigurationSchema = yup.object({
+export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   browserVersion: yup.string().defined(),
   browserIdleTimeout: yup.number(),
   platformName: yup.string().default(getW3CPlatformName()),
   uuid: yup.string().default(() => uuidv4()),
   tags: yup.array(yup.string().defined()).default([]),
-  webdriverPath: yup.string().defined(),
-  webdriverArgs: yup.array(yup.string().defined()).default([]),
-  webdriverEnvs: yup.object().default({}),
+  webdriver: yup.object({
+    path: yup.string().defined(),
+    args: yup.array(yup.string().defined()).default([]),
+    envs: yup.object().default({}),
+  }).defined(),
   maxSessions: yup.number().default(1),
   defaultCapabilities: yup.object().default({}),
   cleanUserData: yup.boolean().default(true),
@@ -30,6 +33,8 @@ export const configurationSchema = yup.object({
   port: yup.number().default(4444),
   host: yup.string().default('0.0.0.0'),
   uuid: yup.string().default(() => uuidv4()),
+  role: yup.string().oneOf(ROLES).defined(),
+
   browserIdleTimeout: yup.number().default(60),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
 
@@ -40,16 +45,18 @@ export const configurationSchema = yup.object({
   sentryDSN: yup.string().optional(),
   sentryDebug: yup.boolean().default(false),
 
-  autoCmdHttpPath: yup.string().optional(),
-  autoCmdHttpArgs: yup.array(yup.string().defined()).default([]),
+  autoCmdHttp: yup.object({
+    disable: yup.boolean().default(false),
+    path: yup.string().defined(),
+    args: yup.array(yup.string().defined()).default([]),
+  }).default(undefined),
 
   configFilePath: yup.string().defined(),
-
-  localDrivers: yup.array(localDriverConfigurationSchema).optional(),
+  drivers: yup.array(driverConfigurationSchema).default([]),
 }).defined();
 
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
-export interface LocalDriverConfiguration extends yup.Asserts<typeof localDriverConfigurationSchema> { };
+export interface LocalDriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
 export interface RemoteDriverConfiguration extends yup.Asserts<typeof remoteDriverConfigurationSchema> { };
 export type Driver = LocalDriverConfiguration | RemoteDriverConfiguration;
 

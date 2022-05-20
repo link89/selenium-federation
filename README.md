@@ -36,6 +36,7 @@ selenium-federation-pm2-start --help
 Prepare configuration file `local.yaml` with the following content.
 
 ```yaml
+role: node
 port: 4444
 browserIdleTimeout: 60  # browser processes will be killed after session inactive after browserIdleTimeout
 maxSessions: 5  # limit the max sessions, default to Math.max(1, os.cpus().length - 1)
@@ -43,34 +44,38 @@ maxSessions: 5  # limit the max sessions, default to Math.max(1, os.cpus().lengt
 registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
 registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
 
-sentryDSN: # optional, upload error to sentry
+autoCmdHttp:
+  path: auto-cmd-http  # optional, path to auto-cmd-http executable file
 
-autoCmdHttpPath: auto-cmd-http  # optional, path to auto-cmd-http executable file
-
-localDrivers:
+drivers:
   - browserName: firefox
     maxSessions: 2  # limit the max session of specific driver, default value is 1
-    webdriverPath: geckodriver 
+    webdriver:
+      path: geckodriver 
 
   - browserName: safari
     maxSessions: 1
-    webdriverPath: safaridriver
+    webdriver:
+      path: safaridriver
 
   - browserName: MicrosoftEdge
     maxSessions: 2
-    webdriverPath: msedgedriver # Support global webdriver command (can be found in PATH envvar)
+    webdriver:
+      path: msedgedriver # Support global webdriver command (can be found in PATH envvar)
 
   - browserName: chrome
     browserVersion: stable # support customized version value (or you can use tags)
     maxSessions: 2
     tags: [95]
-    webdriverPath: ./chromedriver-stable  # support relative (to CWD) path to webdriver (start with ./)
+    webdriver:
+      path: ./chromedriver-stable  # support relative (to CWD) path to webdriver (start with ./)
 
   - browserName: chrome
     browserVersion: beta
     tags: [96]
     maxSessions: 2
-    webdriverPath: //chromedriver-beta  # support relative to THIS configuration file (start with //)
+    webdriver:
+      path: //chromedriver-beta  # support relative to THIS configuration file (start with //)
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
@@ -79,7 +84,8 @@ localDrivers:
     browserVersion: canary
     tags: [97]
     maxSessions: 2
-    webdriverPath: /usr/local/bin/chromedriver-canary  # support absolute path
+    webdriver:
+      path: /usr/local/bin/chromedriver-canary  # support absolute path
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
@@ -103,6 +109,7 @@ selenium-federation-check
 A remote service allows local services to register to. Prepare configuration file `remote.yaml` with the following content.
 
 ```yaml
+role: hub
 port: 5555
 browserIdleTimeout: 60
 ```
@@ -157,11 +164,12 @@ The below configuration is a real-world example to use this feature to support `
 port: 4444
 browserIdleTimeout: 60
 
-localDrivers:
+drivers:
   - browserName: chrome
     browserVersion: canary
     tags: [97]
-    webdriverPath: //chromedriver-canary
+    webdriver:
+      path: //chromedriver-canary
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
@@ -171,7 +179,7 @@ Address this [limitation](https://github.com/SeleniumHQ/selenium/issues/8745) of
 
 ### Matching with Tags
 
-`tags` fields can be used in `localDrivers` to distinguish the configuration items with same `browserName`. The client-side can set the `sf:tags` in capabilities to make use of this feature.
+`tags` fields can be used in driver to distinguish the configuration items with same `browserName`. The client-side can set the `sf:tags` in capabilities to make use of this feature.
 
 You can also use `browserVersion` fields for the same purpose, but `tags` mechanism provides more flexibility.
 
