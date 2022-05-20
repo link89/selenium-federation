@@ -213,11 +213,7 @@ export class LocalService {
     request.transformResponse = identity;
     try {
       const res = await session.forward(request);
-      return res ? Right(res) : Left({
-        ...WEBDRIVER_ERRORS.UNKNOWN_COMMAND,
-        message: `command ${request.url} is not supported for this driver`,
-        stacktrace: new Error().stack || '',
-      });
+      return Right(res);
     } catch (e) {
       return Left({
         ...WEBDRIVER_ERRORS.UNKNOWN_ERROR,

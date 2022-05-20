@@ -5,7 +5,6 @@ import { LocalDriverConfiguration } from "./types";
 import { Request } from 'koa';
 import * as yup from 'yup';
 import _ from 'lodash';
-import { v4 as uuidv4 } from 'uuid';
 import { ProcessManager } from "./process";
 
 const CUSTOM_CAPS_FIELDS = {
@@ -118,7 +117,7 @@ export interface ISession {
   getCdpEndpoint: () => Promise<string | void>;
   start: () => Promise<ResponseCapabilities>;
   stop: () => Promise<void>;
-  forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any> | void>;
+  forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any>>;
 }
 
 export function createSession(

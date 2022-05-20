@@ -5,7 +5,6 @@ export const WEBDRIVER_ERRORS = {
     code: 404,
     error: 'unknown command'
   },
-
   INVALID_SESSION_ID: {
     code: 404,
     error: 'invalid session id'
