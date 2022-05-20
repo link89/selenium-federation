@@ -255,7 +255,7 @@ export class LocalService {
       if (!autoCmdProcess) {
         return Left({
           ...AUTO_CMD_ERRORS.NOT_SUPPORTED,
-          message: `auto-cmd not supported on this node due to miss autoCmdPath in configuration`,
+          message: `auto-cmd is not enable on this node`,
           stacktrace: new Error().stack || '',
         });
       }

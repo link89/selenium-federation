@@ -30,10 +30,12 @@ export const remoteDriverConfigurationSchema = yup.object({
 }).defined();
 
 export const configurationSchema = yup.object({
+  role: yup.string().oneOf(ROLES).defined(),
   port: yup.number().default(4444),
   host: yup.string().default('0.0.0.0'),
+
   uuid: yup.string().default(() => uuidv4()),
-  role: yup.string().oneOf(ROLES).defined(),
+  platformName: yup.string().default(getW3CPlatformName()),
 
   browserIdleTimeout: yup.number().default(60),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
