@@ -58,7 +58,7 @@ export class ProcessManager {
     let path = params.path;
     // a path start with // means relative to the configuration file
     if (path.startsWith('//')) {
-      path = joinPath(dirname(this.config.configFilePath), params.path.substring(1));
+      path = joinPath(dirname(this.config.configFilePath), path.substring(2));
     }
     console.log(`start webdriver process ${path} ${params.args}`);
 
