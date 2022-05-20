@@ -253,7 +253,6 @@ export class LocalService {
   }
 
   public async forwardAutoCmdRequest(request: AxiosRequestConfig): Promise<Either<AutoCmdError, AxiosResponse>> {
-
     try {
       const autoCmdProcess = await this.processManager.getOrSpawnAutoCmdProcess();
       if (!autoCmdProcess) {

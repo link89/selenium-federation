@@ -2,6 +2,7 @@ import * as yup from 'yup';
 import * as os from 'os';
 import { getW3CPlatformName } from './utils';
 import { v4 as uuidv4 } from 'uuid';
+import type { Context } from 'koa';
 
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
 
@@ -93,3 +94,5 @@ export interface WebdriverError<T = unknown> {
 }
 
 export interface AutoCmdError<T = unknown> extends WebdriverError<T> { }
+
+export type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void> | void;

@@ -8,8 +8,7 @@ import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
 import { WEBDRIVER_ERRORS } from "./constants";
-
-export type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void> | void;
+import { RequestHandler } from "./types";
 
 interface HttpResponse {
   headers: { [key: string]: string };
@@ -17,8 +16,6 @@ interface HttpResponse {
   jsonBody: any;
   status: number;
 }
-
-
 
 export class LocalServiceController {
 
