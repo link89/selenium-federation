@@ -9,6 +9,9 @@ import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
 import { WEBDRIVER_ERRORS } from "./constants";
 import { RequestHandler } from "./types";
+import { join as joinPath } from 'path';
+import send from 'koa-send';
+
 
 interface HttpResponse {
   headers: { [key: string]: string };
@@ -181,5 +184,23 @@ export class LocalController implements IController {
       throw new Error(`sessionId is empty`);
     }
     return { sessionId, path: params[0] ? '/' + params[0] : '' };
+  }
+}
+
+export function fileServer(root: string): RequestHandler{
+  return async(ctx, next) => {
+    if (ctx.method !== 'HEAD' && ctx.method !== 'GET') return
+
+    const path = ctx.params[0] || '/'
+    console.log(`fs access: ${path}`);
+
+    try {
+      await send(ctx, path, { hidden: true, root })
+    } catch (err) {
+      console.log(err);
+      if (err.status !== 404) {
+        throw err
+      }
+    }
   }
 }

@@ -2,12 +2,13 @@ import Koa from "koa";
 import Router from "@koa/router";
 import bodyparser from "koa-bodyparser";
 import logger from  "koa-logger";
+import { resolve } from 'path';
 
 import { config } from "./config";
 import * as Sentry from "@sentry/node";
 
 import { LocalService } from "./service";
-import { LocalController } from "./controllers";
+import { fileServer, LocalController } from "./controllers";
 import { ProcessManager } from "./process";
 
 Sentry.init({
@@ -36,7 +37,9 @@ Sentry.init({
     .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
     .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
     // data model
-    .get('/drivers', localServiceController.onGetDriversRequest);
+    .get('/drivers', localServiceController.onGetDriversRequest)
+    // file server
+    .all('/fs/(.*)', fileServer(resolve(config.fileServerRoot)))
 
 
   const router = new Router()

@@ -36,6 +36,8 @@ export const configurationSchema = yup.object({
 
   browserIdleTimeout: yup.number().default(60),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
+
+  fileServerRoot: yup.string().default('.'),
   configFilePath: yup.string().defined(),
 
   registerTo: yup.string().optional(),
