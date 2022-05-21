@@ -2,7 +2,6 @@ import Koa from "koa";
 import Router from "@koa/router";
 import bodyparser from "koa-bodyparser";
 import logger from  "koa-logger";
-import { resolve } from 'path';
 
 import { config } from "./config";
 import * as Sentry from "@sentry/node";
@@ -11,9 +10,6 @@ import { LocalService } from "./service";
 import { serveStatic, LocalController } from "./controllers";
 import { ProcessManager } from "./process";
 
-const mount = require('koa-mount');
-const serveList = require('koa-serve-list');
-const serveStatic = require('koa-static');
 
 Sentry.init({
   dsn: config.sentryDSN,

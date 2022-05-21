@@ -10,6 +10,10 @@ import { logMessage } from "./utils";
 import { WEBDRIVER_ERRORS } from "./constants";
 import { RequestHandler } from "./types";
 import send from 'koa-send';
+import * as fs from 'fs';
+import { join, resolve } from 'path';
+
+
 
 interface HttpResponse {
   headers: { [key: string]: string };
@@ -188,12 +192,19 @@ export class LocalController implements IController {
 export function serveStatic(root: string): RequestHandler {
   return async (ctx, next) => {
     if (ctx.method !== 'HEAD' && ctx.method !== 'GET') return;
-
-    const path = ctx.params[0] || '/';
-    console.log(`fs access: ${path}`);
+    const url = ctx.params[0] || '/';
+    const path = join(root, url);
 
     try {
-      await send(ctx, path, { hidden: true, root });
+      const stat = await fs.promises.lstat(path);
+      if (stat.isDirectory()) {
+        const files = await fs.promises.readdir(path, { withFileTypes: true });
+        const hrefs = files.map(f => f.name + (f.isDirectory() ? '/' : '')).sort();
+        ctx.status = 200;
+        ctx.body = renderDirectoyHtml(url, hrefs);
+      } else {
+        await send(ctx, url, { hidden: true, root });
+      }
     } catch (err) {
       console.log(err);
       if (err.status !== 404) {
@@ -201,4 +212,20 @@ export function serveStatic(root: string): RequestHandler {
       }
     }
   }
+}
+
+function renderDirectoyHtml(dir: string, paths: string[]) {
+  return [
+    `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><html>`,
+    `<title>Directory listing for ${dir}</title>`,
+    `<body>`,
+    `<h2>Directory listing for ${dir}</h2>`,
+    `<hr>`,
+    `<ul>`,
+    ...paths.map(path => `<li><a href="${path}">${path}</a>`),
+    `</ul>`,
+    `<hr>`,
+    `</body>`,
+    `</html>`,
+  ].join('\n');
 }
