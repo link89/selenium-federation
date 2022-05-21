@@ -7,10 +7,6 @@ import type { Context } from 'koa';
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
 const ROLES = ['hub', 'node'];
 
-export const sessionDtoSchema = yup.object({
-  id: yup.string().defined(),
-  responseCapabilities: yup.object().optional(),
-}).defined();
 
 export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
@@ -27,12 +23,6 @@ export const driverConfigurationSchema = yup.object({
   maxSessions: yup.number().default(1),
   defaultCapabilities: yup.object().default({}),
   cleanUserData: yup.boolean().default(true),
-  sessions: yup.array(sessionDtoSchema).default([]),
-}).defined();
-
-export const remoteDriverConfigurationSchema = yup.object({
-  url: yup.string().defined(),
-  registerAt: yup.number().defined(),
 }).defined();
 
 export const configurationSchema = yup.object({
@@ -65,11 +55,21 @@ export const configurationSchema = yup.object({
   drivers: yup.array(driverConfigurationSchema).default([]),
 }).defined();
 
+export const sessionDtoSchema = yup.object({
+  id: yup.string().defined(),
+  responseCapabilities: yup.object().optional(),
+}).defined();
+
+export const driverDtoSchema = yup.object({
+  config: driverConfigurationSchema,
+  sessions: yup.array(sessionDtoSchema).default([]),
+  availableSlots: yup.number().defined(),
+}).defined();
+
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
 export interface DriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
-export interface RemoteDriverConfiguration extends yup.Asserts<typeof remoteDriverConfigurationSchema> { };
 export interface SessionDto extends yup.Asserts<typeof sessionDtoSchema> { };
-export type Driver = DriverConfiguration | RemoteDriverConfiguration;
+export interface DriverDto extends yup.Asserts<typeof driverDtoSchema> { };
 
 export interface DriverMatchCriteria {
   browserName?: string;

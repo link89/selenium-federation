@@ -1,5 +1,5 @@
 import _ from "lodash";
-import { AutoCmdError, Configuration, DriverConfiguration, WebdriverError } from './types';
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, WebdriverError } from './types';
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity } from './utils';
 import { Either, Left, Right } from 'purify-ts';
@@ -148,7 +148,7 @@ export class LocalService implements IService {
     return await webdriverSession?.getCdpEndpoint();
   }
 
-  public async getDrivers(): Promise<DriverConfiguration[]> {
+  public async getDriverDtos(): Promise<DriverDto[]> {
     return this.webdriverManagers.map(d => d.jsonObject);
   }
 
@@ -274,8 +274,12 @@ class WebdriverSessionManager {
     return session;
   }
 
-  public get jsonObject(): DriverConfiguration {
-    return { ...this.driverConfig, sessions: this.getSessions().map(s => s.jsonObject) };
+  public get jsonObject(): DriverDto {
+    return {
+      config: this.driverConfig,
+      sessions: this.getSessions().map(s => s.jsonObject),
+      availableSlots: this.availableSlots,
+    };
   }
 
   private addSession(session: ISession) {

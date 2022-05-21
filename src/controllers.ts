@@ -87,7 +87,7 @@ export class LocalController implements IController {
   }
 
   onGetDriversRequest: RequestHandler = async (ctx, next) => {
-    const drivers = await this.localService.getDrivers();
+    const drivers = await this.localService.getDriverDtos();
     this.setHttpResponse(ctx, {
       status: 200,
       jsonBody: drivers,
