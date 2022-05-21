@@ -101,8 +101,8 @@ export class LocalController implements IController {
         status: 500,
         jsonBody: {
           ...WEBDRIVER_ERRORS.UNKNOWN_ERROR,
-          message: e.message || '',
-          stacktrace: e.stack || '',
+          message: e?.message || '',
+          stacktrace: e?.stack || '',
         }
       });
     });
@@ -185,9 +185,7 @@ export class LocalController implements IController {
   }
 }
 
-export function fileServer(root: string): RequestHandler {
-
-
+export function serveStatic(root: string): RequestHandler {
   return async (ctx, next) => {
     if (ctx.method !== 'HEAD' && ctx.method !== 'GET') return;
 

@@ -8,8 +8,12 @@ import { config } from "./config";
 import * as Sentry from "@sentry/node";
 
 import { LocalService } from "./service";
-import { fileServer, LocalController } from "./controllers";
+import { serveStatic, LocalController } from "./controllers";
 import { ProcessManager } from "./process";
+
+const mount = require('koa-mount');
+const serveList = require('koa-serve-list');
+const serveStatic = require('koa-static');
 
 Sentry.init({
   dsn: config.sentryDSN,
@@ -37,19 +41,21 @@ Sentry.init({
     .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
     .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
     // data model
-    .get('/drivers', localServiceController.onGetDriversRequest)
-    // file server
-    .all('/fs/(.*)', fileServer(resolve(config.fileServerRoot)))
+    .get('/drivers', localServiceController.onGetDriversRequest);
 
 
   const router = new Router()
-  router.use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods());
+  router
+    .use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods())
+    .all('/fs/(.*)', serveStatic(config.fileServerRoot));
+
 
   const app = new Koa();
-  app.use(bodyparser());
-  app.use(logger());
-  app.use(router.routes()).use(router.allowedMethods());
-  app.use(localServiceController.onError);
+  app
+    .use(bodyparser())
+    .use(logger())
+    .use(router.routes()).use(router.allowedMethods())
+    .use(localServiceController.onError);
 
   // set host to a ipv4 address or else request ip will be ipv6 format
   // https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback
