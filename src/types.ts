@@ -36,8 +36,8 @@ export const configurationSchema = yup.object({
 
   browserIdleTimeout: yup.number().default(60),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
+  configFilePath: yup.string().defined(),
 
-  registerTimeout: yup.number().default(60),
   registerTo: yup.string().optional(),
   registerAs: yup.string().optional(),
 
@@ -51,7 +51,6 @@ export const configurationSchema = yup.object({
     maxSessions: yup.number().default(5),
   }).default(undefined),
 
-  configFilePath: yup.string().defined(),
   drivers: yup.array(driverConfigurationSchema).default([]),
 }).defined();
 
@@ -71,19 +70,10 @@ export interface DriverConfiguration extends yup.Asserts<typeof driverConfigurat
 export interface SessionDto extends yup.Asserts<typeof sessionDtoSchema> { };
 export interface DriverDto extends yup.Asserts<typeof driverDtoSchema> { };
 
-export interface DriverMatchCriteria {
-  browserName?: string;
-  platformName?: string;
-  browserVersion?: string;
-  uuid?: string;
-  tags: string[];
-}
-
 export interface SessionPathParams {
   sessionId: string,
   suffix?: string,
 }
-
 
 export interface WebdriverError<T = unknown> {
   code: number;

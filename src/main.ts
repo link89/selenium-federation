@@ -27,15 +27,17 @@ Sentry.init({
 
   const webdirverRouter = new Router();
   webdirverRouter
-    // handle auto-cmd request
+    // auto-cmd
     .post('/session/:sessionId/auto-cmd', localServiceController.onAutoCmdRequest)
-    .post('/node/:nodeId/auto-cmd', localServiceController.onAutoCmdRequest)
+    .post('/nodes/:nodeId/auto-cmd', localServiceController.onAutoCmdRequest)
     .all('/auto-cmd', localServiceController.onAutoCmdRequest)
-    // handle webdriver session
+    // webdriver session
     .post('/session', localServiceController.onNewWebdriverSessionRequest)
     .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
     .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
-    .get('/drivers', localServiceController.onGetDriversRequest)
+    // data model
+    .get('/drivers', localServiceController.onGetDriversRequest);
+
 
   const router = new Router()
   router.use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods());
