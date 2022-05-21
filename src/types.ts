@@ -7,6 +7,11 @@ import type { Context } from 'koa';
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
 const ROLES = ['hub', 'node'];
 
+export const sessionDtoSchema = yup.object({
+  id: yup.string().defined(),
+  responseCapabilities: yup.object().optional(),
+}).defined();
+
 export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   browserVersion: yup.string().defined(),
@@ -22,6 +27,7 @@ export const driverConfigurationSchema = yup.object({
   maxSessions: yup.number().default(1),
   defaultCapabilities: yup.object().default({}),
   cleanUserData: yup.boolean().default(true),
+  sessions: yup.array(sessionDtoSchema).default([]),
 }).defined();
 
 export const remoteDriverConfigurationSchema = yup.object({
@@ -33,6 +39,7 @@ export const configurationSchema = yup.object({
   role: yup.string().oneOf(ROLES).defined(),
   port: yup.number().default(4444),
   host: yup.string().default('0.0.0.0'),
+  tags: yup.array(yup.string().defined()).default([]),
 
   uuid: yup.string().default(() => uuidv4()),
   platformName: yup.string().default(getW3CPlatformName()),
@@ -61,6 +68,7 @@ export const configurationSchema = yup.object({
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
 export interface DriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
 export interface RemoteDriverConfiguration extends yup.Asserts<typeof remoteDriverConfigurationSchema> { };
+export interface SessionDto extends yup.Asserts<typeof sessionDtoSchema> { };
 export type Driver = DriverConfiguration | RemoteDriverConfiguration;
 
 export interface DriverMatchCriteria {
@@ -76,24 +84,6 @@ export interface SessionPathParams {
   suffix?: string,
 }
 
-export interface SessionDto {
-  id: string;
-  option: any;
-}
-
-export type DriverStats = DriverConfiguration & { sessions: SessionDto[], stats: SessionStats };
-
-export interface NodeStatus {
-  remoteUrl?: string;
-  configuration: Partial<Configuration>;
-  systemInfo: any;
-  drivers: DriverStats[];
-}
-
-export interface SessionStats {
-  total: number;
-  failed: number;
-}
 
 export interface WebdriverError<T = unknown> {
   code: number;

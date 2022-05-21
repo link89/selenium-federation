@@ -35,6 +35,7 @@ Sentry.init({
     .post('/session', localServiceController.onNewWebdriverSessionRequest)
     .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
     .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
+    .get('/drivers', localServiceController.onGetDriversRequest)
 
   const router = new Router()
   router.use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods());

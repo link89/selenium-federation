@@ -14,20 +14,19 @@ export interface IService {
 }
 
 
-
 export class LocalService implements IService {
 
   static of(config: Configuration, processManager: ProcessManager) {
     return new LocalService(
       config,
-      config.drivers.map(driver => new WebdriverManager(config, driver, processManager)),
+      config.drivers.map(driver => new WebdriverSessionManager(config, driver, processManager)),
       processManager,
     );
   }
 
   constructor(
     private readonly config: Configuration,
-    private readonly webdriverManagers: WebdriverManager[],
+    private readonly webdriverManagers: WebdriverSessionManager[],
     private readonly processManager: ProcessManager,
   ) { }
 
@@ -50,11 +49,11 @@ export class LocalService implements IService {
     return this.config.maxSessions - this.busySlots;
   }
 
-  public getMatchedWebdrivers(request: RequestCapabilities): WebdriverManager[] {
+  public getMatchedWebdrivers(request: RequestCapabilities): WebdriverSessionManager[] {
     return this.webdriverManagers.filter(driver => driver.isMatch(request));
   }
 
-  public getAvailableWebdrivers(request: RequestCapabilities): WebdriverManager[] {
+  public getAvailableWebdrivers(request: RequestCapabilities): WebdriverSessionManager[] {
     return this.getMatchedWebdrivers(request).filter(driver => driver.availableSlots > 0);
   }
 
@@ -149,6 +148,10 @@ export class LocalService implements IService {
     return await webdriverSession?.getCdpEndpoint();
   }
 
+  public async getDrivers(): Promise<DriverConfiguration[]> {
+    return this.webdriverManagers.map(d => d.jsonObject);
+  }
+
   public async forwardAutoCmdRequest(request: AxiosRequestConfig): Promise<Either<AutoCmdError, AxiosResponse>> {
     try {
       const autoCmdProcess = await this.processManager.getOrSpawnAutoCmdProcess();
@@ -174,7 +177,7 @@ export class LocalService implements IService {
   }
 }
 
-class WebdriverManager {
+class WebdriverSessionManager {
   private readonly sessions: Map<string, ISession> = new Map();
   private readonly watchDogs: WeakMap<ISession, Watchdog> = new WeakMap();
   private pendingSessions: number = 0;
@@ -271,11 +274,19 @@ class WebdriverManager {
     return session;
   }
 
+  public get jsonObject(): DriverConfiguration {
+    return { ...this.driverConfig, sessions: this.getSessions().map(s => s.jsonObject) };
+  }
+
   private addSession(session: ISession) {
     this.sessions.set(session.id, session);
   }
 
   private deleteSession(id: string) {
     this.sessions.delete(id);
+  }
+
+  private getSessions(): ISession[] {
+    return [...this.sessions.values()];
   }
 }

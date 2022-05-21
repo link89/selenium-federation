@@ -1,7 +1,7 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { retry, rmAsync } from "./utils";
 import { ChildProcess } from 'child_process';
-import { DriverConfiguration } from "./types";
+import { DriverConfiguration, SessionDto } from "./types";
 import { Request } from 'koa';
 import * as yup from 'yup';
 import _ from 'lodash';
@@ -54,7 +54,7 @@ export class RequestCapabilities {
   }
 
   get sanitizedCapbilities() {
-    const caps = _.cloneDeep(this.data || {});
+    const caps = _.cloneDeep(this.data);
     for (const key of ['browserVersion', 'extOptions', 'tags', ...Object.values(CUSTOM_CAPS_FIELDS)]) {
       if (caps.desiredCapabilities) {
         delete caps.desiredCapabilities[key];
@@ -118,6 +118,7 @@ export interface ISession {
   start: () => Promise<ResponseCapabilities>;
   stop: () => Promise<void>;
   forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any>>;
+  jsonObject: SessionDto;
 }
 
 export function createSession(
@@ -154,6 +155,13 @@ abstract class AbstractWebdriveSession implements ISession {
       throw new Error(`sessionId is invalid: ${sessionId}`);
     }
     return sessionId;
+  }
+
+  get jsonObject() {
+    return {
+      id: this.id,
+      responseCapabilities: this.response?.jsonObject,
+    };
   }
 
   async start() {
@@ -195,7 +203,14 @@ abstract class AbstractWebdriveSession implements ISession {
   }
 
   private mergeDefaultCaps(caps: any) {
-    return _.defaultsDeep(this.webdriverConfiguration.defaultCapabilities || {}, caps || {});
+    const defaultCaps = this.webdriverConfiguration.defaultCapabilities;
+    if (caps.desiredCapabilities) {
+      _.merge(caps.desiredCapabilities, defaultCaps);
+    }
+    if (caps.capabilities?.alwaysMatch) {
+      _.merge(caps.capabilities.alwaysMatch, defaultCaps);
+    }
+    return caps;
   }
 
   private killProcessGroup() {

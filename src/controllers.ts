@@ -26,7 +26,7 @@ export interface IController {
 
   onWebsocketUpgrade?: (req: IncomingMessage, socket: Duplex, header: Buffer) => Promise<void>;
   onNodeRegiester?: RequestHandler;
-  onGetDrivers?: RequestHandler;
+  onGetDriversRequest?: RequestHandler;
 }
 
 export class LocalController implements IController {
@@ -84,6 +84,14 @@ export class LocalController implements IController {
         headers: response.headers,
       });
     });
+  }
+
+  onGetDriversRequest: RequestHandler = async (ctx, next) => {
+    const drivers = await this.localService.getDrivers();
+    this.setHttpResponse(ctx, {
+      status: 200,
+      jsonBody: drivers,
+    })
   }
 
   onError: RequestHandler = (ctx, next) => {
