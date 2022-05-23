@@ -46,10 +46,10 @@ export class LruCache<K, V> {
 
   set(key: K, value: V) {
     if (this.map.size >= this.maxSize) {
-      const node = this.getTailNode();
-      if (node) {
-        this.map.delete(node.key!);
-        this.removeNode(node);
+      const tail = this.getTailNode();
+      if (tail) {
+        this.map.delete(tail.key!);
+        this.removeNode(tail);
       }
     }
     let node = this.map.get(key);
@@ -60,7 +60,7 @@ export class LruCache<K, V> {
       node = new CacheNode<K, V>(key, value)
     }
     this.map.set(key, node);
-    this.insertHead(node);
+    this.insertNode(node, this.head);
   }
 
   get(key: K) {
@@ -68,14 +68,14 @@ export class LruCache<K, V> {
     if (!node) return;
 
     this.removeNode(node);
-    this.insertHead(node);
+    this.insertNode(node, this.head);
     return node.value;
   }
 
-  private insertHead(node: CacheNode<K, V>) {
-    node.prev = this.head;
-    node.next = this.head.next;
-    this.head.next = node;
+  private insertNode(node: CacheNode<K, V>, after: CacheNode<K, V>) {
+    node.prev = after;
+    node.next = after.next;
+    after.next = node;
   }
 
   private removeNode(node: CacheNode<K, V>) {
