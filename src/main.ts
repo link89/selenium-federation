@@ -43,7 +43,7 @@ Sentry.init({
   const router = new Router()
   router
     .use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods())
-    .all('/fs/(.*)', serveStatic(config.fileServerRoot));
+    .all('/fs/(.*)', serveStatic(config.serveStatic));
 
 
   const app = new Koa();

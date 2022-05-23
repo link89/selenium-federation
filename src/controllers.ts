@@ -192,7 +192,7 @@ export class LocalController implements IController {
 export function serveStatic(root: string): RequestHandler {
   return async (ctx, next) => {
     if (ctx.method !== 'HEAD' && ctx.method !== 'GET') return;
-    const url = ctx.params[0] || '/';
+    const url = '/' + (ctx.params[0] || '');
     const path = join(root, url);
 
     try {
