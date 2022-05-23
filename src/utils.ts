@@ -26,6 +26,75 @@ export async function retry<T>(cb: () => Promise<T> | T, option: IRetryOption = 
   }
 }
 
+class CacheNode<K, V> {
+  constructor(
+    public readonly key?: K,
+    public value?: V,
+    public prev?: CacheNode<K, V>,
+    public next?: CacheNode<K, V>,
+  ) { }
+}
+
+export class LruCache<K, V> {
+
+  private map = new Map<K, CacheNode<K, V>>();
+  private head = new CacheNode<K, V>(undefined, undefined);
+
+  constructor(
+    private maxSize: number,
+  ) { }
+
+  set(key: K, value: V) {
+    if (this.map.size >= this.maxSize) {
+      const node = this.getTailNode();
+      if (node) {
+        this.map.delete(node.key!);
+        this.removeNode(node);
+      }
+    }
+    let node = this.map.get(key);
+    if (node) {
+      this.removeNode(node);
+      node.value = value;
+    } else {
+      node = new CacheNode<K, V>(key, value)
+    }
+    this.map.set(key, node);
+    this.insertHead(node);
+  }
+
+  get(key: K) {
+    const node = this.map.get(key)
+    if (!node) return;
+
+    this.removeNode(node);
+    this.insertHead(node);
+    return node.value;
+  }
+
+  private insertHead(node: CacheNode<K, V>) {
+    node.prev = this.head;
+    node.next = this.head.next;
+    this.head.next = node;
+  }
+
+  private removeNode(node: CacheNode<K, V>) {
+    node.prev!.next = node.next;
+    if (node.next) {
+      node.next.prev = node.prev;
+    }
+  }
+
+  private getTailNode() {
+    if (!this.head.next) return
+    let node = this.head;
+    while (node.next) {
+      node = node.next;
+    }
+    return node;
+  }
+}
+
 export class Semaphore {
   queue: ((value?: any) => void)[] = [];
 
