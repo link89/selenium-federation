@@ -264,7 +264,7 @@ const setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
   if (response.headers) {
     ctx.set(response.headers);
   }
-  if (void 0 != response.body) {
+  if (response.body) {
     ctx.body = response.body;
   } else if (response.jsonBody) {
     ctx.body = JSON.stringify(response.jsonBody);
