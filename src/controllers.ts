@@ -23,6 +23,7 @@ interface HttpResponse {
 
 export interface IController {
   onNewWebdriverSessionRequest: RequestHandler;
+  onGetBestMatchRequest: RequestHandler;
   onDeleteWebdirverSessionRequest: RequestHandler;
   onWebdirverSessionCommandRqeust: RequestHandler;
   onAutoCmdRequest: RequestHandler;
@@ -40,7 +41,9 @@ export class RemoteController implements IController {
   ) { }
 
   onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
+  }
 
+  onGetBestMatchRequest: RequestHandler = async (ctx, next) => {
   }
 
   onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
@@ -94,6 +97,21 @@ export class LocalController implements IController {
     });
   }
 
+  onGetBestMatchRequest: RequestHandler = async (ctx, next) => {
+    const request = new RequestCapabilities(ctx.request);
+    const driver = this.localService.getBestAvailableWebdirver(request);
+    if(driver) {
+      setHttpResponse(ctx, {
+        status: 200,
+        jsonBody: driver,
+      });
+    } else {
+      setHttpResponse(ctx, {
+        status: 404,
+      });
+    }
+  }
+
   onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
     const { sessionId } = this.getSessionParams(ctx);
     await this.localService.deleteWebdirverSession(sessionId);
@@ -131,7 +149,6 @@ export class LocalController implements IController {
       jsonBody: nodes,
     });
   }
-
 
   onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
     const sessionId = this.getSessionIdFromCdpPath(req.url);

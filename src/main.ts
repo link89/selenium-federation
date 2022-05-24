@@ -37,9 +37,8 @@ Sentry.init({
     .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
     .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
     // data model
+    .post('/best-match', localServiceController.onGetBestMatchRequest)
     .get('/nodes', localServiceController.onGetNodesRequest);
-
-
 
   const router = new Router()
   router

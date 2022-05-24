@@ -61,7 +61,7 @@ export class LocalService {
   static of(config: Configuration, processManager: ProcessManager) {
     return new LocalService(
       config,
-      config.drivers.map(driver => new WebdriverSessionManager(config, driver, processManager)),
+      config.drivers.map(driver => new WebdriverManager(config, driver, processManager)),
       processManager,
       axios.create(),
     );
@@ -71,7 +71,7 @@ export class LocalService {
 
   constructor(
     private readonly config: Configuration,
-    private readonly webdriverManagers: WebdriverSessionManager[],
+    private readonly webdriverManagers: WebdriverManager[],
     private readonly processManager: ProcessManager,
     private readonly axios: AxiosInstance,
   ) { }
@@ -98,16 +98,23 @@ export class LocalService {
     return this.config.maxSessions - this.busySlots;
   }
 
-  public getMatchedWebdrivers(request: RequestCapabilities): WebdriverSessionManager[] {
+  public getMatchedWebdrivers(request: RequestCapabilities): WebdriverManager[] {
     return this.webdriverManagers.filter(driver => driver.isMatch(request));
   }
 
-  public getAvailableWebdrivers(request: RequestCapabilities): WebdriverSessionManager[] {
+  public getAvailableWebdrivers(request: RequestCapabilities): WebdriverManager[] {
     return this.getMatchedWebdrivers(request).filter(driver => driver.availableSlots > 0);
   }
 
   public getBestAvailableWebdirver(request: RequestCapabilities) {
-    return _.maxBy(this.getAvailableWebdrivers(request), driver => driver.getScore(request))
+    return _.maxBy(this.getAvailableWebdrivers(request), driver => driver.getScore(request));
+  }
+
+  public getBestMatch(request: RequestCapabilities): DriverDto | undefined {
+    if (!this.availableSlots) return;
+    const driver = this.getBestAvailableWebdirver(request);
+    if (!driver) return;
+    return driver.jsonObject;
   }
 
   public async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, ResponseCapabilities>> {
@@ -262,7 +269,7 @@ export class LocalService {
   }
 }
 
-class WebdriverSessionManager {
+class WebdriverManager {
   private readonly sessions: Map<string, ISession> = new Map();
   private readonly watchDogs: WeakMap<ISession, Watchdog> = new WeakMap();
   private pendingSessions: number = 0;
