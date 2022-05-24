@@ -7,7 +7,7 @@ import { config } from "./config";
 import * as Sentry from "@sentry/node";
 
 import { LocalService } from "./service";
-import { serveStatic, LocalController } from "./controllers";
+import { serveStatic, LocalController, onError } from "./controllers";
 import { ProcessManager } from "./process";
 
 
@@ -51,7 +51,7 @@ Sentry.init({
     .use(bodyparser())
     .use(logger())
     .use(router.routes()).use(router.allowedMethods())
-    .use(localServiceController.onError);
+    .use(onError);
 
   // set host to a ipv4 address or else request ip will be ipv6 format
   // https://nodejs.org/api/net.html#net_server_listen_port_host_backlog_callback

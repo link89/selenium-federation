@@ -53,14 +53,12 @@ export class RemoteService {
 
   getDrivers(): RegistedDriver[] {
     const now = Date.now();
-    const expired: string[] = []
     for (const [key, value] of this.driversIndex.entries()) {
       if (value.expireAfter >= now) {
-        expired.push(key);
+        // it's safe to do so according to https://stackoverflow.com/a/35943995/3099733
+        // don't do this in Python
+        this.driversIndex.delete(key);
       }
-    }
-    for (const key of expired) {
-      this.driversIndex.delete(key);
     }
     return [...this.driversIndex.values()];
   }

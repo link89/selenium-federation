@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from "axios";
-import { LocalService } from "./service";
+import { LocalService, RemoteService } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
 import { createProxyServer } from 'http-proxy';
@@ -25,13 +25,45 @@ export interface IController {
   onNewWebdriverSessionRequest: RequestHandler;
   onDeleteWebdirverSessionRequest: RequestHandler;
   onWebdirverSessionCommandRqeust: RequestHandler;
-  onError: RequestHandler;
   onAutoCmdRequest: RequestHandler;
 
-  onWebsocketUpgrade?: (req: IncomingMessage, socket: Duplex, header: Buffer) => Promise<void>;
-  onNodeRegiester?: RequestHandler;
-  onGetDriversRequest?: RequestHandler;
+  onWebsocketUpgrade: (req: IncomingMessage, socket: Duplex, header: Buffer) => Promise<void>;
+  onNodeRegiester: RequestHandler;
+  onGetDriversRequest: RequestHandler;
 }
+
+
+export class RemoteController implements IController {
+
+  constructor(
+    private readonly remoteService: RemoteService,
+  ) { }
+
+  onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
+  }
+
+  onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
+  }
+
+  onWebdirverSessionCommandRqeust: RequestHandler = async (ctx, next) => {
+  }
+
+  onAutoCmdRequest: RequestHandler = async (ctx, next) => {
+  }
+
+  onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
+    throw Error(`hub service won't handle websocket proxy`);
+  }
+
+  onNodeRegiester: RequestHandler = async (ctx, next) => {
+
+  }
+
+  onGetDriversRequest: RequestHandler = async (ctx, next) => {
+
+  }
+}
+
 
 export class LocalController implements IController {
 
@@ -98,19 +130,6 @@ export class LocalController implements IController {
     })
   }
 
-  onError: RequestHandler = (ctx, next) => {
-    next().catch(e => {
-      this.setHttpResponse(ctx, {
-        status: 500,
-        jsonBody: {
-          ...WEBDRIVER_ERRORS.UNKNOWN_ERROR,
-          message: e?.message || '',
-          stacktrace: e?.stack || '',
-        }
-      });
-    });
-  }
-
   onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
     const sessionId = this.getSessionIdFromCdpPath(req.url);
     if (!sessionId) {
@@ -156,6 +175,10 @@ export class LocalController implements IController {
     });
   }
 
+  onNodeRegiester: RequestHandler = (ctx, next) => {
+    throw Error(`local/node service don't implement register endpoint`);
+  }
+
   private cdpPathPattern = match<{ sessionId: string }>(`/wd/hub/session/:sessionId/se/cdp`, { decode: decodeURIComponent });
 
   private getSessionIdFromCdpPath(pathname?: string) {
@@ -186,6 +209,20 @@ export class LocalController implements IController {
     }
     return { sessionId, path: params[0] ? '/' + params[0] : '' };
   }
+}
+
+
+export const onError: RequestHandler = (ctx, next) => {
+  next().catch(e => {
+    ctx.status = 500,
+      ctx.body = JSON.stringify(
+        {
+          ...WEBDRIVER_ERRORS.UNKNOWN_ERROR,
+          message: e?.message || '',
+          stacktrace: e?.stack || '',
+        }
+      )
+  });
 }
 
 export function serveStatic(root: string): RequestHandler {

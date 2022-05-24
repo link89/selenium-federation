@@ -39,7 +39,7 @@ export const configurationSchema = yup.object({
   serveStatic: yup.string().default('.'),
   configFilePath: yup.string().defined(),
 
-  registerTimeout: yup.number().default(30),
+  registerTimeout: yup.number().default(10),
   registerTo: yup.string().optional(),
   registerAs: yup.string().optional(),
 
