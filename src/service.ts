@@ -270,19 +270,7 @@ class WebdriverSessionManager {
   ) { }
 
   isMatch(request: RequestCapabilities): boolean {
-    if (request.browserName && request.browserName != this.driverConfig.browserName) {
-      return false;
-    }
-    if (request.browserVersion && this.driverConfig.browserVersion && request.browserVersion != this.driverConfig.browserVersion) {
-      return false;
-    }
-    if (request.platformName && request.platformName != this.driverConfig.platformName) {
-      return false;
-    }
-    if (request.tags && request.tags.every(tag => !this.driverConfig.tags.includes(tag))) {
-      return false;
-    }
-    return true;
+    return isRequestMatch(this.driverConfig, request);
   }
 
   getScore(request: RequestCapabilities) {
@@ -374,4 +362,20 @@ class WebdriverSessionManager {
   private getSessions(): ISession[] {
     return [...this.sessions.values()];
   }
+}
+
+function isRequestMatch(driver: DriverConfiguration, request: RequestCapabilities): boolean {
+  if (request.browserName && request.browserName != driver.browserName) {
+    return false;
+  }
+  if (request.browserVersion && request.browserVersion != driver.browserVersion) {
+    return false;
+  }
+  if (request.platformName && request.platformName != driver.platformName) {
+    return false;
+  }
+  if (request.tags && request.tags.every(tag => !driver.tags.includes(tag))) {
+    return false;
+  }
+  return true;
 }
