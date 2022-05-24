@@ -11,7 +11,7 @@ const ROLES = ['hub', 'node'];
 export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   browserVersion: yup.string().defined(),
-  browserIdleTimeout: yup.number(),
+  sessionTimeout: yup.number(),
   platformName: yup.string().default(getW3CPlatformName()),
   uuid: yup.string().default(() => uuidv4()),
   tags: yup.array(yup.string().defined()).default([]),
@@ -30,16 +30,16 @@ export const configurationSchema = yup.object({
   port: yup.number().default(4444),
   host: yup.string().default('0.0.0.0'),
   tags: yup.array(yup.string().defined()).default([]),
-
   uuid: yup.string().default(() => uuidv4()),
   platformName: yup.string().default(getW3CPlatformName()),
 
-  browserIdleTimeout: yup.number().default(60),
+  sessionTimeout: yup.number().default(60),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
 
   serveStatic: yup.string().default('.'),
   configFilePath: yup.string().defined(),
 
+  registerTimeout: yup.number().default(30),
   registerTo: yup.string().optional(),
   registerAs: yup.string().optional(),
 

@@ -11,8 +11,7 @@ import { WEBDRIVER_ERRORS } from "./constants";
 import { RequestHandler } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
-import { join, resolve } from 'path';
-
+import { join } from 'path';
 
 
 interface HttpResponse {
@@ -157,7 +156,7 @@ export class LocalController implements IController {
     });
   }
 
-  private cdpPathPattern = match<{ sessionId: string }>('/wd/hub/session/:sessionId/se/cdp', { decode: decodeURIComponent });
+  private cdpPathPattern = match<{ sessionId: string }>(`/wd/hub/session/:sessionId/se/cdp`, { decode: decodeURIComponent });
 
   private getSessionIdFromCdpPath(pathname?: string) {
     if (!pathname) return;

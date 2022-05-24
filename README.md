@@ -41,8 +41,8 @@ port: 4444
 browserIdleTimeout: 60  # browser processes will be killed after session inactive after browserIdleTimeout
 maxSessions: 5  # limit the max sessions, default to Math.max(1, os.cpus().length - 1)
 
-registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
-registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
+registerTo: http://localhost:5555 # optional, register to a hub service
+registerAs: http://192.168.1.2:4444 # optional, accessible URL to this service, useful when selenium-federation service behind proxy or in Docker or Virutal Machine that with port mapping.
 
 autoCmdHttp:
   path: auto-cmd-http  # optional, path to auto-cmd-http executable file

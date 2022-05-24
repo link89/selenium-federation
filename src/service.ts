@@ -1,6 +1,7 @@
 import _ from "lodash";
-import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, WebdriverError } from './types';
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import * as yup from 'yup';
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, WebdriverError } from './types';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity } from './utils';
 import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
@@ -10,11 +11,63 @@ import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
 export interface IService {
-
+  newWebdirverSession: (request: RequestCapabilities) => Promise<Either<WebdriverError, ResponseCapabilities>>;
+  deleteWebdirverSession: (sessiondId: string) => Promise<void>;
+  forwardWebdriverRequest: (sessionId: string, path: string, request: AxiosRequestConfig) => Promise<Either<WebdriverError, AxiosResponse>>;
 }
 
 
-export class LocalService implements IService {
+interface RegistedDriver {
+  nodeUrl: string;
+  driver: DriverDto;
+  expireAfter: number;
+}
+
+
+export class RemoteService {
+
+  private driversIndex = new Map<string, RegistedDriver>();
+
+  constructor(
+    private config: Configuration,
+    private axios: AxiosInstance,
+  ) { }
+
+  async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, ResponseCapabilities>> {
+    return null as any;
+  }
+
+  async register(nodeUrl: string) {
+    const res = await this.axios.request({
+      method: 'GET',
+      baseURL: nodeUrl,
+      url: '/wd/hub/drivers',
+      timeout: 5e3,
+    });
+    const drivers = yup.array(driverDtoSchema).defined().validateSync(res.data);
+    const expireAfter = Date.now()+ this.config.registerTimeout;
+    drivers.forEach(driver => {
+      this.driversIndex.set(driver.config.uuid, { nodeUrl, driver, expireAfter });
+    });
+  }
+
+  getDrivers(): RegistedDriver[] {
+    const now = Date.now();
+    const expired: string[] = []
+    for (const [key, value] of this.driversIndex.entries()) {
+      if (value.expireAfter >= now) {
+        expired.push(key);
+      }
+    }
+    for (const key of expired) {
+      this.driversIndex.delete(key);
+    }
+    return [...this.driversIndex.values()];
+  }
+}
+
+
+export class LocalService {
 
   static of(config: Configuration, processManager: ProcessManager) {
     return new LocalService(
@@ -221,7 +274,7 @@ class WebdriverSessionManager {
   }
 
   get sessionTimeoutInSeconds() {
-    return this.driverConfig.browserIdleTimeout || this.config.browserIdleTimeout;
+    return this.driverConfig.sessionTimeout || this.config.sessionTimeout;
   }
 
   public hasSession(sessionId: string) {
