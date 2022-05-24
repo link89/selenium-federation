@@ -37,6 +37,7 @@
   "homepage": "https://github.com/link89/selenium-federation#readme",
   "devDependencies": {
     "@types/bluebird": "^3.5.33",
+    "@types/http-proxy": "^1.17.9",
     "@types/koa": "^2.11.6",
     "@types/koa__router": "^8.0.11",
     "@types/koa-bodyparser": "^4.3.3",
@@ -54,7 +55,6 @@
     "@koa/router": "^10.1.1",
     "@sentry/node": "^6.0.2",
     "@sentry/tracing": "^6.0.2",
-    "@types/http-proxy": "^1.17.7",
     "axios": "^0.21.0",
     "bluebird": "^3.7.2",
     "get-port": "^5.1.1",
