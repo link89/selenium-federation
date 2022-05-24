@@ -35,7 +35,7 @@ export class RemoteService {
     return null as any;
   }
 
-  async register(nodeUrl: string) {
+  async onRegister(nodeUrl: string) {
     const res = await this.axios.request({
       method: 'GET',
       baseURL: nodeUrl,

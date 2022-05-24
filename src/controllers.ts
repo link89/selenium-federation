@@ -40,6 +40,7 @@ export class RemoteController implements IController {
   ) { }
 
   onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
+
   }
 
   onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
@@ -57,7 +58,8 @@ export class RemoteController implements IController {
 
   onNodeRegiester: RequestHandler = async (ctx, next) => {
     const registerRequest = registerDtoSchema.validateSync(ctx.body);
-    await this.remoteService.register(registerRequest.registerAs);
+    const nodeUrl = registerRequest.registerAs || `http://${ctx.request.ip}`;
+    await this.remoteService.onRegister(nodeUrl);
     ctx.status = 201;
   }
 

@@ -68,7 +68,7 @@ export const driverDtoSchema = yup.object({
 }).defined();
 
 export const registerDtoSchema = yup.object({
-  registerAs: yup.string().defined(),
+  registerAs: yup.string().optional(),
 }).defined();
 
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
