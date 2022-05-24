@@ -75,7 +75,7 @@ export interface Configuration extends yup.Asserts<typeof configurationSchema> {
 export interface DriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
 export interface SessionDto extends yup.Asserts<typeof sessionDtoSchema> { };
 export interface DriverDto extends yup.Asserts<typeof driverDtoSchema> { };
-export interface RegisterAsDto extends yup.Asserts<typeof registerDtoSchema> { };
+export interface RegisterDto extends yup.Asserts<typeof registerDtoSchema> { };
 
 export interface SessionPathParams {
   sessionId: string,

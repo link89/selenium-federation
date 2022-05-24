@@ -1,6 +1,6 @@
 import _ from "lodash";
 import * as yup from 'yup';
-import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, WebdriverError } from './types';
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, RegisterDto, WebdriverError } from './types';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity } from './utils';
 import { Either, Left, Right } from 'purify-ts';
@@ -9,12 +9,6 @@ import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
 import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
-
-export interface IService {
-  newWebdirverSession: (request: RequestCapabilities) => Promise<Either<WebdriverError, ResponseCapabilities>>;
-  deleteWebdirverSession: (sessiondId: string) => Promise<void>;
-  forwardWebdriverRequest: (sessionId: string, path: string, request: AxiosRequestConfig) => Promise<Either<WebdriverError, AxiosResponse>>;
-}
 
 interface RegistedDriver {
   nodeUrl: string;
@@ -69,13 +63,17 @@ export class LocalService {
       config,
       config.drivers.map(driver => new WebdriverSessionManager(config, driver, processManager)),
       processManager,
+      axios.create(),
     );
   }
+
+  private nextRegisterTime: number = 0;
 
   constructor(
     private readonly config: Configuration,
     private readonly webdriverManagers: WebdriverSessionManager[],
     private readonly processManager: ProcessManager,
+    private readonly axios: AxiosInstance,
   ) { }
 
   init() {
@@ -86,7 +84,10 @@ export class LocalService {
           process.exit();
         });
       })
-    })
+    });
+    if (this.config.registerTo) {
+      this.autoRegister(1000);
+    }
   }
 
   public get busySlots() {
@@ -221,6 +222,32 @@ export class LocalService {
         message: e.message || '',
         stacktrace: e.stack || '',
       });
+    }
+  }
+
+  private async autoRegister(interval: number) {
+    if (this.nextRegisterTime < Date.now()) {
+      await this.register(); // suppressed error
+    }
+    setTimeout(() => this.autoRegister(interval), interval);
+  }
+
+  private async register() {
+    if (!this.config.registerTo) return;
+
+    const data: RegisterDto = { registerAs: this.config.registerAs };
+    try {
+      const res = await this.axios.request({
+        method: 'GET',
+        url: this.config.registerTo,
+        data,
+        timeout: 5e3,
+      });
+      this.nextRegisterTime = Date.now() + this.config.registerTimeout * 800 // 800 = 1000 x 80%, 80% of timeout
+      return res;
+    } catch (e) {
+      console.error(e);
+      this.nextRegisterTime = Date.now() + 2000; // rety after 2 seconds, suppress error
     }
   }
 }
