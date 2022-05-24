@@ -60,7 +60,6 @@ export class RemoteService {
     }
     return [...this.driversIndex.values()];
   }
-
 }
 
 export class LocalService {

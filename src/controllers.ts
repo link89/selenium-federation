@@ -8,7 +8,7 @@ import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
 import { WEBDRIVER_ERRORS } from "./constants";
-import { DriverDto, RequestHandler } from "./types";
+import { DriverDto, registerDtoSchema, RequestHandler } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
@@ -56,7 +56,9 @@ export class RemoteController implements IController {
   }
 
   onNodeRegiester: RequestHandler = async (ctx, next) => {
-
+    const registerRequest = registerDtoSchema.validateSync(ctx.body);
+    await this.remoteService.register(registerRequest.registerAs);
+    ctx.status = 201;
   }
 
   onGetDriversRequest: RequestHandler = async (ctx, next) => {
