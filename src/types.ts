@@ -64,7 +64,11 @@ export const sessionDtoSchema = yup.object({
 export const driverDtoSchema = yup.object({
   config: driverConfigurationSchema,
   sessions: yup.array(sessionDtoSchema).default([]),
-  availableSlots: yup.number().defined(),
+}).defined();
+
+export const nodeDtoSchema = yup.object({
+  config: configurationSchema,
+  drivers: yup.array(driverDtoSchema).default([]),
 }).defined();
 
 export const registerDtoSchema = yup.object({
@@ -75,6 +79,7 @@ export interface Configuration extends yup.Asserts<typeof configurationSchema> {
 export interface DriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
 export interface SessionDto extends yup.Asserts<typeof sessionDtoSchema> { };
 export interface DriverDto extends yup.Asserts<typeof driverDtoSchema> { };
+export interface NodeDto extends yup.Asserts<typeof nodeDtoSchema> { };
 export interface RegisterDto extends yup.Asserts<typeof registerDtoSchema> { };
 
 export interface SessionPathParams {

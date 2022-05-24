@@ -8,7 +8,7 @@ import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
 import { WEBDRIVER_ERRORS } from "./constants";
-import { DriverDto, registerDtoSchema, RequestHandler } from "./types";
+import { DriverDto, NodeDto, registerDtoSchema, RequestHandler } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
@@ -29,7 +29,7 @@ export interface IController {
 
   onWebsocketUpgrade: (req: IncomingMessage, socket: Duplex, header: Buffer) => Promise<void>;
   onNodeRegiester: RequestHandler;
-  onGetDriversRequest: RequestHandler;
+  onGetNodesRequest: RequestHandler;
 }
 
 
@@ -63,12 +63,12 @@ export class RemoteController implements IController {
     ctx.status = 201;
   }
 
-  onGetDriversRequest: RequestHandler = async (ctx, next) => {
-    const driverDtos: DriverDto[] = this.remoteService.getDrivers().map(driver => driver.driver);
+  onGetNodesRequest: RequestHandler = async (ctx, next) => {
+    const nodes: NodeDto[] = this.remoteService.getNodes().map(node => node.node);
     setHttpResponse(ctx, {
       status: 200,
-      jsonBody: driverDtos,
-    })
+      jsonBody: nodes,
+    });
   }
 }
 
@@ -124,13 +124,14 @@ export class LocalController implements IController {
     });
   }
 
-  onGetDriversRequest: RequestHandler = async (ctx, next) => {
-    const drivers = await this.localService.getDriverDtos();
+  onGetNodesRequest: RequestHandler = async (ctx, next) => {
+    const nodes = this.localService.getNodeDtos();
     setHttpResponse(ctx, {
       status: 200,
-      jsonBody: drivers,
-    })
+      jsonBody: nodes,
+    });
   }
+
 
   onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
     const sessionId = this.getSessionIdFromCdpPath(req.url);

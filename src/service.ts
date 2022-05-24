@@ -1,6 +1,6 @@
 import _ from "lodash";
 import * as yup from 'yup';
-import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, RegisterDto, WebdriverError } from './types';
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity } from './utils';
 import { Either, Left, Right } from 'purify-ts';
@@ -10,15 +10,15 @@ import { RequestCapabilities, ResponseCapabilities, createSession, ISession } fr
 import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
-interface RegistedDriver {
+interface RegistedNode {
   nodeUrl: string;
-  driver: DriverDto;
+  node: NodeDto;
   expireAfter: number;
 }
 
 export class RemoteService {
 
-  private driversIndex = new Map<string, RegistedDriver>();
+  private nodesIndex = new Map<string, RegistedNode>();
 
   constructor(
     private config: Configuration,
@@ -33,26 +33,26 @@ export class RemoteService {
     const res = await this.axios.request({
       method: 'GET',
       baseURL: nodeUrl,
-      url: '/wd/hub/drivers',
+      url: '/wd/hub/nodes',
       timeout: 5e3,
     });
-    const drivers = yup.array(driverDtoSchema).defined().validateSync(res.data);
+    const nodes = yup.array(nodeDtoSchema).defined().validateSync(res.data);
     const expireAfter = Date.now()+ this.config.registerTimeout;
-    drivers.forEach(driver => {
-      this.driversIndex.set(driver.config.uuid, { nodeUrl, driver, expireAfter });
+    nodes.forEach(node => {
+      this.nodesIndex.set(node.config.uuid, { nodeUrl, node, expireAfter });
     });
   }
 
-  getDrivers(): RegistedDriver[] {
+  getNodes(): RegistedNode[] {
     const now = Date.now();
-    for (const [key, value] of this.driversIndex.entries()) {
+    for (const [key, value] of this.nodesIndex.entries()) {
       if (value.expireAfter >= now) {
         // It's safe to do so according to https://stackoverflow.com/a/35943995/3099733
         // PS: Don't do this in Python.
-        this.driversIndex.delete(key);
+        this.nodesIndex.delete(key);
       }
     }
-    return [...this.driversIndex.values()];
+    return [...this.nodesIndex.values()];
   }
 }
 
@@ -199,8 +199,12 @@ export class LocalService {
     return await webdriverSession?.getCdpEndpoint();
   }
 
-  public async getDriverDtos(): Promise<DriverDto[]> {
+  public getDriverDtos(): DriverDto[] {
     return this.webdriverManagers.map(d => d.jsonObject);
+  }
+
+  public getNodeDtos(): NodeDto[] {
+    return [{ config: this.config, drivers: this.getDriverDtos() }];
   }
 
   public async forwardAutoCmdRequest(request: AxiosRequestConfig): Promise<Either<AutoCmdError, AxiosResponse>> {
@@ -347,7 +351,6 @@ class WebdriverSessionManager {
     return {
       config: this.driverConfig,
       sessions: this.getSessions().map(s => s.jsonObject),
-      availableSlots: this.availableSlots,
     };
   }
 
@@ -362,6 +365,7 @@ class WebdriverSessionManager {
   private getSessions(): ISession[] {
     return [...this.sessions.values()];
   }
+
 }
 
 function isRequestMatch(driver: DriverConfiguration, request: RequestCapabilities): boolean {
