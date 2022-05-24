@@ -1,6 +1,6 @@
 import _ from "lodash";
 import * as yup from 'yup';
-import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity } from './utils';
 import { Either, Left, Right } from 'purify-ts';
@@ -16,6 +16,11 @@ interface RegistedNode {
   expireAfter: number;
 }
 
+interface Candidate {
+  nodeUrl: string;
+  driver: DriverDto;
+}
+
 export class RemoteService {
 
   private nodesIndex = new Map<string, RegistedNode>();
@@ -25,8 +30,39 @@ export class RemoteService {
     private axios: AxiosInstance,
   ) { }
 
+  async getBestMatch(request: RequestCapabilities): Promise<Candidate | undefined> {
+    const nodeUrls = this.getNodes().map(node => node.url);
+    const candidates: (Candidate | undefined)[] = await Bluebird.map(nodeUrls, async nodeUrl => {
+      try {
+        const res = await this.axios.request({
+          method: 'GET',
+          baseURL: nodeUrl,
+          url: '/wd/hub/best-match',
+          data: request.data,
+          timeout: 2e3,
+        });
+        return { nodeUrl, driver: res.data as DriverDto };
+      } catch (e) {
+        console.error(e); // supress error
+      }
+    });
+    return _.sample(candidates.filter(c => c));
+  }
+
+
   async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, ResponseCapabilities>> {
+    const candidate = await this.getBestMatch(request);
+    if (!candidate){
+      return Left({
+        ...WEBDRIVER_ERRORS.SESSION_NOT_CREATED,
+        message: `no availabe capbilities could be found`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+
+
     return null as any;
+
   }
 
   async onRegister(nodeUrl: string) {
@@ -37,7 +73,7 @@ export class RemoteService {
       timeout: 5e3,
     });
     const nodes = yup.array(nodeDtoSchema).defined().validateSync(res.data);
-    const expireAfter = Date.now()+ this.config.registerTimeout;
+    const expireAfter = Date.now() + this.config.registerTimeout;
     nodes.forEach(node => {
       this.nodesIndex.set(node.config.uuid, { url: nodeUrl, node, expireAfter });
     });
