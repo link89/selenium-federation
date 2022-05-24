@@ -49,8 +49,9 @@ Sentry.init({
   const app = new Koa();
   app
     .use(bodyparser())
+    .use(router.routes())
+    .use(router.allowedMethods())
     .use(logger())
-    .use(router.routes()).use(router.allowedMethods())
     .use(onError);
 
   // set host to a ipv4 address or else request ip will be ipv6 format

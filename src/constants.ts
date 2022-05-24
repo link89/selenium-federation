@@ -1,5 +1,3 @@
-export const DEFAULT_HOST_IP_PLACEHOLDER = '__HOST_IP__';
-
 export const WEBDRIVER_ERRORS = {
   UNKNOWN_COMMAND: {
     code: 404,

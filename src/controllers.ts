@@ -1,4 +1,4 @@
-import { AxiosRequestConfig } from "axios";
+import { AxiosInstance, AxiosRequestConfig } from "axios";
 import { LocalService, RemoteService } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
@@ -72,7 +72,6 @@ export class RemoteController implements IController {
   }
 }
 
-
 export class LocalController implements IController {
 
   constructor(
@@ -106,16 +105,11 @@ export class LocalController implements IController {
 
   onWebdirverSessionCommandRqeust: RequestHandler = async (ctx, next) => {
     const { sessionId, path } = this.getSessionParams(ctx);
-    const fromRequest: Request = ctx.request;
-    const toRequest: AxiosRequestConfig = {
-      method: fromRequest.method as any,
-      data: fromRequest.rawBody,
-      headers: fromRequest.headers,
-      params: fromRequest.query,
+    const request = {
+      ...toForwardRequest(ctx),
       timeout: 30e3,
     };
-
-    const result = await this.localService.forwardWebdriverRequest(sessionId, path, toRequest);
+    const result = await this.localService.forwardWebdriverRequest(sessionId, path, request);
     result.ifLeft(err => {
       setHttpResponse(ctx, {
         status: err.code,
@@ -159,16 +153,11 @@ export class LocalController implements IController {
   }
 
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {
-    const fromRequest: Request = ctx.request;
-    const toRequest: AxiosRequestConfig = {
-      method: fromRequest.method as any,
-      data: fromRequest.rawBody,
-      headers: fromRequest.headers,
-      params: fromRequest.query,
+    const request = {
+      ...toForwardRequest(ctx),
       timeout: 30e3,
-    }
-
-    const result = await this.localService.forwardAutoCmdRequest(toRequest);
+    };
+    const result = await this.localService.forwardAutoCmdRequest(request);
     result.ifLeft(err => {
       setHttpResponse(ctx, {
         status: err.code,
@@ -271,4 +260,14 @@ const setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
   } else if (response.jsonBody) {
     ctx.body = JSON.stringify(response.jsonBody);
   }
+}
+
+function toForwardRequest(ctx: Context): AxiosRequestConfig {
+  const fromRequest: Request = ctx.request;
+  return {
+    method: fromRequest.method as any,
+    data: fromRequest.rawBody,
+    headers: fromRequest.headers,
+    params: fromRequest.query,
+  };
 }
