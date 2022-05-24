@@ -11,7 +11,7 @@ import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
 interface RegistedNode {
-  nodeUrl: string;
+  url: string;
   node: NodeDto;
   expireAfter: number;
 }
@@ -39,7 +39,7 @@ export class RemoteService {
     const nodes = yup.array(nodeDtoSchema).defined().validateSync(res.data);
     const expireAfter = Date.now()+ this.config.registerTimeout;
     nodes.forEach(node => {
-      this.nodesIndex.set(node.config.uuid, { nodeUrl, node, expireAfter });
+      this.nodesIndex.set(node.config.uuid, { url: nodeUrl, node, expireAfter });
     });
   }
 

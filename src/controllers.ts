@@ -8,7 +8,7 @@ import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
 import { WEBDRIVER_ERRORS } from "./constants";
-import { DriverDto, NodeDto, registerDtoSchema, RequestHandler } from "./types";
+import { NodeDto, registerDtoSchema, RequestHandler } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
