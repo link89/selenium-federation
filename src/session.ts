@@ -182,7 +182,7 @@ abstract class AbstractWebdriveSession implements ISession {
   async stop() {
     await this.axios.delete(`/session/${this.id}`);
     this.killProcessGroup();
-    await this.afterStop();
+    await this.postStop();
   }
 
   async forward(request: AxiosRequestConfig) {
@@ -191,7 +191,7 @@ abstract class AbstractWebdriveSession implements ISession {
 
   async getCdpEndpoint(): Promise<string | undefined> { return; }
 
-  async afterStop() { }
+  async postStop() { }
 
   private async waitForReady() {
     await retry(async () => await this.axios.get('/status'), { max: 10, interval: 1e2 });
@@ -247,7 +247,7 @@ class ChromeDriverSession extends AbstractWebdriveSession {
     return res.data?.webSocketDebuggerUrl as string;
   }
 
-  async afterStop() {
+  async posttStop() {
     const userDataDir = this.response?.chromeUserDataDir;
     if (this.shouldCleanUserData && userDataDir) {
       try {

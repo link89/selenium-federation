@@ -130,6 +130,7 @@ export class LocalService {
 
     try {
       const res = await driver.makeSession(request);
+      this.onSessionChange();
       return Right(res);
     } catch (e) {
       return Left({
@@ -144,6 +145,7 @@ export class LocalService {
     const driverManager = this.getWebdirverBySessionId(sessiondId);
     if (!driverManager) return;
     await driverManager.destroySession(sessiondId);
+    this.onSessionChange();
   }
 
   public async forwardWebdriverRequest(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
@@ -225,6 +227,10 @@ export class LocalService {
     }
   }
 
+  private onSessionChange() {
+    this.register();
+  }
+
   private async autoRegister(interval: number) {
     if (this.nextRegisterTime < Date.now()) {
       await this.register(); // suppressed error
@@ -235,6 +241,8 @@ export class LocalService {
   private async register() {
     if (!this.config.registerTo) return;
 
+    // suggest a new time for next auto register
+    this.nextRegisterTime = Date.now() + this.config.registerTimeout * 800 // 800 = 1000 x 80%, 80% of timeout
     const data: RegisterDto = { registerAs: this.config.registerAs };
     try {
       const res = await this.axios.request({
@@ -243,11 +251,9 @@ export class LocalService {
         data,
         timeout: 5e3,
       });
-      this.nextRegisterTime = Date.now() + this.config.registerTimeout * 800 // 800 = 1000 x 80%, 80% of timeout
       return res;
     } catch (e) {
-      console.error(e);
-      this.nextRegisterTime = Date.now() + 2000; // rety after 2 seconds, suppress error
+      console.error(e); // suppress error
     }
   }
 }
