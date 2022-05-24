@@ -16,13 +16,11 @@ export interface IService {
   forwardWebdriverRequest: (sessionId: string, path: string, request: AxiosRequestConfig) => Promise<Either<WebdriverError, AxiosResponse>>;
 }
 
-
 interface RegistedDriver {
   nodeUrl: string;
   driver: DriverDto;
   expireAfter: number;
 }
-
 
 export class RemoteService {
 
@@ -55,15 +53,15 @@ export class RemoteService {
     const now = Date.now();
     for (const [key, value] of this.driversIndex.entries()) {
       if (value.expireAfter >= now) {
-        // it's safe to do so according to https://stackoverflow.com/a/35943995/3099733
-        // don't do this in Python
+        // It's safe to do so according to https://stackoverflow.com/a/35943995/3099733
+        // PS: Don't do this in Python.
         this.driversIndex.delete(key);
       }
     }
     return [...this.driversIndex.values()];
   }
-}
 
+}
 
 export class LocalService {
 

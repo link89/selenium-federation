@@ -8,7 +8,7 @@ import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
 import { WEBDRIVER_ERRORS } from "./constants";
-import { RequestHandler } from "./types";
+import { DriverDto, RequestHandler } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
@@ -60,7 +60,11 @@ export class RemoteController implements IController {
   }
 
   onGetDriversRequest: RequestHandler = async (ctx, next) => {
-
+    const driverDtos: DriverDto[] = this.remoteService.getDrivers().map(driver => driver.driver);
+    setHttpResponse(ctx, {
+      status: 200,
+      jsonBody: driverDtos,
+    })
   }
 }
 
@@ -75,12 +79,12 @@ export class LocalController implements IController {
     const request = new RequestCapabilities(ctx.request);
     const result = await this.localService.newWebdirverSession(request);
     result.ifLeft(err => {
-      this.setHttpResponse(ctx, {
+      setHttpResponse(ctx, {
         status: err.code,
         jsonBody: { value: err },
       });
     }).ifRight(response => {
-      this.setHttpResponse(ctx, {
+      setHttpResponse(ctx, {
         status: 200,
         jsonBody: response.jsonObject,
       });
@@ -90,7 +94,7 @@ export class LocalController implements IController {
   onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
     const { sessionId } = this.getSessionParams(ctx);
     await this.localService.deleteWebdirverSession(sessionId);
-    this.setHttpResponse(ctx, {
+    setHttpResponse(ctx, {
       status: 200,
       jsonBody: { value: null },
     });
@@ -109,12 +113,12 @@ export class LocalController implements IController {
 
     const result = await this.localService.forwardWebdriverRequest(sessionId, path, toRequest);
     result.ifLeft(err => {
-      this.setHttpResponse(ctx, {
+      setHttpResponse(ctx, {
         status: err.code,
         jsonBody: { value: err },
       });
     }).ifRight(response => {
-      this.setHttpResponse(ctx, {
+      setHttpResponse(ctx, {
         status: 200,
         body: response.data,
         headers: response.headers,
@@ -124,7 +128,7 @@ export class LocalController implements IController {
 
   onGetDriversRequest: RequestHandler = async (ctx, next) => {
     const drivers = await this.localService.getDriverDtos();
-    this.setHttpResponse(ctx, {
+    setHttpResponse(ctx, {
       status: 200,
       jsonBody: drivers,
     })
@@ -162,12 +166,12 @@ export class LocalController implements IController {
 
     const result = await this.localService.forwardAutoCmdRequest(toRequest);
     result.ifLeft(err => {
-      this.setHttpResponse(ctx, {
+      setHttpResponse(ctx, {
         status: err.code,
         jsonBody: { value: err },
       });
     }).ifRight(response => {
-      this.setHttpResponse(ctx, {
+      setHttpResponse(ctx, {
         status: 200,
         body: response.data,
         headers: response.headers,
@@ -187,20 +191,6 @@ export class LocalController implements IController {
     return match ? match?.params?.sessionId : undefined;
   }
 
-  private setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
-    if (response.status) {
-      ctx.status = response.status;
-    }
-    if (response.headers) {
-      ctx.set(response.headers);
-    }
-    if (void 0 != response.body) {
-      ctx.body = response.body;
-    } else if (response.jsonBody) {
-      ctx.body = JSON.stringify(response.jsonBody);
-    }
-  }
-
   private getSessionParams = (ctx: Context) => {
     const params = ctx?.params;
     const sessionId = params?.sessionId;
@@ -210,7 +200,6 @@ export class LocalController implements IController {
     return { sessionId, path: params[0] ? '/' + params[0] : '' };
   }
 }
-
 
 export const onError: RequestHandler = (ctx, next) => {
   next().catch(e => {
@@ -264,4 +253,18 @@ function renderDirectoyHtml(dir: string, paths: string[]) {
     `</body>`,
     `</html>`,
   ].join('\n');
+}
+
+const setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
+  if (response.status) {
+    ctx.status = response.status;
+  }
+  if (response.headers) {
+    ctx.set(response.headers);
+  }
+  if (void 0 != response.body) {
+    ctx.body = response.body;
+  } else if (response.jsonBody) {
+    ctx.body = JSON.stringify(response.jsonBody);
+  }
 }
