@@ -12,7 +12,6 @@ export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   browserVersion: yup.string().defined(),
   sessionTimeout: yup.number(),
-  platformName: yup.string().default(getW3CPlatformName()),
   uuid: yup.string().default(() => uuidv4()),
   tags: yup.array(yup.string().defined()).default([]),
   webdriver: yup.object({

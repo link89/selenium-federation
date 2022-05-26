@@ -318,7 +318,7 @@ class WebdriverManager {
   ) { }
 
   isMatch(request: RequestCapabilities): boolean {
-    return isRequestMatch(this.driverConfig, request);
+    return isRequestMatch(this.config, this.driverConfig, request);
   }
 
   getScore(request: RequestCapabilities) {
@@ -412,18 +412,15 @@ class WebdriverManager {
 
 }
 
-function isRequestMatch(driver: DriverConfiguration, request: RequestCapabilities): boolean {
-  if (request.browserName && request.browserName != driver.browserName) {
-    return false;
-  }
-  if (request.browserVersion && request.browserVersion != driver.browserVersion) {
-    return false;
-  }
-  if (request.platformName && request.platformName != driver.platformName) {
-    return false;
-  }
-  if (request.browserTags && request.browserTags.every(tag => !driver.tags.includes(tag))) {
-    return false;
-  }
+function isRequestMatch(config: Configuration, driver: DriverConfiguration, request: RequestCapabilities): boolean {
+  if (request.browserName && request.browserName != driver.browserName) return false;
+  if (request.browserVersion && request.browserVersion != driver.browserVersion) return false;
+  if (request.browserUuid && request.browserUuid != driver.uuid) return false;
+  if (request.browserTags && request.browserTags.every(tag => !driver.tags.includes(tag))) return false;
+
+  if (request.platformName && request.platformName != config.platformName) return false;
+  if (request.nodeUuid && request.nodeUuid != config.uuid) return false;
+  if (request.nodeTags && request.nodeTags.every(tag => !config.tags.includes(tag))) return false;
+
   return true;
 }
