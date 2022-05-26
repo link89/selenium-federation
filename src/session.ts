@@ -8,9 +8,9 @@ import _ from 'lodash';
 import { ProcessManager } from "./process";
 
 const CUSTOM_CAPS_FIELDS = {
-  TAGS: 'sf:tags',
-  ENVS: 'sf:envs',
+  BROWSER_TAGS: 'sf:browserTags',
   CLEAN_USER_DATA: 'sf:cleanUserData',
+  ENVS: 'sf:envs',
 };
 
 export class RequestCapabilities {
@@ -36,7 +36,7 @@ export class RequestCapabilities {
   get platformName() { return this.getValue('platformName'); }
 
   get tags(): string[] | undefined {
-    const tags = this.getValue(CUSTOM_CAPS_FIELDS.TAGS);
+    const tags = this.getValue(CUSTOM_CAPS_FIELDS.BROWSER_TAGS);
     if (yup.array(yup.string().defined()).defined().isValidSync(tags)) return tags;
   }
   get environmentVariables(): any { return this.getValue(CUSTOM_CAPS_FIELDS.ENVS) || {}; }

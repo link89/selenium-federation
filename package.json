@@ -64,6 +64,7 @@
     "koa-logger": "^3.2.1",
     "koa-send": "^5.0.1",
     "lodash": "^4.17.20",
+    "nanoid": "^3.3.4",
     "path-to-regexp": "^6.2.0",
     "purify-ts": "^1.1.0",
     "selenium-webdriver": "^4.0.0",
