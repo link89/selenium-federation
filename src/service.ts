@@ -31,6 +31,9 @@ export class RemoteService {
 
   private nodesIndex = new Map<string, RegistedNode>();
   private sessionIndex = new Map<string, SessionRecord>();
+  private lastSessionReclaimTime = 0;
+
+
 
   constructor(
     private config: Configuration,
@@ -48,7 +51,7 @@ export class RemoteService {
           data: request.data,
           timeout: 2e3,
         });
-        const driver = driverDtoSchema.validateSync(res.data);  // remove this if it is too slow
+        const driver = await driverDtoSchema.validate(res.data);  // remove this if it is too slow
         return { nodeUrl, driver};
       } catch (e) {
         console.error(e); // supress error
@@ -74,10 +77,8 @@ export class RemoteService {
         url: '/wd/hub/session',
         data: request.data,
       });
-
       const sessionId = res.data?.sesssionId || res.data?.value?.sessionId;
       if (!sessionId) throw Error(`cannot find session id in response`);
-
       this.sessionIndex.set(sessionId, {
         nodeUrl: candidate.nodeUrl,
         sessionId,
@@ -93,6 +94,39 @@ export class RemoteService {
     }
   }
 
+  public async forwardWebdriverRequest(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
+    const session = this.getSession(sessionId);
+    if (!session) {
+      return Left({
+        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
+        message: `session id ${sessionId} is invalid`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+    request.baseURL = session.nodeUrl;
+    request.url = `/session/${sessionId}${path}`;
+    request.validateStatus = alwaysTrue;
+    request.transformRequest = identity;
+    request.transformResponse = identity;
+    try {
+      const res = await this.axios.request(request);
+      return Right(res);
+    } catch (e) {
+      return Left({
+        ...WEBDRIVER_ERRORS.UNKNOWN_ERROR,
+        message: e.message || '',
+        stacktrace: e.stack || '',
+      });
+    }
+  }
+
+  public async deleteWebdriverSession(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
+    this.deleteSession(sessionId);
+    return await this.forwardWebdriverRequest(sessionId, path, request);
+  }
+
+
+
   async onRegister(nodeUrl: string) {
     const res = await this.axios.request({
       method: 'GET',
@@ -100,7 +134,7 @@ export class RemoteService {
       url: '/wd/hub/nodes',
       timeout: 5e3,
     });
-    const nodes = yup.array(nodeDtoSchema).defined().validateSync(res.data);  // remove this if it is too slow
+    const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data);  // remove this if it is too slow
     const expireAfter = Date.now() + this.config.registerTimeout;
     nodes.forEach(node => {
       this.nodesIndex.set(node.config.uuid, { url: nodeUrl, node, expireAfter });
@@ -119,6 +153,28 @@ export class RemoteService {
     return [...this.nodesIndex.values()];
   }
 
+  private getSession(sessionId: string): SessionRecord | undefined {
+    const session = this.sessionIndex.get(sessionId);
+    if (!session) return;
+    session.expireAfter = Date.now() + this.config.sessionTimeout;
+    return session;
+  }
+
+  private deleteSession(sessionId: string) {
+    this.sessionIndex.delete(sessionId);
+
+    // a quick and dirty method to reclaim expired session to avoid memory leak
+    // may use formal ttl cache if this implemetation have problem
+    const now = Date.now();
+    if (this.lastSessionReclaimTime < now) {
+      this.lastSessionReclaimTime = now + 1800e3;
+      for (const [id, session] of this.sessionIndex.entries()) {
+        if (session.expireAfter < now) {
+          this.sessionIndex.delete(id);
+        }
+      }
+    }
+  }
 }
 
 export class LocalService {
