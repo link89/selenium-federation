@@ -27,7 +27,7 @@ export const driverConfigurationSchema = yup.object({
 export const configurationSchema = yup.object({
   role: yup.string().oneOf(ROLES).defined(),
   port: yup.number().default(4444),
-  host: yup.string().default('0.0.0.0'),
+  host: yup.string().default('127.0.0.1'),
   tags: yup.array(yup.string().defined()).default([]),
   uuid: yup.string().default(() => uuidv4()),
   platformName: yup.string().default(getW3CPlatformName()),

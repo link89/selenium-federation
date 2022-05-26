@@ -38,7 +38,10 @@ Sentry.init({
     .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
     // data model
     .post('/best-match', localServiceController.onGetBestMatchRequest)
-    .get('/nodes', localServiceController.onGetNodesRequest);
+    .get('/nodes', localServiceController.onGetNodesRequest)
+    // utils
+    .post('/ansible-playbook')
+    .get('/restart')
 
   const router = new Router()
   router
