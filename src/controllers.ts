@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { LocalService, RemoteService } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
@@ -50,7 +50,6 @@ export class RemoteController implements IController {
     const result = await this.remoteService.newWebdirverSession(request);
     setForwardResponse(ctx, result);
   }
-
 
   onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
     const { sessionId, path } = getSessionParams(ctx);

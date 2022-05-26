@@ -244,7 +244,7 @@ class ChromeDriverSession extends AbstractWebdriveSession {
     return res.data?.webSocketDebuggerUrl as string;
   }
 
-  async posttStop() {
+  async postStop() {
     const userDataDir = this.response?.chromeUserDataDir;
     if (this.shouldCleanUserData && userDataDir) {
       try {
