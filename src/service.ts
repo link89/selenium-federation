@@ -61,6 +61,7 @@ export class RemoteService {
     }
 
 
+
     return null as any;
 
   }
@@ -421,7 +422,7 @@ function isRequestMatch(driver: DriverConfiguration, request: RequestCapabilitie
   if (request.platformName && request.platformName != driver.platformName) {
     return false;
   }
-  if (request.tags && request.tags.every(tag => !driver.tags.includes(tag))) {
+  if (request.browserTags && request.browserTags.every(tag => !driver.tags.includes(tag))) {
     return false;
   }
   return true;

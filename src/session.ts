@@ -3,12 +3,14 @@ import { retry, rmAsync } from "./utils";
 import { ChildProcess } from 'child_process';
 import { DriverConfiguration, SessionDto } from "./types";
 import { Request } from 'koa';
-import * as yup from 'yup';
 import _ from 'lodash';
 import { ProcessManager } from "./process";
 
-const CUSTOM_CAPS_FIELDS = {
+const SF_CAPS_FIELDS = {
   BROWSER_TAGS: 'sf:browserTags',
+  BROWSER_UUID: 'sf:browserUuid',
+  NODE_UUID: 'sf:nodeUuid',
+  NODE_TAGS: 'sf:nodeTags',
   CLEAN_USER_DATA: 'sf:cleanUserData',
   ENVS: 'sf:envs',
 };
@@ -33,16 +35,18 @@ export class RequestCapabilities {
 
   get browserName() { return this.getValue('browserName'); }
   get browserVersion() { return this.getValue('browserVersion'); }
+  get browserUuid() { return this.getValue(SF_CAPS_FIELDS.BROWSER_UUID); }
+  get browserTags(): string[] | undefined { return this.getValue(SF_CAPS_FIELDS.BROWSER_TAGS) as any };
+
   get platformName() { return this.getValue('platformName'); }
 
-  get tags(): string[] | undefined {
-    const tags = this.getValue(CUSTOM_CAPS_FIELDS.BROWSER_TAGS);
-    if (yup.array(yup.string().defined()).defined().isValidSync(tags)) return tags;
-  }
-  get environmentVariables(): any { return this.getValue(CUSTOM_CAPS_FIELDS.ENVS) || {}; }
+  get nodeUuid() { return this.getValue(SF_CAPS_FIELDS.NODE_UUID); }
+  get nodeTags(): string[] | undefined { return this.getValue(SF_CAPS_FIELDS.NODE_TAGS) as any };
+
+  get environmentVariables(): any { return this.getValue(SF_CAPS_FIELDS.ENVS) || {}; }
 
   get shouldcleanUserData(): boolean | undefined {
-    const cleanUserData = this.getValue(CUSTOM_CAPS_FIELDS.CLEAN_USER_DATA);
+    const cleanUserData = this.getValue(SF_CAPS_FIELDS.CLEAN_USER_DATA);
     if ('boolean' == typeof cleanUserData) {
       return cleanUserData;
     }
@@ -55,7 +59,7 @@ export class RequestCapabilities {
 
   get sanitizedCapbilities() {
     const caps = _.cloneDeep(this.data);
-    for (const key of ['browserVersion', 'extOptions', 'tags', ...Object.values(CUSTOM_CAPS_FIELDS)]) {
+    for (const key of ['browserVersion', 'extOptions', 'tags', ...Object.values(SF_CAPS_FIELDS)]) {
       if (caps.desiredCapabilities) {
         delete caps.desiredCapabilities[key];
       }
