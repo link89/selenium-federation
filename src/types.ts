@@ -53,6 +53,8 @@ export const configurationSchema = yup.object({
     maxSessions: yup.number().default(5),
   }).default(undefined),
 
+  ansiblePlaybookCmd: yup.string().optional(),
+
   drivers: yup.array(driverConfigurationSchema).default([]),
 }).defined();
 
