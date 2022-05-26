@@ -5,15 +5,8 @@ import { DriverConfiguration, SessionDto } from "./types";
 import { Request } from 'koa';
 import _ from 'lodash';
 import { ProcessManager } from "./process";
+import { SF_CAPS_FIELDS } from "./constants";
 
-const SF_CAPS_FIELDS = {
-  BROWSER_TAGS: 'sf:browserTags',
-  BROWSER_UUID: 'sf:browserUuid',
-  NODE_UUID: 'sf:nodeUuid',
-  NODE_TAGS: 'sf:nodeTags',
-  CLEAN_USER_DATA: 'sf:cleanUserData',
-  ENVS: 'sf:envs',
-};
 
 export class RequestCapabilities {
 

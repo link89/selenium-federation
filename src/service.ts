@@ -21,9 +21,16 @@ interface Candidate {
   driver: DriverDto;
 }
 
+interface SessionRecord {
+  nodeUrl: string;
+  sessionId: string;
+  expireAfter: number;
+}
+
 export class RemoteService {
 
   private nodesIndex = new Map<string, RegistedNode>();
+  private sessionIndex = new Map<string, SessionRecord>();
 
   constructor(
     private config: Configuration,
@@ -41,7 +48,8 @@ export class RemoteService {
           data: request.data,
           timeout: 2e3,
         });
-        return { nodeUrl, driver: res.data as DriverDto };
+        const driver = driverDtoSchema.validateSync(res.data);  // remove this if it is too slow
+        return { nodeUrl, driver};
       } catch (e) {
         console.error(e); // supress error
       }
@@ -49,8 +57,7 @@ export class RemoteService {
     return _.sample(candidates.filter(c => c));
   }
 
-
-  async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, ResponseCapabilities>> {
+  async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, AxiosResponse>> {
     const candidate = await this.getBestMatch(request);
     if (!candidate){
       return Left({
@@ -60,10 +67,30 @@ export class RemoteService {
       });
     }
 
+    try {
+      const res = await this.axios.request({
+        method: 'POST',
+        baseURL: candidate.nodeUrl,
+        url: '/wd/hub/session',
+        data: request.data,
+      });
 
+      const sessionId = res.data?.sesssionId || res.data?.value?.sessionId;
+      if (!sessionId) throw Error(`cannot find session id in response`);
 
-    return null as any;
-
+      this.sessionIndex.set(sessionId, {
+        nodeUrl: candidate.nodeUrl,
+        sessionId,
+        expireAfter: Date.now() + this.config.sessionTimeout,
+      });
+      return Right(res);
+    } catch (e) {
+      return Left({
+        ...WEBDRIVER_ERRORS.SESSION_NOT_CREATED,
+        message: e.message || '',
+        stacktrace: e.stack || '',
+      });
+    }
   }
 
   async onRegister(nodeUrl: string) {
@@ -73,7 +100,7 @@ export class RemoteService {
       url: '/wd/hub/nodes',
       timeout: 5e3,
     });
-    const nodes = yup.array(nodeDtoSchema).defined().validateSync(res.data);
+    const nodes = yup.array(nodeDtoSchema).defined().validateSync(res.data);  // remove this if it is too slow
     const expireAfter = Date.now() + this.config.registerTimeout;
     nodes.forEach(node => {
       this.nodesIndex.set(node.config.uuid, { url: nodeUrl, node, expireAfter });
@@ -91,6 +118,7 @@ export class RemoteService {
     }
     return [...this.nodesIndex.values()];
   }
+
 }
 
 export class LocalService {

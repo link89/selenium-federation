@@ -27,3 +27,12 @@ export const AUTO_CMD_ERRORS = {
     error: 'unknown error',
   },
 }
+
+export const SF_CAPS_FIELDS = {
+  BROWSER_TAGS: 'sf:browserTags',
+  BROWSER_UUID: 'sf:browserUuid',
+  NODE_UUID: 'sf:nodeUuid',
+  NODE_TAGS: 'sf:nodeTags',
+  CLEAN_USER_DATA: 'sf:cleanUserData',
+  ENVS: 'sf:envs',
+};
