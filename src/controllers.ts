@@ -1,4 +1,4 @@
-import { AxiosInstance, AxiosRequestConfig } from "axios";
+import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { LocalService, RemoteService } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
@@ -8,16 +8,16 @@ import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
 import { WEBDRIVER_ERRORS } from "./constants";
-import { NodeDto, registerDtoSchema, RequestHandler } from "./types";
+import { NodeDto, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
+import { Either } from "purify-ts";
 
 
 interface HttpResponse {
   headers: { [key: string]: string };
-  body: string;
-  jsonBody: any;
+  body: string | object;
   status: number;
 }
 
@@ -40,16 +40,36 @@ export class RemoteController implements IController {
     private readonly remoteService: RemoteService,
   ) { }
 
-  onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
+  onGetBestMatchRequest: RequestHandler = async (ctx, next) => {
+    // TODO: implement when necessary
+    throw Error(`this endpoint is optional for hub service`);
   }
 
-  onGetBestMatchRequest: RequestHandler = async (ctx, next) => {
+  onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
+    const request = new RequestCapabilities(ctx.request);
+    const result = await this.remoteService.newWebdirverSession(request);
+    setForwardResponse(ctx, result);
   }
+
 
   onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
+    const { sessionId, path } = getSessionParams(ctx);
+    const request = {
+      ...toForwardRequest(ctx),
+      timeout: 30e3,
+    };
+    const result = await this.remoteService.deleteWebdriverSession(sessionId, path, request);
+    setForwardResponse(ctx, result);
   }
 
   onWebdirverSessionCommandRqeust: RequestHandler = async (ctx, next) => {
+    const { sessionId, path } = getSessionParams(ctx);
+    const request = {
+      ...toForwardRequest(ctx),
+      timeout: 30e3,
+    };
+    const result = await this.remoteService.forwardWebdriverRequest(sessionId, path, request);
+    setForwardResponse(ctx, result);
   }
 
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {
@@ -70,7 +90,7 @@ export class RemoteController implements IController {
     const nodes: NodeDto[] = this.remoteService.getNodes().map(node => node.node);
     setHttpResponse(ctx, {
       status: 200,
-      jsonBody: nodes,
+      body: nodes,
     });
   }
 }
@@ -87,12 +107,12 @@ export class LocalController implements IController {
     result.ifLeft(err => {
       setHttpResponse(ctx, {
         status: err.code,
-        jsonBody: { value: err },
+        body: { value: err },
       });
     }).ifRight(response => {
       setHttpResponse(ctx, {
         status: 200,
-        jsonBody: response.jsonObject,
+        body: response.jsonObject,
       });
     });
   }
@@ -103,7 +123,7 @@ export class LocalController implements IController {
     if(driver) {
       setHttpResponse(ctx, {
         status: 200,
-        jsonBody: driver,
+        body: driver,
       });
     } else {
       setHttpResponse(ctx, {
@@ -113,40 +133,29 @@ export class LocalController implements IController {
   }
 
   onDeleteWebdirverSessionRequest: RequestHandler = async (ctx, next) => {
-    const { sessionId } = this.getSessionParams(ctx);
+    const { sessionId } = getSessionParams(ctx);
     await this.localService.deleteWebdirverSession(sessionId);
     setHttpResponse(ctx, {
       status: 200,
-      jsonBody: { value: null },
+      body: { value: null },
     });
   }
 
   onWebdirverSessionCommandRqeust: RequestHandler = async (ctx, next) => {
-    const { sessionId, path } = this.getSessionParams(ctx);
+    const { sessionId, path } = getSessionParams(ctx);
     const request = {
       ...toForwardRequest(ctx),
       timeout: 30e3,
     };
     const result = await this.localService.forwardWebdriverRequest(sessionId, path, request);
-    result.ifLeft(err => {
-      setHttpResponse(ctx, {
-        status: err.code,
-        jsonBody: { value: err },
-      });
-    }).ifRight(response => {
-      setHttpResponse(ctx, {
-        status: 200,
-        body: response.data,
-        headers: response.headers,
-      });
-    });
+    setForwardResponse(ctx, result);
   }
 
   onGetNodesRequest: RequestHandler = async (ctx, next) => {
     const nodes = this.localService.getNodeDtos();
     setHttpResponse(ctx, {
       status: 200,
-      jsonBody: nodes,
+      body: nodes,
     });
   }
 
@@ -176,18 +185,7 @@ export class LocalController implements IController {
       timeout: 30e3,
     };
     const result = await this.localService.forwardAutoCmdRequest(request);
-    result.ifLeft(err => {
-      setHttpResponse(ctx, {
-        status: err.code,
-        jsonBody: { value: err },
-      });
-    }).ifRight(response => {
-      setHttpResponse(ctx, {
-        status: 200,
-        body: response.data,
-        headers: response.headers,
-      });
-    });
+    setForwardResponse(ctx, result);
   }
 
   onNodeRegiester: RequestHandler = (ctx, next) => {
@@ -202,14 +200,6 @@ export class LocalController implements IController {
     return match ? match?.params?.sessionId : undefined;
   }
 
-  private getSessionParams = (ctx: Context) => {
-    const params = ctx?.params;
-    const sessionId = params?.sessionId;
-    if (!sessionId) {
-      throw new Error(`sessionId is empty`);
-    }
-    return { sessionId, path: params[0] ? '/' + params[0] : '' };
-  }
 }
 
 export const onError: RequestHandler = (ctx, next) => {
@@ -273,10 +263,10 @@ const setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
   if (response.headers) {
     ctx.set(response.headers);
   }
-  if (response.body) {
+  if ('object' === typeof(response.body)) {
+    ctx.body = JSON.stringify(response.body);
+  } else {
     ctx.body = response.body;
-  } else if (response.jsonBody) {
-    ctx.body = JSON.stringify(response.jsonBody);
   }
 }
 
@@ -289,3 +279,28 @@ function toForwardRequest(ctx: Context): AxiosRequestConfig {
     params: fromRequest.query,
   };
 }
+
+function setForwardResponse(ctx: Context, result: Either<WebdriverError, AxiosResponse>) {
+  result.ifLeft(err => {
+    setHttpResponse(ctx, {
+      status: err.code,
+      body: { value: err },
+    });
+  }).ifRight(response => {
+    setHttpResponse(ctx, {
+      status: response.status,
+      body: response.data,
+      headers: response.headers,
+    });
+  });
+}
+
+const getSessionParams = (ctx: Context) => {
+  const params = ctx?.params;
+  const sessionId = params?.sessionId;
+  if (!sessionId) {
+    throw new Error(`sessionId is empty`);
+  }
+  return { sessionId, path: params[0] ? '/' + params[0] : '' };
+}
+
