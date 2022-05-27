@@ -1,5 +1,5 @@
 import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { LocalService, RemoteService } from "./service";
+import { LocalService, HubService } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
 import { createProxyServer } from 'http-proxy';
@@ -40,7 +40,7 @@ export interface IController {
 export class RemoteController implements IController {
 
   constructor(
-    private readonly remoteService: RemoteService,
+    private readonly remoteService: HubService,
   ) { }
 
   onGetBestMatchRequest: RequestHandler = async (ctx, next) => {

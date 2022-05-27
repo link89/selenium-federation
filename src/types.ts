@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import type { Context } from 'koa';
 
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
-const ROLES = ['hub', 'node'];
+const ROLES = ['local', 'hub'];
 
 
 export const driverConfigurationSchema = yup.object({

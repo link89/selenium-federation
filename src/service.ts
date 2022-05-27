@@ -27,7 +27,7 @@ interface SessionRecord {
   expireAfter: number;
 }
 
-export class RemoteService {
+export class HubService {
 
   private nodesIndex = new Map<string, RegistedNode>();
   private sessionIndex = new Map<string, SessionRecord>();
