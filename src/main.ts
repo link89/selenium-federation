@@ -39,13 +39,12 @@ Sentry.init({
     // data model
     .post('/best-match', localServiceController.onGetBestMatchRequest)
     .get('/nodes', localServiceController.onGetNodesRequest)
-    // utils
-    .post('/ansible-playbook')
-    .get('/restart')
 
   const router = new Router()
   router
-    .use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods());
+    .use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods())
+    .post('/ansible-playbook')
+    .get('/terminate')
 
   if (config.fileServer) {
     router.all('/fs/(.*)', serveStatic(config.fileServer));

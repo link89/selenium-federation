@@ -50,7 +50,6 @@ export const configurationSchema = yup.object({
     disable: yup.boolean().default(false),
     path: yup.string().defined(),
     args: yup.array(yup.string().defined()).default([]),
-    maxSessions: yup.number().default(5),
   }).default(undefined),
 
   ansiblePlaybookCmd: yup.string().optional(),
