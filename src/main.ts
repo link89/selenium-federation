@@ -26,35 +26,38 @@ Sentry.init({
   localService.init();
   const localServiceController = new LocalController(localService);
 
-  const webdirverRouter = new Router();
-  webdirverRouter
+  const wdHubRouter = new Router();
+  wdHubRouter
     // auto-cmd
     .post('/session/:sessionId/auto-cmd', localServiceController.onAutoCmdRequestToSession)
     .post('/nodes/:nodeId/auto-cmd', localServiceController.onAutoCmdRequestToNode)
-    .all('/auto-cmd', localServiceController.onAutoCmdRequest)
     // webdriver session
     .post('/session', localServiceController.onNewWebdriverSessionRequest)
-    .delete('/session/:sessionId', localServiceController.onDeleteWebdirverSessionRequest)
+    .delete(['/session/:sessionId', '/session/:sessionId/'], localServiceController.onDeleteWebdirverSessionRequest)
     .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
     // data model
     .post('/best-match', localServiceController.onGetBestMatchRequest)
     .get('/nodes', localServiceController.onGetNodesRequest)
 
-  const router = new Router()
-  router
-    .use('/wd/hub', webdirverRouter.routes(), webdirverRouter.allowedMethods())
+  const rootRouter = new Router();
+  rootRouter
+    // hub endpoint
+    .use('/wd/hub', wdHubRouter.routes(), wdHubRouter.allowedMethods())
+
+    // utils
     .post('/ansible-playbook')
+    .post('/auto-cmd', localServiceController.onAutoCmdRequest)
     .get('/terminate')
 
   if (config.fileServer) {
-    router.all('/fs/(.*)', serveStatic(config.fileServer));
+    rootRouter.all('/fs/(.*)', serveStatic(config.fileServer));
   }
 
   const app = new Koa();
   app
     .use(bodyparser())
-    .use(router.routes())
-    .use(router.allowedMethods())
+    .use(rootRouter.routes())
+    .use(rootRouter.allowedMethods())
     .use(logger())
     .use(onError);
 
@@ -66,5 +69,4 @@ Sentry.init({
 
   // handle websocket connection
   server.on('upgrade', localServiceController.onWebsocketUpgrade);
-
 })();
