@@ -1,11 +1,12 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { retry, rmAsync } from "./utils";
+import { retry } from "./utils";
 import { ChildProcess } from 'child_process';
 import { DriverConfiguration, SessionDto } from "./types";
 import { Request } from 'koa';
 import _ from 'lodash';
 import { ProcessManager } from "./process";
 import { SF_CAPS_FIELDS } from "./constants";
+import * as fs from 'fs';
 
 
 export class RequestCapabilities {
@@ -249,7 +250,7 @@ class ChromeDriverSession extends AbstractWebdriveSession {
     if (this.shouldCleanUserData && userDataDir) {
       try {
         console.log(`clean user data: ${userDataDir}`);
-        await rmAsync(userDataDir, { recursive: true, force: true });
+        await fs.promises.rm(userDataDir, { recursive: true, force: true });
       } catch (e) {
         console.warn(`ignore error during rm ${userDataDir}`, e);
       }

@@ -6,10 +6,19 @@ export const WEBDRIVER_ERRORS = {
   INVALID_SESSION_ID: {
     code: 404,
     error: 'invalid session id'
+
   },
   SESSION_NOT_CREATED: {
     code: 500,
     error: 'session not created',
+  },
+  INVALID_NODE_ID: {
+    code: 404,
+    error: 'invalid node id'
+  },
+  INVALID_ENDPOINT: {
+    code: 400,
+    error: 'invalid endpoint',
   },
   UNKNOWN_ERROR: {
     code: 500,

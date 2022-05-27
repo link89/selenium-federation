@@ -27,6 +27,9 @@ export interface IController {
   onDeleteWebdirverSessionRequest: RequestHandler;
   onWebdirverSessionCommandRqeust: RequestHandler;
   onAutoCmdRequest: RequestHandler;
+  onAutoCmdRequestToNode: RequestHandler;
+  onAutoCmdRequestToSession: RequestHandler;
+
 
   onWebsocketUpgrade: (req: IncomingMessage, socket: Duplex, header: Buffer) => Promise<void>;
   onNodeRegiester: RequestHandler;
@@ -42,7 +45,7 @@ export class RemoteController implements IController {
 
   onGetBestMatchRequest: RequestHandler = async (ctx, next) => {
     // TODO: implement when necessary
-    throw Error(`this endpoint is optional for hub service`);
+    throw Error(`this endpoint is optional in hub mode`);
   }
 
   onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
@@ -72,10 +75,19 @@ export class RemoteController implements IController {
   }
 
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {
+    const request = {
+      ...toForwardRequest(ctx),
+      timeout: 30e3,
+    };
+    const result = await this.remoteService.forwardAutoCmd(ctx.params || {}, request);
+    setForwardResponse(ctx, result);
   }
 
+  onAutoCmdRequestToNode: RequestHandler = this.onAutoCmdRequest;
+  onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
+
   onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
-    throw Error(`hub service won't handle websocket proxy`);
+    throw Error(`hub mode won't handle websocket proxy`);
   }
 
   onNodeRegiester: RequestHandler = async (ctx, next) => {
@@ -186,9 +198,11 @@ export class LocalController implements IController {
     const result = await this.localService.forwardAutoCmdRequest(request);
     setForwardResponse(ctx, result);
   }
+  onAutoCmdRequestToNode: RequestHandler = this.onAutoCmdRequest;
+  onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
 
   onNodeRegiester: RequestHandler = (ctx, next) => {
-    throw Error(`local/node service don't implement register endpoint`);
+    throw Error(`register endpoint is not supported in local mode`);
   }
 
   private cdpPathPattern = match<{ sessionId: string }>(`/wd/hub/session/:sessionId/se/cdp`, { decode: decodeURIComponent });

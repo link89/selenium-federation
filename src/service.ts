@@ -9,7 +9,6 @@ import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
 import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
-import { config } from "yargs";
 
 interface RegistedNode {
   url: string;
@@ -94,7 +93,7 @@ export class RemoteService {
   }
 
   public async forwardWebdriverRequest(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
-    const session = this.getSession(sessionId);
+    const session = this.getSessionById(sessionId);
     if (!session) {
       return Left({
         ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
@@ -119,17 +118,44 @@ export class RemoteService {
     }
   }
 
-  public async forwardAutoCmd(sessionId: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
-    const session = this.getSession(sessionId);
-    if (!session) {
+  public async forwardAutoCmd(params: {sessionId?: string, nodeId?: string},  request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
+    let path = '/wd/hub/auto-cmd';
+    let nodeUrl: string;
+
+    const sessionId = params.sessionId;
+    const nodeId = params.nodeId;
+    if (sessionId) {
+      const session = this.getSessionById(sessionId);
+      if (!session) {
+        return Left({
+          ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
+          message: `session id ${sessionId} is invalid`,
+          stacktrace: new Error().stack || '',
+        });
+      }
+      nodeUrl = session.nodeUrl;
+      path = `/wd/hub/session/${sessionId}/auto-cmd`;
+    } else if (nodeId) {
+      const node = this.getNodeById(nodeId);
+      if (!node) {
+        return Left({
+          ...WEBDRIVER_ERRORS.INVALID_NODE_ID,
+          message: `node id ${nodeId} is invalid`,
+          stacktrace: new Error().stack || '',
+        });
+      }
+      nodeUrl = node.url;
+      path = `/wd/hub/nodes/${nodeId}/auto-cmd`;
+    } else {
       return Left({
-        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
-        message: `session id ${sessionId} is invalid`,
+        ...WEBDRIVER_ERRORS.INVALID_ENDPOINT,
+        message: `hub mode didn't implement /wd/hub/auto-cmd endpoint`,
         stacktrace: new Error().stack || '',
       });
     }
-    request.baseURL = session.nodeUrl;
-    request.url = `/wd/hub/session/${session.sessionId}/auto-cmd`;
+
+    request.baseURL = nodeUrl;
+    request.url = path;
     request.validateStatus = alwaysTrue;
     request.transformRequest = identity;
     request.transformResponse = identity;
@@ -146,11 +172,9 @@ export class RemoteService {
   }
 
   public async deleteWebdriverSession(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
-    this.deleteSession(sessionId);
+    this.deleteSessionById(sessionId);
     return await this.forwardWebdriverRequest(sessionId, path, request);
   }
-
-
 
   async onRegister(nodeUrl: string) {
     const res = await this.axios.request({
@@ -178,14 +202,19 @@ export class RemoteService {
     return [...this.nodesIndex.values()];
   }
 
-  private getSession(sessionId: string): SessionRecord | undefined {
+  private getNodeById(nodeId: string): RegistedNode | undefined {
+    return this.nodesIndex.get(nodeId);
+  }
+
+
+  private getSessionById(sessionId: string): SessionRecord | undefined {
     const session = this.sessionIndex.get(sessionId);
     if (!session) return;
     session.expireAfter = Date.now() + this.config.sessionTimeout;
     return session;
   }
 
-  private deleteSession(sessionId: string) {
+  private deleteSessionById(sessionId: string) {
     this.sessionIndex.delete(sessionId);
 
     // a quick and dirty method to reclaim expired session to avoid memory leak

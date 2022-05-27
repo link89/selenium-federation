@@ -1,8 +1,5 @@
 import Bluebird from "bluebird";
 
-import { promisify } from 'util';
-import fs from 'fs';
-
 interface IRetryOption {
   max?: number;
   interval?: number;
@@ -196,6 +193,5 @@ export function logException(e: Error) {
   console.error(e);
 }
 
-export const rmAsync = promisify(fs.rm);
 export const alwaysTrue = () => true;
 export const identity = (i: any) => i;

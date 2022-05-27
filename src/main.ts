@@ -29,8 +29,8 @@ Sentry.init({
   const webdirverRouter = new Router();
   webdirverRouter
     // auto-cmd
-    .post('/session/:sessionId/auto-cmd', localServiceController.onAutoCmdRequest)
-    .post('/nodes/:nodeId/auto-cmd', localServiceController.onAutoCmdRequest)
+    .post('/session/:sessionId/auto-cmd', localServiceController.onAutoCmdRequestToSession)
+    .post('/nodes/:nodeId/auto-cmd', localServiceController.onAutoCmdRequestToNode)
     .all('/auto-cmd', localServiceController.onAutoCmdRequest)
     // webdriver session
     .post('/session', localServiceController.onNewWebdriverSessionRequest)
