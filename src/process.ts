@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from "axios";
 import { spawn, execSync, ChildProcess } from 'child_process';
-import { join as joinPath, dirname } from 'path';
 import getPort from "get-port";
 import { Configuration } from "./types";
 import { retry } from "./utils";
@@ -56,12 +55,7 @@ export class ProcessManager {
   async spawnWebdriverProcess(params: { path: string, args: string[], envs: { [key: string]: string } }) {
     const port = await getPort();
     let path = params.path;
-    // a path start with // means relative to the configuration file
-    if (path.startsWith('//')) {
-      path = joinPath(dirname(this.config.configFilePath), path.substring(2));
-    }
     console.log(`start webdriver process ${path} ${params.args}`);
-
     const webdriverProcess = spawn(path, [...params.args, `--port=${port}`],
       {
         stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,

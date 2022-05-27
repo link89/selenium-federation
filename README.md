@@ -75,7 +75,7 @@ drivers:
     tags: [96]
     maxSessions: 2
     webdriver:
-      path: //chromedriver-beta  # support relative to THIS configuration file (start with //)
+      path: chromedriver-beta  
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
