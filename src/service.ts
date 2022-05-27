@@ -9,6 +9,7 @@ import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
 import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
+import { config } from "yargs";
 
 interface RegistedNode {
   url: string;
@@ -32,8 +33,6 @@ export class RemoteService {
   private nodesIndex = new Map<string, RegistedNode>();
   private sessionIndex = new Map<string, SessionRecord>();
   private lastSessionReclaimTime = 0;
-
-
 
   constructor(
     private config: Configuration,
@@ -104,7 +103,33 @@ export class RemoteService {
       });
     }
     request.baseURL = session.nodeUrl;
-    request.url = `/session/${sessionId}${path}`;
+    request.url = `/wd/hub/session/${sessionId}${path}`;
+    request.validateStatus = alwaysTrue;
+    request.transformRequest = identity;
+    request.transformResponse = identity;
+    try {
+      const res = await this.axios.request(request);
+      return Right(res);
+    } catch (e) {
+      return Left({
+        ...WEBDRIVER_ERRORS.UNKNOWN_ERROR,
+        message: e.message || '',
+        stacktrace: e.stack || '',
+      });
+    }
+  }
+
+  public async forwardAutoCmd(sessionId: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
+    const session = this.getSession(sessionId);
+    if (!session) {
+      return Left({
+        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
+        message: `session id ${sessionId} is invalid`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+    request.baseURL = session.nodeUrl;
+    request.url = `/wd/hub/session/${session.sessionId}/auto-cmd`;
     request.validateStatus = alwaysTrue;
     request.transformRequest = identity;
     request.transformResponse = identity;
@@ -500,11 +525,15 @@ function isRequestMatch(config: Configuration, driver: DriverConfiguration, requ
   if (request.browserName && request.browserName != driver.browserName) return false;
   if (request.browserVersion && request.browserVersion != driver.browserVersion) return false;
   if (request.browserUuid && request.browserUuid != driver.uuid) return false;
-  if (request.browserTags && request.browserTags.every(tag => !driver.tags.includes(tag))) return false;
+  if (request.browserTags && !matchTags(request.browserTags, driver.tags)) return false;
 
   if (request.platformName && request.platformName != config.platformName) return false;
   if (request.nodeUuid && request.nodeUuid != config.uuid) return false;
-  if (request.nodeTags && request.nodeTags.every(tag => !config.tags.includes(tag))) return false;
+  if (request.nodeTags && !matchTags(request.nodeTags, config.tags)) return false;
 
   return true;
+}
+
+function matchTags(requestTags: string[], targetTags: string[]) {
+  return requestTags.every( tag =>  tag.startsWith('!') ? (!targetTags.includes(tag.slice(1))) : targetTags.includes(tag));
 }
