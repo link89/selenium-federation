@@ -188,6 +188,7 @@ export class LocalController implements IController {
     });
     logMessage(`create websocket proxy to ${cdpEndpoint}`);
     proxy.ws(req, socket, header);
+    proxy.on('error', (err) => console.error(err));
   }
 
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {
