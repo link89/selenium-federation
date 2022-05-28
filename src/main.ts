@@ -10,11 +10,13 @@ import { LocalService } from "./service";
 import { serveStatic, LocalController, onError } from "./controllers";
 import { ProcessManager } from "./process";
 
+if (config.sentry) {
+  Sentry.init({
+    dsn: config.sentry.dsn,
+    debug: config.sentry.debug,
+  });
+}
 
-Sentry.init({
-  dsn: config.sentryDSN,
-  debug: config.sentryDebug,
-});
 
 // Get started
 (async () => {
@@ -49,8 +51,8 @@ Sentry.init({
     .post('/auto-cmd', localServiceController.onAutoCmdRequest)
     .get('/terminate')
 
-  if (config.fileServer) {
-    rootRouter.all('/fs/(.*)', serveStatic(config.fileServer));
+  if (config.fileServer && !config.fileServer.disable) {
+    rootRouter.all('/fs/(.*)', serveStatic(config.fileServer.root));
   }
 
   const app = new Koa();

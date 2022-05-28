@@ -4,6 +4,9 @@ port: 4444
 browserIdleTimeout: 60
 maxSessions: 5
 
+fileServer:
+  root: .
+
 drivers:
   - browserName: chrome
     browserVersion: stable

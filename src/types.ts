@@ -35,16 +35,18 @@ export const configurationSchema = yup.object({
   sessionTimeout: yup.number().default(60),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
 
-  fileServer: yup.string().optional(),
-  tmpFolder: yup.string().default(`tmp/`),
-  configFilePath: yup.string().defined(),
+  tmpFolder: yup.string().default(`./tmp`),
 
   registerTimeout: yup.number().default(10),
   registerTo: yup.string().optional(),
   registerAs: yup.string().optional(),
 
-  sentryDSN: yup.string().optional(),
-  sentryDebug: yup.boolean().default(false),
+  drivers: yup.array(driverConfigurationSchema).default([]),
+
+  sentry: yup.object({
+    dsn: yup.string().defined(),
+    debug: yup.boolean().default(false),
+  }).default(undefined),
 
   autoCmdHttp: yup.object({
     disable: yup.boolean().default(false),
@@ -52,9 +54,17 @@ export const configurationSchema = yup.object({
     args: yup.array(yup.string().defined()).default([]),
   }).default(undefined),
 
-  ansiblePlaybookCmd: yup.string().optional(),
+  fileServer: yup.object({
+    disable: yup.boolean().default(false),
+    root: yup.string().defined(),
+  }).default(undefined),
 
-  drivers: yup.array(driverConfigurationSchema).default([]),
+  ansiblePlaybook: yup.object({
+    disable: yup.boolean().default(false),
+    path: yup.string().defined(),
+  }).default(undefined),
+
+
 }).defined();
 
 export const sessionDtoSchema = yup.object({

@@ -1,4 +1,6 @@
+import axios from "axios";
 import Bluebird from "bluebird";
+import * as fs from 'fs';
 
 interface IRetryOption {
   max?: number;
@@ -195,3 +197,17 @@ export function logException(e: Error) {
 
 export const alwaysTrue = () => true;
 export const identity = (i: any) => i;
+
+
+export async function readPathOrUrl(pathOrUrl: string, options?: any) {
+  if (/^https?:\/\//.test(pathOrUrl)) {
+    const res = await axios.get(pathOrUrl, {
+      validateStatus: alwaysTrue,
+      transformRequest: identity,
+      transformResponse: identity,
+    });
+    return res.data;
+  } else {
+    return fs.promises.readFile(pathOrUrl, options);
+  }
+}
