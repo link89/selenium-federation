@@ -26,12 +26,12 @@ export interface IController {
   onGetBestMatchRequest: RequestHandler;
   onDeleteWebdirverSessionRequest: RequestHandler;
   onWebdirverSessionCommandRqeust: RequestHandler;
+  onWebsocketUpgrade: (req: IncomingMessage, socket: Duplex, header: Buffer) => Promise<void>;
+
   onAutoCmdRequest: RequestHandler;
   onAutoCmdRequestToNode: RequestHandler;
   onAutoCmdRequestToSession: RequestHandler;
 
-
-  onWebsocketUpgrade: (req: IncomingMessage, socket: Duplex, header: Buffer) => Promise<void>;
   onNodeRegiester: RequestHandler;
   onGetNodesRequest: RequestHandler;
 }

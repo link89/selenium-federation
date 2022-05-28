@@ -1,5 +1,6 @@
 import _ from "lodash";
 import * as yup from 'yup';
+import * as fs from 'fs';
 import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity } from './utils';
@@ -261,7 +262,7 @@ export class LocalService {
       })
     });
     if (this.config.registerTo) {
-      this.autoRegister(1000);
+      this.autoRegister();
     }
   }
 
@@ -417,18 +418,18 @@ export class LocalService {
     this.register();
   }
 
-  private async autoRegister(interval: number) {
+  private async autoRegister() {
     if (this.nextRegisterTime < Date.now()) {
       await this.register(); // suppressed error
     }
-    setTimeout(() => this.autoRegister(interval), interval);
+    setTimeout(() => this.autoRegister(), 1e3);
   }
 
   private async register() {
     if (!this.config.registerTo) return;
 
     // suggest a new time for next auto register
-    this.nextRegisterTime = Date.now() + this.config.registerTimeout * 800 // 800 = 1000 x 80%, 80% of timeout
+    this.nextRegisterTime = Date.now() + 10e3;
     const data: RegisterDto = { registerAs: this.config.registerAs };
     try {
       const res = await this.axios.request({

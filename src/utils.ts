@@ -125,10 +125,8 @@ export class KeywordMutex<K> {
   }
 }
 
-
 export class Semaphore {
   queue: ((value?: any) => void)[] = [];
-
 
   constructor(public size: number) { }
 
@@ -207,6 +205,6 @@ export async function readPathOrUrl(pathOrUrl: string, options?: any) {
     });
     return res.data;
   } else {
-    return fs.promises.readFile(pathOrUrl, options);
+    return await fs.promises.readFile(pathOrUrl, options);
   }
 }
