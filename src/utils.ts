@@ -202,7 +202,6 @@ export const identity = (i: any) => i;
 export async function readPathOrUrl(pathOrUrl: string, options?: any) {
   if (/^https?:\/\//.test(pathOrUrl)) {
     const res = await axios.get(pathOrUrl, {
-      validateStatus: alwaysTrue,
       transformRequest: identity,
       transformResponse: identity,
     });

@@ -566,3 +566,12 @@ function isRequestMatch(config: Configuration, driver: DriverConfiguration, requ
 function matchTags(requestTags: string[], targetTags: string[]) {
   return requestTags.every( tag =>  tag.startsWith('!') ? (!targetTags.includes(tag.slice(1))) : targetTags.includes(tag));
 }
+
+
+export async function initConfig(config: Configuration) {
+  // prepare tmp folder
+  
+
+
+  
+}

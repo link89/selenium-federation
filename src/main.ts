@@ -3,23 +3,24 @@ import Router from "@koa/router";
 import bodyparser from "koa-bodyparser";
 import logger from  "koa-logger";
 
-import { config } from "./config";
+import { getConfig } from "./config";
 import * as Sentry from "@sentry/node";
 
 import { LocalService } from "./service";
 import { serveStatic, LocalController, onError } from "./controllers";
 import { ProcessManager } from "./process";
 
-if (config.sentry) {
-  Sentry.init({
-    dsn: config.sentry.dsn,
-    debug: config.sentry.debug,
-  });
-}
-
 
 // Get started
 (async () => {
+  const config = await getConfig();
+
+  if (config.sentry) {
+    Sentry.init({
+      dsn: config.sentry.dsn,
+      debug: config.sentry.debug,
+    });
+  }
 
   const processManager = new ProcessManager(config);
   await processManager.init();
