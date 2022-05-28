@@ -188,6 +188,7 @@ export class LocalController implements IController {
     });
     logMessage(`create websocket proxy to ${cdpEndpoint}`);
     proxy.ws(req, socket, header);
+    // capture socket error, it happens when webdirver close socket connection
     proxy.on('error', (err) => console.error(err));
   }
 
