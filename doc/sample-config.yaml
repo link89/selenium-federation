@@ -1,4 +1,4 @@
-role: node
+role: local
 
 port: 4444
 browserIdleTimeout: 60
@@ -9,7 +9,7 @@ drivers:
     browserVersion: stable
     maxSessions: 2
     webdriver:
-      path: //../chromedriver.exe
+      path: ./chromedriver.exe
     defaultCapabilities:
       "goog:chromeOptions":
         args:
