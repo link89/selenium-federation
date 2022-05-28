@@ -3,7 +3,7 @@ import Router from "@koa/router";
 import bodyparser from "koa-bodyparser";
 import logger from  "koa-logger";
 
-import { getConfig } from "./config";
+import { getAndInitConfig } from "./config";
 import * as Sentry from "@sentry/node";
 
 import { LocalService } from "./service";
@@ -13,7 +13,7 @@ import { ProcessManager } from "./process";
 
 // Get started
 (async () => {
-  const config = await getConfig();
+  const config = await getAndInitConfig();
 
   if (config.sentry) {
     Sentry.init({
