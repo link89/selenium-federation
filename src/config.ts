@@ -1,7 +1,7 @@
 import yargs from 'yargs/yargs';
 import { parse } from 'yaml';
 import { Configuration, configurationSchema } from './types';
-import { isHttpUrl, readPathOrUrl, saveUrl } from './utils';
+import { isHttpUrl, readPathOrUrl, saveUrlToFile } from './utils';
 import * as fs from 'fs';
 import { join } from 'path';
 import { basename } from 'path';
@@ -40,7 +40,7 @@ export async function getAndInitConfig(): Promise<Configuration> {
       } else {
         console.log(`>> start to download ${webdriverUrl} to ${filePath}`);
         const tmpFilePath = join(_config.tmpFolder, `${nanoid(8)}.tmp`);
-        await saveUrl(webdriverUrl, tmpFilePath);
+        await saveUrlToFile(webdriverUrl, tmpFilePath);
         await fs.promises.rename(tmpFilePath, filePath);
         console.log(`>> success to download ${filePath}`);
       }

@@ -197,9 +197,8 @@ export function logException(e: Error) {
 export const alwaysTrue = () => true;
 export const identity = (i: any) => i;
 
-
 export async function readPathOrUrl(pathOrUrl: string, options?: any) {
-  if (/^https?:\/\//.test(pathOrUrl)) {
+  if (isHttpUrl(pathOrUrl)) {
     const res = await axios.get(pathOrUrl, {
       transformRequest: identity,
       transformResponse: identity,
@@ -214,7 +213,7 @@ export function isHttpUrl(pathOrUrl: string) {
   return /^https?:\/\//.test(pathOrUrl)
 }
 
-export async function saveUrl(url: string, path: string) {
+export async function saveUrlToFile(url: string, path: string) {
   const writer = fs.createWriteStream(path);
   await axios.request({
     method: 'GET',
