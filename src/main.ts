@@ -50,7 +50,7 @@ import { ProcessManager } from "./process";
     // utils
     .post('/ansible-playbook')
     .post('/auto-cmd', localServiceController.onAutoCmdRequest)
-    .get('/terminate')
+    .get('/terminate', localServiceController.onTermiateRequest)
 
   if (config.fileServer && !config.fileServer.disable) {
     rootRouter.all('/fs/(.*)', serveStatic(config.fileServer.root));

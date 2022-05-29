@@ -1,5 +1,5 @@
 import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { LocalService, HubService } from "./service";
+import { LocalService, HubService, TerminateOptions } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
 import { createProxyServer } from 'http-proxy';
@@ -13,6 +13,8 @@ import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
 import { Either } from "purify-ts";
+import { ParsedUrlQuery } from 'querystring';
+
 
 
 interface HttpResponse {
@@ -118,7 +120,12 @@ export class LocalController implements IController {
   ) { }
 
   onTermiateRequest: RequestHandler = async (ctx, next) => {
-
+    const query = ctx.request.query;
+    await this.localService.terminate(queryToTerminateOptions(query));
+    setHttpResponse(ctx, {
+      status: 200,
+      body: 'todo',
+    });
   }
 
   onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
@@ -328,3 +335,12 @@ const getSessionParams = (ctx: Context) => {
   return { sessionId, path: params[0] ? '/' + params[0] : '' };
 }
 
+
+function queryToTerminateOptions(query: ParsedUrlQuery): TerminateOptions {
+  const options: TerminateOptions = { 
+    confirmed: '1' === query.confirmed,
+    force: '1' === query.force,
+    cancel: '1' === query.cancel,
+  };
+  return options;
+}

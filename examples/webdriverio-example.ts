@@ -19,7 +19,7 @@ void (async () => {
   await page.coverage.startJSCoverage();
   await page.coverage.stopJSCoverage();
   await page.title()
-  await new Promise(resolve => setTimeout(resolve, 10e3));
+  await new Promise(resolve => setTimeout(resolve, 30e3));
   await driver.deleteSession();
 })();
 

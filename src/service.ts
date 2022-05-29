@@ -417,26 +417,30 @@ export class LocalService {
     }
   }
 
-  public async terminate(_options: Partial<TerminateOptions>) {
-    const options: TerminateOptions = { confirmed: false, force: false, cancel: false, ..._options };
+  public async terminate(options: TerminateOptions) {
     if (options.cancel) {
+      console.log(`cancel service termination`);
       clearInterval(this.terminatingTimer);
       this.terminatingTimer = undefined;
       return;
     }
+
     if (!options.confirmed) {
       return;
     }
+
     if (options.force) {
-      console.log(`force terminate service without waiting for active sessions exited`);
-      process.exit(1);
+      console.log(`force terminate service without waiting for active sessions exited in 5 seconds`);
+      setTimeout(() => process.exit(1), 5e3); // leave some time for controller to send response.
     }
 
+    console.log('terminate service when there is no active sessions');
     if (this.terminatingTimer) return;
-    const checkIntervalInS = 10;
 
+    const checkIntervalInS = 5;
     this.terminatingTimer = setInterval(() => {
       if (!this.activeSessions.length) {
+        console.log('terminate service now');
         process.exit(1);
       }
       console.log(`active sessions are detected, defer termintation to ${checkIntervalInS}s later...`);
