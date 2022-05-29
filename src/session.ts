@@ -187,6 +187,11 @@ abstract class AbstractWebdriveSession implements ISession {
     return await this.axios.request(request);
   }
 
+  get shouldCleanUserData(): boolean {
+    const cleanUserData = this.request?.shouldcleanUserData;
+    return _.isNil(cleanUserData) ? this.webdriverConfiguration.cleanUserData : cleanUserData;
+  }
+
   async getCdpEndpoint(): Promise<string | undefined> { return; }
 
   async postStop() { }
@@ -226,19 +231,11 @@ class CommonWebdriverSession extends AbstractWebdriveSession { }
 
 class ChromeDriverSession extends AbstractWebdriveSession {
 
-  get shouldCleanUserData(): boolean {
-    const cleanUserData = this.request?.shouldcleanUserData;
-    return _.isNil(cleanUserData) ? this.webdriverConfiguration.cleanUserData : cleanUserData;
-  }
-
-  get debuggerAddress() {
-    return this.response?.chromeDebuggerAddress;
-  }
-
   async getCdpEndpoint() {
-    if (!this.debuggerAddress) return;
+    const debuggerAddress = this.response?.chromeDebuggerAddress;
+    if (!debuggerAddress) return;
     const res = await this.axios.request({
-      baseURL: 'http://' + this.debuggerAddress,
+      baseURL: 'http://' + debuggerAddress,
       url: '/json/version',
       method: 'GET',
     });
