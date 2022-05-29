@@ -1,6 +1,7 @@
 import axios from "axios";
 import Bluebird from "bluebird";
 import * as fs from 'fs';
+import * as stream from 'stream';
 
 interface IRetryOption {
   max?: number;
@@ -207,4 +208,20 @@ export async function readPathOrUrl(pathOrUrl: string, options?: any) {
   } else {
     return await fs.promises.readFile(pathOrUrl, options);
   }
+}
+
+export function isHttpUrl(pathOrUrl: string) {
+  return /^https?:\/\//.test(pathOrUrl)
+}
+
+export async function saveUrl(url: string, path: string) {
+  const writer = fs.createWriteStream(path);
+  await axios.request({
+    method: 'GET',
+    url,
+    responseType: 'stream',
+  }).then(res => {
+    res.data.pipe(writer);
+    return stream.promises.finished(writer);
+  })
 }
