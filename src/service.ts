@@ -10,6 +10,13 @@ import { RequestCapabilities, ResponseCapabilities, createSession, ISession } fr
 import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
+
+export interface TerminateOptions {
+  confirmed: boolean;
+  force: boolean;
+  cancel: boolean;
+}
+
 interface RegistedNode {
   url: string;
   node: NodeDto;
@@ -26,6 +33,7 @@ interface SessionRecord {
   sessionId: string;
   expireAfter: number;
 }
+
 
 export class HubService {
 
@@ -50,7 +58,7 @@ export class HubService {
           timeout: 2e3,
         });
         const driver = await driverDtoSchema.validate(res.data);  // remove this if it is too slow
-        return { nodeUrl, driver};
+        return { nodeUrl, driver };
       } catch (e) {
         console.error(e); // supress error
       }
@@ -60,7 +68,7 @@ export class HubService {
 
   async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, AxiosResponse>> {
     const candidate = await this.getBestMatch(request);
-    if (!candidate){
+    if (!candidate) {
       return Left({
         ...WEBDRIVER_ERRORS.SESSION_NOT_CREATED,
         message: `no availabe capbilities could be found`,
@@ -118,7 +126,7 @@ export class HubService {
     }
   }
 
-  public async forwardAutoCmd(params: {sessionId?: string, nodeId?: string},  request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
+  public async forwardAutoCmd(params: { sessionId?: string, nodeId?: string }, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
     let path = '/wd/hub/auto-cmd';
     let nodeUrl: string;
 
@@ -243,6 +251,11 @@ export class LocalService {
   }
 
   private nextRegisterTime: number = 0;
+  private terminatingTimer?: NodeJS.Timer;
+
+  get terminating() {
+    return undefined !== this.terminatingTimer;
+  }
 
   constructor(
     private readonly config: Configuration,
@@ -255,7 +268,7 @@ export class LocalService {
     ['SIGINT', 'SIGTERM'].forEach(signal => {
       process.on(signal, () => {
         console.log(`terminating...`);
-        return this.forceTerminate().then(() => {
+        return this.closeActiveSessions().then(() => {
           process.exit();
         });
       })
@@ -270,6 +283,7 @@ export class LocalService {
   }
 
   public get availableSlots() {
+    if (this.terminating) return 0;
     return this.config.maxSessions - this.busySlots;
   }
 
@@ -366,16 +380,6 @@ export class LocalService {
     }
   }
 
-  private get activeSessions() {
-    return _.flatMap(this.webdriverManagers, driver => [...driver.activeSessions]);
-  }
-
-  public async forceTerminate() {
-    await Bluebird.map(this.activeSessions, async session => {
-      await session.stop();
-    }, { concurrency: 4 });
-  }
-
   public async getCdpEndpointBySessionId(sessionId: string) {
     const webdriverSession = this.getWebdriverSessionById(sessionId);
     return await webdriverSession?.getCdpEndpoint();
@@ -411,6 +415,42 @@ export class LocalService {
         stacktrace: e.stack || '',
       });
     }
+  }
+
+  public async terminate(_options: Partial<TerminateOptions>) {
+    const options: TerminateOptions = { confirmed: false, force: false, cancel: false, ..._options };
+    if (options.cancel) {
+      clearInterval(this.terminatingTimer);
+      this.terminatingTimer = undefined;
+      return;
+    }
+    if (!options.confirmed) {
+      return;
+    }
+    if (options.force) {
+      console.log(`force terminate service without waiting for active sessions exited`);
+      process.exit(1);
+    }
+
+    if (this.terminatingTimer) return;
+    const checkIntervalInS = 10;
+
+    this.terminatingTimer = setInterval(() => {
+      if (!this.activeSessions.length) {
+        process.exit(1);
+      }
+      console.log(`active sessions are detected, defer termintation to ${checkIntervalInS}s later...`);
+    }, checkIntervalInS * 1e3);
+  }
+
+  private get activeSessions() {
+    return _.flatMap(this.webdriverManagers, driver => [...driver.activeSessions]);
+  }
+
+  private async closeActiveSessions() {
+    await Bluebird.map(this.activeSessions, async session => {
+      await session.stop();
+    }, { concurrency: 4 });
   }
 
   private onSessionChange() {
@@ -564,5 +604,5 @@ function isRequestMatch(config: Configuration, driver: DriverConfiguration, requ
 }
 
 function matchTags(requestTags: string[], targetTags: string[]) {
-  return requestTags.every( tag =>  tag.startsWith('!') ? (!targetTags.includes(tag.slice(1))) : targetTags.includes(tag));
+  return requestTags.every(tag => tag.startsWith('!') ? (!targetTags.includes(tag.slice(1))) : targetTags.includes(tag));
 }

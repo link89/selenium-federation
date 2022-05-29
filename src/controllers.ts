@@ -34,6 +34,7 @@ export interface IController {
 
   onNodeRegiester: RequestHandler;
   onGetNodesRequest: RequestHandler;
+  onTermiateRequest: RequestHandler;
 }
 
 
@@ -43,9 +44,13 @@ export class RemoteController implements IController {
     private readonly remoteService: HubService,
   ) { }
 
+  onTermiateRequest: RequestHandler = async (ctx, next) => {
+    throw Error(`termiate endpoint is optional in hub mode`);
+  }
+
   onGetBestMatchRequest: RequestHandler = async (ctx, next) => {
     // TODO: implement when necessary
-    throw Error(`this endpoint is optional in hub mode`);
+    throw Error(`best-match endpoint is optional in hub mode`);
   }
 
   onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
@@ -111,6 +116,10 @@ export class LocalController implements IController {
   constructor(
     private readonly localService: LocalService,
   ) { }
+
+  onTermiateRequest: RequestHandler = async (ctx, next) => {
+
+  }
 
   onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
     const request = new RequestCapabilities(ctx.request);
