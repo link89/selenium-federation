@@ -124,7 +124,7 @@ export class LocalController implements IController {
     await this.localService.terminate(queryToTerminateOptions(query));
     setHttpResponse(ctx, {
       status: 200,
-      body: 'todo',
+      body: renderTerminatePage(),
     });
   }
 
@@ -279,7 +279,7 @@ function renderDirectoyHtml(dir: string, paths: string[]) {
     `<h2>Directory listing for ${dir}</h2>`,
     `<hr>`,
     `<ul>`,
-    ...paths.map(path => `<li><a href="${path}">${path}</a>`),
+    ...paths.map(path => `<li><a href="${path}">${path}</a></li>`),
     `</ul>`,
     `<hr>`,
     `</body>`,
@@ -343,4 +343,22 @@ function queryToTerminateOptions(query: ParsedUrlQuery): TerminateOptions {
     cancel: '1' === query.cancel,
   };
   return options;
+}
+
+function renderTerminatePage() {
+  return [
+    `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><html>`,
+    `<title>Terminate Service</title>`,
+    `<body>`,
+    `<h2>Termiate Service</h2>`,
+    `<hr>`,
+    `<ul>`,
+    `<li>Click <a href="/terminate?confirmed=1">here</a> to teriminated the service gracefully (waiting for all sessions exited, cancelable) </li>`,
+    `<li>Click <a href="/terminate?cancel=1">here</a> to cancel the termination</li>`,
+    `<li>Click <a href="/terminate?confirmed=1&force=1">here</a> to teriminated the service immediately (current sessions will be aborted)</li>`,
+    `</ul>`,
+    `<hr>`,
+    `</body>`,
+    `</html>`,
+  ].join('\n');
 }
