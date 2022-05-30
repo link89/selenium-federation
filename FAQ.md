@@ -3,10 +3,8 @@ Useful tips to setup a reliable browser farm.
 
 ## Auto Start on Windows
 To enable the auto startup on windows, you need to create a bat script in the `Startup` folder.
-
 To open the `Startup` folder the easy way, just hit `Windows + R` to open the `Run` box, type `shell:startup`, and then press `Enter`.
-
-Then you can create a file named `pm2.bat` and write a single line command `pm2 resurrect` in it.
+Then you can create a file named `pm2-startup.bat` and add the command `pm2 resurrect` to it.
 
 
 ## Auto Login Operating System
