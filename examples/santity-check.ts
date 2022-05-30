@@ -22,7 +22,7 @@ void (async () => {
     const driver = await remote(opt);
     await driver.url('https://bing.com');
 
-    if (browserName in ['chrome', 'MicrosoftEdge']) {
+    if (browserName === 'chrome' || browserName === 'MicrosoftEdge') {
       console.log('Test CDP protocol');
       const pt = await driver.getPuppeteer();
       const page = (await pt.pages())[0];
