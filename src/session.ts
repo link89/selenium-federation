@@ -85,16 +85,28 @@ export class ResponseCapabilities {
     return this.rawResponseData?.capabilities?.browserVersion;
   }
 
-  get chromeDebuggerAddress() {
-    return this.rawResponseData?.capabilities?.["goog:chromeOptions"]?.debuggerAddress;
-  }
-
   get cdpEndpoint() {
     return `${this.request.getSessionBaseUrl(true)}/${this.sessionId}/se/cdp`;
   }
 
+  get chromeDebuggerAddress() {
+    return this.rawResponseData?.capabilities?.["goog:chromeOptions"]?.debuggerAddress;
+  }
+
   get chromeUserDataDir() {
     return this.rawResponseData?.capabilities?.chrome?.userDataDir;
+  }
+
+  get msEdgeDebuggerAddress() {
+    return this.rawResponseData?.capabilities?.["ms:edgeOptions"]?.debuggerAddress;
+  }
+
+  get msEdgeUserDataDir() {
+    return this.rawResponseData?.capabilities?.msedge?.userDataDir;
+  }
+
+  get firefoxProfilePath() {
+    return this.rawResponseData?.capabilities?.['moz:profile'];
   }
 
   get jsonObject() {
@@ -102,7 +114,7 @@ export class ResponseCapabilities {
     // patch capabilities
     const newResponseData = raw.value || raw;
     // set cdp endpoint
-    if (this.chromeDebuggerAddress) {
+    if (this.chromeDebuggerAddress || this.msEdgeDebuggerAddress) {
       newResponseData.capabilities['se:cdp'] = this.cdpEndpoint;
       newResponseData.capabilities['se:cdpVersion'] = 'FIXME';  // FIXME
     }
@@ -126,11 +138,11 @@ export function createSession(
   axios: AxiosInstance,
 ) {
   switch (request.browserName) {
-    case 'chrome': return new ChromeDriverSession(request, webdriverConfiguration, processManager, axios);
-    case 'firefox': ;
-    case 'MicrosoftEdge': ;
+    case 'chrome': return new ChromiumSession(request, webdriverConfiguration, processManager, axios);
+    case 'MicrosoftEdge': return new ChromiumSession(request, webdriverConfiguration, processManager, axios);
+    case 'firefox': return new FirefoxSession(request, webdriverConfiguration, processManager, axios);
     case 'safari': return new CommonWebdriverSession(request, webdriverConfiguration, processManager, axios);
-    default: throw Error(`browser ${request.browserName} is not supported`)
+    default: throw Error(`browser ${request.browserName} is not supported`);
   }
 }
 
@@ -178,8 +190,9 @@ abstract class AbstractWebdriveSession implements ISession {
   }
 
   async stop() {
-    await this.axios.delete(`/session/${this.id}`);
+    await this.axios.delete(`/session/${this.id}`).catch(e => console.error(e));
     this.killProcessGroup();
+    await this.mayCleanUserData();
     await this.postStop();
   }
 
@@ -195,6 +208,8 @@ abstract class AbstractWebdriveSession implements ISession {
   async getCdpEndpoint(): Promise<string | undefined> { return; }
 
   async postStop() { }
+
+  get userDataDir(): string | undefined { return undefined; }
 
   private async waitForReady() {
     await retry(async () => await this.axios.get('/status'), { max: 10, interval: 1e2 });
@@ -227,25 +242,9 @@ abstract class AbstractWebdriveSession implements ISession {
       }
     }
   }
-}
 
-class CommonWebdriverSession extends AbstractWebdriveSession { }
-
-class ChromeDriverSession extends CommonWebdriverSession {
-
-  async getCdpEndpoint() {
-    const debuggerAddress = this.response?.chromeDebuggerAddress;
-    if (!debuggerAddress) return;
-    const res = await this.axios.request({
-      baseURL: 'http://' + debuggerAddress,
-      url: '/json/version',
-      method: 'GET',
-    });
-    return res.data?.webSocketDebuggerUrl as string;
-  }
-
-  async postStop() {
-    const userDataDir = this.response?.chromeUserDataDir;
+  private async mayCleanUserData() {
+    const userDataDir = this.userDataDir;
     if (this.shouldCleanUserData && userDataDir) {
       try {
         console.log(`clean user data: ${userDataDir}`);
@@ -257,3 +256,28 @@ class ChromeDriverSession extends CommonWebdriverSession {
   }
 }
 
+class CommonWebdriverSession extends AbstractWebdriveSession { }
+
+class ChromiumSession extends CommonWebdriverSession {
+
+  async getCdpEndpoint() {
+    const debuggerAddress = this.response?.chromeDebuggerAddress || this.response?.msEdgeDebuggerAddress;
+    if (!debuggerAddress) return;
+    const res = await this.axios.request({
+      baseURL: 'http://' + debuggerAddress,
+      url: '/json/version',
+      method: 'GET',
+    });
+    return res.data?.webSocketDebuggerUrl as string;
+  }
+
+  get userDataDir() {
+    return this.response?.chromeUserDataDir || this.response?.msEdgeUserDataDir;
+  }
+}
+
+class FirefoxSession extends CommonWebdriverSession {
+  get userDataDir() {
+    return this.response?.firefoxProfilePath;
+  }
+}

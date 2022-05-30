@@ -20,6 +20,11 @@ drivers:
         args:
           - --headless
 
+  - browserName: MicrosoftEdge
+    maxSessions: 2
+    webdriver:
+      path: ./msedgedriver.exe
+
   - browserName: firefox
     maxSessions: 2
     webdriver:
