@@ -39,8 +39,8 @@ export const AUTO_CMD_ERRORS = {
 
 export const SF_CAPS_FIELDS = {
   BROWSER_TAGS: 'sf:browserTags',
-  BROWSER_UUID: 'sf:browserUuid',
-  NODE_UUID: 'sf:nodeUuid',
+  BROWSER_UUID: 'sf:browserUUID',
+  NODE_UUID: 'sf:nodeUUID',
   NODE_TAGS: 'sf:nodeTags',
   CLEAN_USER_DATA: 'sf:cleanUserData',
   ENVS: 'sf:envs',

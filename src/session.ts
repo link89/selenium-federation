@@ -29,12 +29,12 @@ export class RequestCapabilities {
 
   get browserName() { return this.getValue('browserName'); }
   get browserVersion() { return this.getValue('browserVersion'); }
-  get browserUuid() { return this.getValue(SF_CAPS_FIELDS.BROWSER_UUID); }
+  get browserUUID() { return this.getValue(SF_CAPS_FIELDS.BROWSER_UUID); }
   get browserTags(): string[] | undefined { return this.getValue(SF_CAPS_FIELDS.BROWSER_TAGS) as any };
 
   get platformName() { return this.getValue('platformName'); }
 
-  get nodeUuid() { return this.getValue(SF_CAPS_FIELDS.NODE_UUID); }
+  get nodeUUID() { return this.getValue(SF_CAPS_FIELDS.NODE_UUID); }
   get nodeTags(): string[] | undefined { return this.getValue(SF_CAPS_FIELDS.NODE_TAGS) as any };
 
   get environmentVariables(): any { return this.getValue(SF_CAPS_FIELDS.ENVS) || {}; }

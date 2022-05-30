@@ -599,11 +599,11 @@ class WebdriverManager {
 function isRequestMatch(config: Configuration, driver: DriverConfiguration, request: RequestCapabilities): boolean {
   if (request.browserName && request.browserName != driver.browserName) return false;
   if (request.browserVersion && request.browserVersion != driver.browserVersion) return false;
-  if (request.browserUuid && request.browserUuid != driver.uuid) return false;
+  if (request.browserUUID && request.browserUUID != driver.uuid) return false;
   if (request.browserTags && !matchTags(request.browserTags, driver.tags)) return false;
 
   if (request.platformName && request.platformName != config.platformName) return false;
-  if (request.nodeUuid && request.nodeUuid != config.uuid) return false;
+  if (request.nodeUUID && request.nodeUUID != config.uuid) return false;
   if (request.nodeTags && !matchTags(request.nodeTags, config.tags)) return false;
 
   return true;
