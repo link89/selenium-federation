@@ -2,7 +2,7 @@ import { remote } from "webdriverio";
 
 const opt = {
   hostname: 'localhost',
-  port: 4444,
+  port: 5555,
   path: '/wd/hub',
   capabilities: {
     browserName: 'chrome',

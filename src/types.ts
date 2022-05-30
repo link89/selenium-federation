@@ -77,7 +77,7 @@ export const nodeDtoSchema = yup.object({
 }).defined();
 
 export const registerDtoSchema = yup.object({
-  registerAs: yup.string().optional(),
+  registerAs: yup.string().required(),
 }).defined();
 
 

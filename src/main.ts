@@ -57,7 +57,6 @@ import axios from "axios";
   rootRouter
     // hub endpoint
     .use('/wd/hub', wdHubRouter.routes(), wdHubRouter.allowedMethods())
-
     // utils
     .post('/auto-cmd', controller.onAutoCmdRequest)
     .get('/terminate', controller.onTermiateRequest)

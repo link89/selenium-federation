@@ -51,13 +51,13 @@ export class HubService {
     const candidates: (Candidate | undefined)[] = await Bluebird.map(nodeUrls, async nodeUrl => {
       try {
         const res = await this.axios.request({
-          method: 'GET',
+          method: 'POST',
           baseURL: nodeUrl,
           url: '/wd/hub/best-match',
           data: request.data,
           timeout: 2e3,
         });
-        const driver = await driverDtoSchema.validate(res.data);  // remove this if it is too slow
+        const driver = await driverDtoSchema.validate(res.data, { strict: true });  // remove this if it is too slow
         return { nodeUrl, driver };
       } catch (e) {
         console.error(e); // supress error
@@ -191,7 +191,7 @@ export class HubService {
       url: '/wd/hub/nodes',
       timeout: 5e3,
     });
-    const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data);  // remove this if it is too slow
+    const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data, { strict: true });  // remove this if it is too slow
     const expireAfter = Date.now() + this.config.registerTimeout;
     nodes.forEach(node => {
       this.nodesIndex.set(node.config.uuid, { url: nodeUrl, node, expireAfter });
@@ -473,10 +473,12 @@ export class LocalService {
 
     // suggest a new time for next auto register
     this.nextRegisterTime = Date.now() + 10e3;
-    const data: RegisterDto = { registerAs: this.config.registerAs };
+    const data: RegisterDto = {
+      registerAs: this.config.registerAs || `http://%s:${this.config.port}`,
+    };
     try {
       const res = await this.axios.request({
-        method: 'GET',
+        method: 'POST',
         url: this.config.registerTo,
         data,
         timeout: 5e3,

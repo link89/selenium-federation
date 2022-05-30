@@ -14,6 +14,7 @@ import * as fs from 'fs';
 import { join } from 'path';
 import { Either } from "purify-ts";
 import { ParsedUrlQuery } from 'querystring';
+import { format } from 'util';
 
 
 interface HttpResponse {
@@ -97,8 +98,8 @@ export class HubController implements IController {
   }
 
   onNodeRegiester: RequestHandler = async (ctx, next) => {
-    const registerRequest = registerDtoSchema.validateSync(ctx.body);
-    const nodeUrl = registerRequest.registerAs || `http://${ctx.request.ip}`;
+    const registerRequest = registerDtoSchema.validateSync(ctx.request.body);
+    const nodeUrl = format(registerRequest.registerAs, ctx.request.ip);
     await this.remoteService.onRegister(nodeUrl);
     ctx.status = 201;
   }
@@ -149,7 +150,7 @@ export class LocalController implements IController {
     if(driver) {
       setHttpResponse(ctx, {
         status: 200,
-        body: driver,
+        body: driver.jsonObject,
       });
     } else {
       setHttpResponse(ctx, {
