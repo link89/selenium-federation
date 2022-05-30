@@ -108,3 +108,6 @@ dist
 
 # default tmp folder
 tmp
+
+# avoid accident commit
+examples
