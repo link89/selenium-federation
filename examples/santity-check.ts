@@ -19,7 +19,13 @@ void (async () => {
     const browserName = browser.config.browserName;
     opt.capabilities.browserName = browserName;
 
-    const driver = await remote(opt);
+    let driver;
+    try {
+      driver = await remote(opt);
+    } catch (e) {
+      console.error(e);
+      continue;
+    }
 
     await driver.url('https://bing.com');
     await driver.getTitle();

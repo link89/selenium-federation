@@ -192,6 +192,7 @@ abstract class AbstractWebdriveSession implements ISession {
   async stop() {
     await this.axios.delete(`/session/${this.id}`);
     this.killProcessGroup();
+    await this.mayCleanUserData();
     await this.postStop();
   }
 
@@ -241,6 +242,20 @@ abstract class AbstractWebdriveSession implements ISession {
       }
     }
   }
+
+
+  async mayCleanUserData() {
+    const userDataDir = this.userDataDir;
+    if (this.shouldCleanUserData && userDataDir) {
+      try {
+        console.log(`clean user data: ${userDataDir}`);
+        await fs.promises.rm(userDataDir, { recursive: true, force: true });
+      } catch (e) {
+        console.warn(`ignore error during rm ${userDataDir}`, e);
+      }
+    }
+  }
+
 }
 
 class CommonWebdriverSession extends AbstractWebdriveSession { }
@@ -258,16 +273,8 @@ class ChromiumSession extends CommonWebdriverSession {
     return res.data?.webSocketDebuggerUrl as string;
   }
 
-  async postStop() {
-    const userDataDir = this.response?.chromeUserDataDir || this.response?.msEdgeUserDataDir;
-    if (this.shouldCleanUserData && userDataDir) {
-      try {
-        console.log(`clean user data: ${userDataDir}`);
-        await fs.promises.rm(userDataDir, { recursive: true, force: true });
-      } catch (e) {
-        console.warn(`ignore error during rm ${userDataDir}`, e);
-      }
-    }
+  get userDataDir() {
+    return this.response?.chromeUserDataDir || this.response?.msEdgeUserDataDir;
   }
 }
 
