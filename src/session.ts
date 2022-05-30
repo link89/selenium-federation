@@ -180,6 +180,10 @@ abstract class AbstractWebdriveSession implements ISession {
       envs: { ...this.webdriverConfiguration.webdriver.envs, ...this.request.environmentVariables },
       args: this.webdriverConfiguration.webdriver.args,
     });
+    // TODO: handle webdriver error properly
+    // The suggested way is to accept an error handler when session is created,
+    // which can allow the caller to decide what to do when unexpected error happens.
+    webdriverProcess.on('error', (err) => console.error(err));
     this.port = port;
     this.process = webdriverProcess;
     this.axios.defaults.baseURL = `http://localhost:${this.port}`;

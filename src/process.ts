@@ -42,8 +42,9 @@ export class ProcessManager {
     return "win32" === process.platform;
   }
 
-  killProcessGroup(process: ChildProcess) {
+  killProcessGroup = (process: ChildProcess) => {
     if (!process.killed) {
+      console.log(`kill process group ${process.pid}`);
       if (this.isWindows) {
         execSync(`taskkill /T /F /PID ${process.pid}`);
       } else {
@@ -56,18 +57,19 @@ export class ProcessManager {
     const port = await getPort();
     let path = params.path;
     console.log(`start webdriver process ${path} ${params.args}`);
-    const webdriverProcess = spawn(path, [...params.args, `--port=${port}`],
-      {
-        stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
-        env: { ...process.env, ...params.envs, }
-      });
+    const webdriverProcess = spawn(path, [...params.args, `--port=${port}`], {
+      stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
+      env: { ...process.env, ...params.envs, }
+    });
+
+
     return { port, webdriverProcess };
   }
 
   async getOrSpawnAutoCmdProcess() {
     if (this.autoCmdProcess && this.autoCmdProcess.isActive) return this.autoCmdProcess;
-    if(!this.config.autoCmdHttp) return null;
-    if(this.config.autoCmdHttp.disable) return null;
+    if (!this.config.autoCmdHttp) return null;
+    if (this.config.autoCmdHttp.disable) return null;
 
     const path = this.config.autoCmdHttp.path;
     if (!path) return null;
