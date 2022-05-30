@@ -192,8 +192,10 @@ export class HubService {
       timeout: 5e3,
     });
     const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data, { strict: true });  // remove this if it is too slow
+
     const expireAfter = Date.now() + this.config.registerTimeout;
     nodes.forEach(node => {
+      node.config.registerAs = nodeUrl;
       this.nodesIndex.set(node.config.uuid, { url: nodeUrl, node, expireAfter });
     });
   }
