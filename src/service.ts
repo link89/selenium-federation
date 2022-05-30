@@ -68,8 +68,21 @@ export class HubService {
   }
 
   async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, AxiosResponse>> {
+    /**
+     * TODO: optimize when necessary
+     * 
+     * Currently to distribute a create session request to registed nodes,
+     * hub service will send best-match requests to all of them to pick up a node to handle it.
+     * 
+     * I know that this design is not scale,
+     * but it is easy to reason and to implement, and less error prone.
+     * It should work well when registed nodes are few in number (maybe <100).
+     * I will optimize this when necessary.
+     */
+
     let resPromise: Promise<AxiosResponse>;
     let candidate: Candidate | undefined;
+
 
     try {
       await this.createSessionMutex.wait();
