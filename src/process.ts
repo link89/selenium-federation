@@ -61,8 +61,6 @@ export class ProcessManager {
       stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
       env: { ...process.env, ...params.envs, }
     });
-
-
     return { port, webdriverProcess };
   }
 
@@ -79,8 +77,9 @@ export class ProcessManager {
     const autoCmdprocess = spawn(path, [...args, `--port=${port}`],
       { stdio: 'inherit', windowsHide: this.isWindows, env: process.env }
     );
+    // TODO: handle process error properly
+    autoCmdprocess.on('error', (err) => console.error(err));
     this.autoCmdProcess = new AutoCmdProcess(autoCmdprocess, port);
     return this.autoCmdProcess;
   }
-
 }
