@@ -102,4 +102,9 @@ dist
 
 # TernJS port file
 .tern-port
-*driver
+
+# webdriver files
+*driver*
+
+# default tmp folder
+tmp

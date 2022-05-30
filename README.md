@@ -1,20 +1,24 @@
 # Selenium Federation
-A lightweight alternative to selenium-grid.
+A lightweight alternative to `selenium4`.
 
 ## Introduction
-`selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is compatible with `selenium-grid`.
+`selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is 95% compatible with `selenium4`.
 
-The followings are the major goals of this project:
+### Highlights
+* CDP proxy (compatible with `selenium4`)
+* Extend desktop support with `auto-cmd`
+
+**The followings are the major goals of this project:**
 
 * Simple: It should be easy enough to run or make contributions to this project.
 * Lightweight: It is designed to support a browser farm with at most 20 nodes.
 * Unblock limitations of existed solutions: see [here](#differentiation-from-selenium-4).
 
-The following are NOT this project's main focus (at least for now):
+**The following are *NOT* this project's main focus (at least for now):**
 
 * Zero-configuration: You should try [webdriver-manager](https://github.com/angular/webdriver-manager) or [selenium-standalone](https://github.com/vvo/selenium-standalone) instead. They are great tools to start a local service to run tests.
-* Distributed architecture: The project chooses federated architecture for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
-  * I guess it won't be hard to support the distributed mode via `etcd` when there are requirements in the future.
+* Distributed architecture: I choose **federated architecture** for simplicity's sake. It's good enough to run a farm with at most 20 nodes.
+  * I don't think it will be hard to support distributed mode by using `etcd` to share state in the future, if necessary.
 
 ## Usage
 
@@ -31,51 +35,57 @@ selenium-federation-pm2-start --help
 ### Start Local Service
 Prepare configuration file `local.yaml` with the following content.
 
-> CAUTIONS: The relative path in the configuration file is relative to the `current working directory`, a.k.a. the path where you run the `selenium-federation` or `selenium-federation-pm2-start` commands.
-
 ```yaml
+role: node
 port: 4444
 browserIdleTimeout: 60  # browser processes will be killed after session inactive after browserIdleTimeout
 maxSessions: 5  # limit the max sessions, default to Math.max(1, os.cpus().length - 1)
 
-registerTo: http://localhost:5555/wd/hub  # optional, register to a remote service
-registerAs: http://192.168.1.2:4444/wd/hub  # optional, accessible URL to this service, useful when selenium-federation service behind proxy or inside docker
+registerTo: http://localhost:5555 # optional, register to a hub service
+registerAs: http://192.168.1.2:4444 # optional, accessible URL to this service, useful when selenium-federation service behind proxy or in Docker or Virutal Machine that with port mapping.
 
-autoRebootThreshold: 1000  # optional, auto reboot the host machine after start this many sessions, default is 0 (disable)
-autoRebootCommand: shutdown /r  # optional, customize auto-reboot command, default command depends on the operating system
+autoCmdHttp:
+  path: auto-cmd-http  # optional, path to auto-cmd-http executable file
 
-# sentryDSN: # optional, upload message and exception to sentry
-
-localDrivers:
+drivers:
   - browserName: firefox
     maxSessions: 2  # limit the max session of specific driver, default value is 1
-    webdriverPath: geckodriver # Support global webdriver command.
+    webdriver:
+      path: geckodriver 
 
   - browserName: safari
     maxSessions: 1
-    webdriverPath: safaridriver
+    webdriver:
+      path: safaridriver
 
   - browserName: MicrosoftEdge
     maxSessions: 2
-    webdriverPath: msedgedriver
+    webdriver:
+      path: msedgedriver # Support global webdriver command (can be found in PATH envvar)
 
   - browserName: chrome
-    browserVersion: stable # support customized version value
+    browserVersion: stable # support customized version value (or you can use tags)
     maxSessions: 2
-    webdriverPath: ./chromedriver-stable  # Also support relative/absolute path to webdriver.
+    tags: [95]
+    webdriver:
+      path: ./chromedriver-stable  # support relative (to CWD) path to webdriver (start with ./)
 
   - browserName: chrome
     browserVersion: beta
+    tags: [96]
     maxSessions: 2
-    webdriverPath: ./chromedriver-beta
+    webdriver:
+      path: chromedriver-beta  
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
 
   - browserName: chrome
     browserVersion: canary
+    tags: [97]
     maxSessions: 2
-    webdriverPath: ./chromedriver-canary
+    webdriver:
+      path: /usr/local/bin/chromedriver-canary  # support absolute path
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
@@ -99,6 +109,7 @@ selenium-federation-check
 A remote service allows local services to register to. Prepare configuration file `remote.yaml` with the following content.
 
 ```yaml
+role: hub
 port: 5555
 browserIdleTimeout: 60
 ```
@@ -133,7 +144,15 @@ pm2 save  # dump current apps so that they will be brought up automatically afte
 ```
 
 
-## Differentiation from Selenium 4
+## Differentiation from Selenium4 and other solutions
+
+### Support provider specificed capabilities (start with sf:)
+Currently support:
+* sf:tags: use tags for matching
+* sf:envs: set environment variable for browser or electron app
+
+The detail can be found in the foloowing sections.
+
 
 ### Default Capabilities
 
@@ -145,12 +164,12 @@ The below configuration is a real-world example to use this feature to support `
 port: 4444
 browserIdleTimeout: 60
 
-localDrivers:
+drivers:
   - browserName: chrome
     browserVersion: canary
-    tags:
-      - canary
-    webdriverPath: ./chromedriver-canary
+    tags: [97]
+    webdriver:
+      path: //chromedriver-canary
     defaultCapabilities:
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
@@ -158,14 +177,9 @@ localDrivers:
 
 Address this [limitation](https://github.com/SeleniumHQ/selenium/issues/8745) of selenium.
 
-### Restart host machine automatically
-
-Errors are found after a host machine running as a selenium node for a long time. `selenium-federation` provide an auto reboot mechanism to work around this problem by setting the `autoRebootThreshold` and `autoRebootCommand`.
-
-
 ### Matching with Tags
 
-`tags` fields can be used in `localDrivers` to distinguish the configuration items with same `browserName`. The client-side can set the `extOptions.tags` in capabilities to make use of this feature.
+`tags` fields can be used in driver to distinguish the configuration items with same `browserName`. The client-side can set the `sf:tags` in capabilities to make use of this feature.
 
 You can also use `browserVersion` fields for the same purpose, but `tags` mechanism provides more flexibility.
 
@@ -178,10 +192,8 @@ const opt = {
   hostname: 'localhost', port: 4444, path: '/wd/hub',
   capabilities: {
     browserName: 'chrome',
-    browserVersion: 'canary',  // example of using browserVersion
-    extOptions: {
-      tags: ['canary'],  // example of using tags
-    }
+    browserVersion: 'canary',  // example of using browserVersion as tag
+    "sf:tags": [97],             // example of using tags
   }
 };
 const url = "https://github.com";
@@ -193,7 +205,7 @@ void (async () => {
 
 ### Customize Environment Variables
 
-When specific environment variables need to be set when starting webdriver process or browsers, for example, to enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `localDriver.webdriverEnvs` field in the configuration file, or setting the `envOptions.envs` field in the capabilities.
+When specific environment variables need to be set when starting webdriver process or browsers, for example, to enable firefox WebRender by setting `MOZ_WEBRENDER=1`, you can either setting the `drivers.webdriver.envs` field in the configuration file, or setting the `sf:envs` field in the capabilities.
 
 ```typescript
 import { remote } from "webdriverio";
@@ -201,10 +213,8 @@ const opt = {
   hostname: 'localhost', port: 4444, path: '/wd/hub',
   capabilities: {
     browserName: 'firefox',
-    extOptions: {
-      envs: {
-        MOZ_WEBRENDER: '1',
-      }
+    "sf:envs": {
+      MOZ_WEBRENDER: '1',
     }
   }
 };

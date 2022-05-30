@@ -1,0 +1,19 @@
+role: local
+
+port: 4444
+browserIdleTimeout: 60
+maxSessions: 5
+
+fileServer:
+  root: .
+
+drivers:
+  - browserName: chrome
+    browserVersion: stable
+    maxSessions: 2
+    webdriver:
+      path: ./chromedriver.exe
+    defaultCapabilities:
+      "goog:chromeOptions":
+        args:
+          - --headless
