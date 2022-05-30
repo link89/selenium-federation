@@ -39,7 +39,7 @@ export interface IController {
 }
 
 
-export class RemoteController implements IController {
+export class HubController implements IController {
 
   constructor(
     private readonly remoteService: HubService,
@@ -336,7 +336,7 @@ const getSessionParams = (ctx: Context) => {
 
 
 function queryToTerminateOptions(query: ParsedUrlQuery): TerminateOptions {
-  const options: TerminateOptions = { 
+  const options: TerminateOptions = {
     confirmed: '1' === query.confirmed,
     force: '1' === query.force,
     cancel: '1' === query.cancel,

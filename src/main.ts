@@ -6,9 +6,10 @@ import logger from  "koa-logger";
 import { getAndInitConfig } from "./config";
 import * as Sentry from "@sentry/node";
 
-import { LocalService } from "./service";
-import { serveStatic, LocalController, onError } from "./controllers";
+import { HubService, LocalService } from "./service";
+import { serveStatic, LocalController, onError, IController, HubController } from "./controllers";
 import { ProcessManager } from "./process";
+import axios from "axios";
 
 
 // Get started
@@ -22,25 +23,34 @@ import { ProcessManager } from "./process";
     });
   }
 
-  const processManager = new ProcessManager(config);
-  await processManager.init();
+  let controller: IController;
 
-  const localService = LocalService.of(config, processManager);
-  localService.init();
-  const localServiceController = new LocalController(localService);
+  if ('local' === config.role) {
+    const processManager = new ProcessManager(config);
+    await processManager.init();
+
+    const localService = LocalService.of(config, processManager);
+    localService.init();
+    controller = new LocalController(localService);
+  } else if ('hub' === config.role) {
+    const hubService = new HubService(config, axios.create({}));
+    controller = new HubController(hubService);
+  } else {
+    throw Error(`Invalid role: ${config.role}`);
+  }
 
   const wdHubRouter = new Router();
   wdHubRouter
     // auto-cmd
-    .post('/session/:sessionId/auto-cmd', localServiceController.onAutoCmdRequestToSession)
-    .post('/nodes/:nodeId/auto-cmd', localServiceController.onAutoCmdRequestToNode)
+    .post('/session/:sessionId/auto-cmd', controller.onAutoCmdRequestToSession)
+    .post('/nodes/:nodeId/auto-cmd', controller.onAutoCmdRequestToNode)
     // webdriver session
-    .post('/session', localServiceController.onNewWebdriverSessionRequest)
-    .delete(['/session/:sessionId', '/session/:sessionId/'], localServiceController.onDeleteWebdirverSessionRequest)
-    .all(['/session/:sessionId', '/session/:sessionId/(.*)'], localServiceController.onWebdirverSessionCommandRqeust)
+    .post('/session', controller.onNewWebdriverSessionRequest)
+    .delete(['/session/:sessionId', '/session/:sessionId/'], controller.onDeleteWebdirverSessionRequest)
+    .all(['/session/:sessionId', '/session/:sessionId/(.*)'], controller.onWebdirverSessionCommandRqeust)
     // data model
-    .post('/best-match', localServiceController.onGetBestMatchRequest)
-    .get('/nodes', localServiceController.onGetNodesRequest)
+    .post('/best-match', controller.onGetBestMatchRequest)
+    .get('/nodes', controller.onGetNodesRequest)
 
   const rootRouter = new Router();
   rootRouter
@@ -48,8 +58,8 @@ import { ProcessManager } from "./process";
     .use('/wd/hub', wdHubRouter.routes(), wdHubRouter.allowedMethods())
 
     // utils
-    .post('/auto-cmd', localServiceController.onAutoCmdRequest)
-    .get('/terminate', localServiceController.onTermiateRequest)
+    .post('/auto-cmd', controller.onAutoCmdRequest)
+    .get('/terminate', controller.onTermiateRequest)
 
   if (config.fileServer && !config.fileServer.disable) {
     rootRouter.all('/fs/(.*)', serveStatic(config.fileServer.root));
@@ -70,5 +80,5 @@ import { ProcessManager } from "./process";
   });
 
   // handle websocket connection
-  server.on('upgrade', localServiceController.onWebsocketUpgrade);
+  server.on('upgrade', controller.onWebsocketUpgrade);
 })();
