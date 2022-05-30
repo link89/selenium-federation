@@ -229,7 +229,7 @@ abstract class AbstractWebdriveSession implements ISession {
 
 class CommonWebdriverSession extends AbstractWebdriveSession { }
 
-class ChromeDriverSession extends AbstractWebdriveSession {
+class ChromeDriverSession extends CommonWebdriverSession {
 
   async getCdpEndpoint() {
     const debuggerAddress = this.response?.chromeDebuggerAddress;
