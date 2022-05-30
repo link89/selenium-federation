@@ -10,7 +10,7 @@ const ROLES = ['local', 'hub'];
 
 export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
-  browserVersion: yup.string().defined(),
+  browserVersion: yup.string().optional(),
   sessionTimeout: yup.number(),
   uuid: yup.string().default(() => uuidv4()),
   tags: yup.array(yup.string().defined()).default([]),

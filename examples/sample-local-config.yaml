@@ -19,3 +19,13 @@ drivers:
       "goog:chromeOptions":
         args:
           - --headless
+
+  - browserName: firefox
+    maxSessions: 2
+    webdriver:
+      path: ./geckodriver.exe
+
+  - browserName: safari
+    maxSessions: 1
+    webdriver:
+      path: safaridriver

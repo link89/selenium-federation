@@ -303,10 +303,13 @@ const setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
 
 function toForwardRequest(ctx: Context): AxiosRequestConfig {
   const fromRequest: Request = ctx.request;
+  const headers = fromRequest.headers || {};
+  delete headers['host'];
+  delete headers['content-length'];
   return {
     method: fromRequest.method as any,
     data: fromRequest.rawBody,
-    headers: fromRequest.headers,
+    headers,
     params: fromRequest.query,
   };
 }
@@ -318,6 +321,8 @@ function setForwardResponse(ctx: Context, result: Either<WebdriverError, AxiosRe
       body: { value: err },
     });
   }).ifRight(response => {
+    const headers = response.headers || {};
+    delete headers['content-length'];
     setHttpResponse(ctx, {
       status: response.status,
       body: response.data,
