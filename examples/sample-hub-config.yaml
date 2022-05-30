@@ -1,0 +1,7 @@
+role: hub
+
+port: 5555
+sessionTimeout: 60
+
+fileServer:
+  root: .
