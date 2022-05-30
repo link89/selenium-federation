@@ -17,10 +17,15 @@ void (async () => {
 
   for (const browser of browsers) {
     const browserName = browser.config.browserName;
+    if (browserName != 'firefox') {
+      continue;
+    }
     opt.capabilities.browserName = browserName;
 
     const driver = await remote(opt);
+
     await driver.url('https://bing.com');
+    await driver.getTitle();
 
     if (browserName === 'chrome' || browserName === 'MicrosoftEdge') {
       console.log('Test CDP protocol');
