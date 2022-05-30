@@ -48,7 +48,6 @@ import { ProcessManager } from "./process";
     .use('/wd/hub', wdHubRouter.routes(), wdHubRouter.allowedMethods())
 
     // utils
-    .post('/ansible-playbook')
     .post('/auto-cmd', localServiceController.onAutoCmdRequest)
     .get('/terminate', localServiceController.onTermiateRequest)
 

@@ -16,7 +16,6 @@ import { Either } from "purify-ts";
 import { ParsedUrlQuery } from 'querystring';
 
 
-
 interface HttpResponse {
   headers: { [key: string]: string };
   body: string | object;

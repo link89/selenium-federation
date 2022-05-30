@@ -59,12 +59,6 @@ export const configurationSchema = yup.object({
     root: yup.string().defined(),
   }).default(undefined),
 
-  ansiblePlaybook: yup.object({
-    disable: yup.boolean().default(false),
-    path: yup.string().defined(),
-  }).default(undefined),
-
-
 }).defined();
 
 export const sessionDtoSchema = yup.object({
@@ -85,6 +79,7 @@ export const nodeDtoSchema = yup.object({
 export const registerDtoSchema = yup.object({
   registerAs: yup.string().optional(),
 }).defined();
+
 
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
 export interface DriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
