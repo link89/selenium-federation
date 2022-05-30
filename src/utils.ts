@@ -143,6 +143,15 @@ export class Semaphore {
     const resolve = this.queue.shift();
     if (resolve) resolve();
   }
+
+  async withLock<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      await this.wait();
+      return await fn();
+    } finally {
+      this.signal();
+    }
+  }
 }
 
 export class Watchdog {

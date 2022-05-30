@@ -2,7 +2,7 @@ import _ from "lodash";
 import * as yup from 'yup';
 import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { alwaysTrue, identity } from './utils';
+import { alwaysTrue, identity, Semaphore } from './utils';
 import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
 import { Watchdog } from './utils';
@@ -40,6 +40,7 @@ export class HubService {
   private nodesIndex = new Map<string, RegistedNode>();
   private sessionIndex = new Map<string, SessionRecord>();
   private lastSessionReclaimTime = 0;
+  private createSessionMutex = new Semaphore(1);
 
   constructor(
     private config: Configuration,
@@ -67,22 +68,31 @@ export class HubService {
   }
 
   async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, AxiosResponse>> {
-    const candidate = await this.getBestMatch(request);
-    if (!candidate) {
-      return Left({
-        ...WEBDRIVER_ERRORS.SESSION_NOT_CREATED,
-        message: `no availabe capbilities could be found`,
-        stacktrace: new Error().stack || '',
-      });
-    }
+    let resPromise: Promise<AxiosResponse>;
+    let candidate: Candidate | undefined;
 
     try {
-      const res = await this.axios.request({
+      await this.createSessionMutex.wait();
+      candidate = await this.getBestMatch(request);
+      if (!candidate) {
+        return Left({
+          ...WEBDRIVER_ERRORS.SESSION_NOT_CREATED,
+          message: `no availabe capbilities could be found`,
+          stacktrace: new Error().stack || '',
+        });
+      }
+      resPromise = this.axios.request({
         method: 'POST',
         baseURL: candidate.nodeUrl,
         url: '/wd/hub/session',
         data: request.data,
       });
+    } finally {
+      this.createSessionMutex.signal();
+    }
+
+    try {
+      const res = await resPromise;
       const sessionId = res.data?.sesssionId || res.data?.value?.sessionId;
       if (!sessionId) throw Error(`cannot find session id in response`);
       this.sessionIndex.set(sessionId, {

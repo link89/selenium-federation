@@ -1,7 +1,7 @@
 import Koa from "koa";
 import Router from "@koa/router";
 import bodyparser from "koa-bodyparser";
-import logger from  "koa-logger";
+import logger from "koa-logger";
 
 import { getAndInitConfig } from "./config";
 import * as Sentry from "@sentry/node";
@@ -11,6 +11,7 @@ import { serveStatic, LocalController, onError, IController, HubController } fro
 import { ProcessManager } from "./process";
 import axios from "axios";
 
+// TODO: handle uncaughtException properly
 process.on('uncaughtException', function (err) {
   console.error(`suppress uncaughtException:`);
   console.error(err);
