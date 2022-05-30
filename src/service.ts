@@ -483,7 +483,7 @@ export class LocalService {
       });
       return res;
     } catch (e) {
-      console.error(e); // suppress error
+      console.error(String(e)); // suppress error
     }
   }
 }

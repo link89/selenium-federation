@@ -1,11 +1,13 @@
 role: local
 
 port: 4444
-browserIdleTimeout: 60
+sessionTimeout: 60
 maxSessions: 5
 
 fileServer:
   root: .
+
+registerTo: http://localhost:5555/wd/hub/register
 
 drivers:
   - browserName: chrome

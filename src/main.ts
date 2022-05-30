@@ -51,6 +51,7 @@ import axios from "axios";
     // data model
     .post('/best-match', controller.onGetBestMatchRequest)
     .get('/nodes', controller.onGetNodesRequest)
+    .post('/register', controller.onNodeRegiester)
 
   const rootRouter = new Router();
   rootRouter
