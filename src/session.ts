@@ -217,7 +217,7 @@ abstract class AbstractWebdriveSession implements ISession {
   private async createSession(request: RequestCapabilities) {
     const res = await this.axios.post('/session', this.mergeDefaultCaps(request.sanitizedCapbilities));
     console.log(`create session:`);
-    console.log(res.data);
+    console.log(JSON.stringify(res.data, null, 2));
     return new ResponseCapabilities(res.data, request);
   }
 

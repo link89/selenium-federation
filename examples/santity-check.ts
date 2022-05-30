@@ -17,9 +17,6 @@ void (async () => {
 
   for (const browser of browsers) {
     const browserName = browser.config.browserName;
-    if (browserName != 'firefox') {
-      continue;
-    }
     opt.capabilities.browserName = browserName;
 
     const driver = await remote(opt);
@@ -36,8 +33,7 @@ void (async () => {
       await page.title()
     }
 
-    await new Promise(resolve => setTimeout(resolve, 5e3));
+    await new Promise(resolve => setTimeout(resolve, 10e3));
     await driver.deleteSession();
   }
-
 })();

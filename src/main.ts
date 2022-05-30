@@ -81,4 +81,10 @@ import axios from "axios";
 
   // handle websocket connection
   server.on('upgrade', controller.onWebsocketUpgrade);
+
+  // default is 5000, which will lead to ECONNRESET error in some client (got, for example)
+  // set to a larger value to workaround this problem,
+  server.keepAliveTimeout = 60e3;
+  // ref: https://stackoverflow.com/a/68922692/3099733, https://github.com/nodejs/node/issues/27363
+  server.headersTimeout = 60e3 + 1e3;
 })();
