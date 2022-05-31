@@ -211,6 +211,7 @@ export class HubService {
   }
 
   async onRegister(nodeUrl: string) {
+    console.log(`on node ${nodeUrl} registered`);
     const res = await this.axios.request({
       method: 'GET',
       baseURL: nodeUrl,

@@ -16,7 +16,7 @@ void (async () => {
   await Bluebird.map(flatMap(res.data, node => node.drivers), async (browser: any) => {
     try {
       const browserName = browser.config.browserName;
-      const driver = await remote({ ...opt, capabilities: { browserName } });
+      const driver = await remote({ ...opt, capabilities: { browserName, 'sf:browserUUID': browser.config.uuid } });
 
       await driver.url(getNodesUrl);
       await driver.getTitle();
@@ -35,5 +35,5 @@ void (async () => {
     } catch (e) {
       console.error(e);
     }
-  }, { concurrency: 2 });
+  }, { concurrency: 3 });
 })();
