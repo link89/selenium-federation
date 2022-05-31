@@ -1,5 +1,6 @@
 import axios from "axios";
 import Bluebird from "bluebird";
+import { flatMap } from "lodash";
 import { remote } from "webdriverio";
 
 const opt = {
@@ -10,34 +11,29 @@ const opt = {
 
 void (async () => {
   const getNodesUrl = `http://localhost:${opt.port}/wd/hub/nodes`;
-
   const res = await axios.get(getNodesUrl);
-  const browsers = res.data[0].drivers;
 
-  await Bluebird.map(browsers, async (browser: any) => {
-    const browserName = browser.config.browserName;
-
-    let driver;
+  await Bluebird.map(flatMap(res.data, node => node.drivers), async (browser: any) => {
     try {
-      driver = await remote({ ...opt, capabilities: { browserName } });
+      const browserName = browser.config.browserName;
+      const driver = await remote({ ...opt, capabilities: { browserName } });
+
+      await driver.url(getNodesUrl);
+      await driver.getTitle();
+
+      if (driver.capabilities['se:cdp']) {
+        console.log('Test CDP protocol');
+        const pt = await driver.getPuppeteer();
+        const page = (await pt.pages())[0];
+        await page.coverage.startJSCoverage();
+        await page.coverage.stopJSCoverage();
+        await page.title()
+      }
+      await new Promise(resolve => setTimeout(resolve, 1e3));
+      await driver.deleteSession();
+
     } catch (e) {
       console.error(e);
-      return;
     }
-
-    await driver.url(getNodesUrl);
-    await driver.getTitle();
-
-    if (driver.capabilities['se:cdp']) {
-      console.log('Test CDP protocol');
-      const pt = await driver.getPuppeteer();
-      const page = (await pt.pages())[0];
-      await page.coverage.startJSCoverage();
-      await page.coverage.stopJSCoverage();
-      await page.title()
-    }
-
-    await new Promise(resolve => setTimeout(resolve, 1e3));
-    await driver.deleteSession();
-  }, { concurrency: 2 });
+  }, { concurrency: 3 });
 })();

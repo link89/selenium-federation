@@ -155,6 +155,7 @@ export class LocalController implements IController {
     } else {
       setHttpResponse(ctx, {
         status: 404,
+        body: 'no availabe capbilities could be found',
       });
     }
   }
