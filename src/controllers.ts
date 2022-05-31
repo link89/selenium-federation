@@ -43,7 +43,7 @@ export interface IController {
 export class HubController implements IController {
 
   constructor(
-    private readonly remoteService: HubService,
+    private readonly hubService: HubService,
   ) { }
 
   onTermiateRequest: RequestHandler = async (ctx, next) => {
@@ -57,7 +57,7 @@ export class HubController implements IController {
 
   onNewWebdriverSessionRequest: RequestHandler = async (ctx, next) => {
     const request = new RequestCapabilities(ctx.request);
-    const result = await this.remoteService.newWebdirverSession(request);
+    const result = await this.hubService.newWebdirverSession(request);
     setForwardResponse(ctx, result);
   }
 
@@ -67,7 +67,7 @@ export class HubController implements IController {
       ...toForwardRequest(ctx),
       timeout: 30e3,
     };
-    const result = await this.remoteService.deleteWebdriverSession(sessionId, path, request);
+    const result = await this.hubService.deleteWebdriverSession(sessionId, path, request);
     setForwardResponse(ctx, result);
   }
 
@@ -77,7 +77,7 @@ export class HubController implements IController {
       ...toForwardRequest(ctx),
       timeout: 30e3,
     };
-    const result = await this.remoteService.forwardWebdriverRequest(sessionId, path, request);
+    const result = await this.hubService.forwardWebdriverRequest(sessionId, path, request);
     setForwardResponse(ctx, result);
   }
 
@@ -86,7 +86,7 @@ export class HubController implements IController {
       ...toForwardRequest(ctx),
       timeout: 30e3,
     };
-    const result = await this.remoteService.forwardAutoCmd(ctx.params || {}, request);
+    const result = await this.hubService.forwardAutoCmd(ctx.params || {}, request);
     setForwardResponse(ctx, result);
   }
 
@@ -100,12 +100,12 @@ export class HubController implements IController {
   onNodeRegiester: RequestHandler = async (ctx, next) => {
     const registerRequest = registerDtoSchema.validateSync(ctx.request.body);
     const nodeUrl = format(registerRequest.registerAs, ctx.request.ip);
-    await this.remoteService.onRegister(nodeUrl);
+    await this.hubService.onRegister(nodeUrl);
     ctx.status = 201;
   }
 
   onGetNodesRequest: RequestHandler = async (ctx, next) => {
-    const nodes: NodeDto[] = this.remoteService.getNodes().map(node => node.node);
+    const nodes: NodeDto[] = this.hubService.getNodes().map(node => node.node);
     setHttpResponse(ctx, {
       status: 200,
       body: nodes,
