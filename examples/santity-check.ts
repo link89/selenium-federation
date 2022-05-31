@@ -1,33 +1,31 @@
 import axios from "axios";
+import Bluebird from "bluebird";
 import { remote } from "webdriverio";
 
 const opt = {
   hostname: 'localhost',
   port: 5555,
   path: '/wd/hub',
-  capabilities: {
-    browserName: undefined,
-  }
 };
 
 void (async () => {
+  const getNodesUrl = `http://localhost:${opt.port}/wd/hub/nodes`;
 
-  const res = await axios.get(`http://localhost:${opt.port}/wd/hub/nodes`);
+  const res = await axios.get(getNodesUrl);
   const browsers = res.data[0].drivers;
 
-  for (const browser of browsers) {
+  await Bluebird.map(browsers, async (browser: any) => {
     const browserName = browser.config.browserName;
-    opt.capabilities.browserName = browserName;
 
     let driver;
     try {
-      driver = await remote(opt);
+      driver = await remote({ ...opt, capabilities: { browserName } });
     } catch (e) {
       console.error(e);
-      continue;
+      return;
     }
 
-    await driver.url('https://bing.com');
+    await driver.url(getNodesUrl);
     await driver.getTitle();
 
     if (driver.capabilities['se:cdp']) {
@@ -39,7 +37,7 @@ void (async () => {
       await page.title()
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10e3));
+    await new Promise(resolve => setTimeout(resolve, 1e3));
     await driver.deleteSession();
-  }
+  }, { concurrency: 2 });
 })();
