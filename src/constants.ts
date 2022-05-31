@@ -47,3 +47,4 @@ export const SF_CAPS_FIELDS = {
 };
 
 export const REGISTER_TIMEOUT_IN_MS = 30e3;
+export const LONG_TIMEOUT_IN_MS = 300e3;

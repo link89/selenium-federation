@@ -7,7 +7,7 @@ import { Duplex } from "stream";
 import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
-import { WEBDRIVER_ERRORS } from "./constants";
+import { LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
 import { NodeDto, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
@@ -65,7 +65,6 @@ export class HubController implements IController {
     const { sessionId, path } = getSessionParams(ctx);
     const request = {
       ...toForwardRequest(ctx),
-      timeout: 30e3,
     };
     const result = await this.hubService.deleteWebdriverSession(sessionId, path, request);
     setForwardResponse(ctx, result);
@@ -75,7 +74,6 @@ export class HubController implements IController {
     const { sessionId, path } = getSessionParams(ctx);
     const request = {
       ...toForwardRequest(ctx),
-      timeout: 30e3,
     };
     const result = await this.hubService.forwardWebdriverRequest(sessionId, path, request);
     setForwardResponse(ctx, result);
@@ -84,7 +82,6 @@ export class HubController implements IController {
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {
     const request = {
       ...toForwardRequest(ctx),
-      timeout: 30e3,
     };
     const result = await this.hubService.forwardAutoCmd(ctx.params || {}, request);
     setForwardResponse(ctx, result);
@@ -173,7 +170,6 @@ export class LocalController implements IController {
     const { sessionId, path } = getSessionParams(ctx);
     const request = {
       ...toForwardRequest(ctx),
-      timeout: 30e3,
     };
     const result = await this.localService.forwardWebdriverRequest(sessionId, path, request);
     setForwardResponse(ctx, result);
@@ -212,7 +208,6 @@ export class LocalController implements IController {
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {
     const request = {
       ...toForwardRequest(ctx),
-      timeout: 30e3,
     };
     const result = await this.localService.forwardAutoCmdRequest(request);
     setForwardResponse(ctx, result);
@@ -312,6 +307,7 @@ function toForwardRequest(ctx: Context): AxiosRequestConfig {
     data: fromRequest.rawBody,
     headers,
     params: fromRequest.query,
+    timeout: LONG_TIMEOUT_IN_MS,
   };
 }
 

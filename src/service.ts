@@ -7,7 +7,7 @@ import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
 import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
-import { AUTO_CMD_ERRORS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
+import { AUTO_CMD_ERRORS, LONG_TIMEOUT_IN_MS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
 
@@ -563,7 +563,7 @@ class WebdriverManager {
         request,
         this.driverConfig,
         this.processManager,
-        axios.create({ timeout: 30e3 })
+        axios.create({ timeout: LONG_TIMEOUT_IN_MS }),
       );
       const res = await session.start();
       this.addSession(session);
