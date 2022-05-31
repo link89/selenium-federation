@@ -7,7 +7,7 @@ import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
 import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
-import { AUTO_CMD_ERRORS, WEBDRIVER_ERRORS } from './constants';
+import { AUTO_CMD_ERRORS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 
 
@@ -70,10 +70,10 @@ export class HubService {
   async newWebdirverSession(request: RequestCapabilities): Promise<Either<WebdriverError, AxiosResponse>> {
     /**
      * TODO: optimize when necessary
-     * 
+     *
      * Currently to distribute a create session request to registed nodes,
      * hub service will send best-match requests to all of them to pick up a node to handle it.
-     * 
+     *
      * I know that this design is not scale,
      * but it is easy to reason and to implement, and less error prone.
      * It should work well when registed nodes are few in number (maybe <100).
@@ -203,8 +203,11 @@ export class HubService {
   }
 
   public async deleteWebdriverSession(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
-    this.deleteSessionById(sessionId);
-    return await this.forwardWebdriverRequest(sessionId, path, request);
+    const res = await this.forwardWebdriverRequest(sessionId, path, request);
+    if (res.isRight()) {
+      this.deleteSessionById(sessionId);
+    }
+    return res;
   }
 
   async onRegister(nodeUrl: string) {
@@ -214,9 +217,9 @@ export class HubService {
       url: '/wd/hub/nodes',
       timeout: 5e3,
     });
-    const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data, { strict: true });  // remove this if it is too slow
 
-    const expireAfter = Date.now() + this.config.registerTimeout;
+    const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data, { strict: true });  // remove this if it is too slow
+    const expireAfter = Date.now() + REGISTER_TIMEOUT_IN_MS;
     nodes.forEach(node => {
       node.config.registerAs = nodeUrl;
       this.nodesIndex.set(node.config.uuid, { url: nodeUrl, node, expireAfter });
@@ -226,7 +229,7 @@ export class HubService {
   getNodes(): RegistedNode[] {
     const now = Date.now();
     for (const [key, value] of this.nodesIndex.entries()) {
-      if (value.expireAfter >= now) {
+      if (value.expireAfter < now) {
         // It's safe to do so according to https://stackoverflow.com/a/35943995/3099733
         // PS: Don't do this in Python.
         this.nodesIndex.delete(key);
@@ -497,20 +500,16 @@ export class LocalService {
     if (!this.config.registerTo) return;
 
     // suggest a new time for next auto register
-    this.nextRegisterTime = Date.now() + 10e3;
+    this.nextRegisterTime = Date.now() + REGISTER_TIMEOUT_IN_MS / 2;
     const data: RegisterDto = {
       registerAs: this.config.registerAs || `http://%s:${this.config.port}`,
     };
+    const url = this.config.registerTo;
     try {
-      const res = await this.axios.request({
-        method: 'POST',
-        url: this.config.registerTo,
-        data,
-        timeout: 5e3,
-      });
+      const res = await this.axios.request({ method: 'POST', url, data, timeout: 5e3, });
       return res;
     } catch (e) {
-      console.error(String(e)); // suppress error
+      console.error(`register to ${url} failed: ${String(e)}`); // suppress error
     }
   }
 }

@@ -3,7 +3,7 @@ import { remote } from "webdriverio";
 
 const opt = {
   hostname: 'localhost',
-  port: 4444,
+  port: 5555,
   path: '/wd/hub',
   capabilities: {
     browserName: undefined,
@@ -30,7 +30,7 @@ void (async () => {
     await driver.url('https://bing.com');
     await driver.getTitle();
 
-    if (browserName === 'chrome' || browserName === 'MicrosoftEdge') {
+    if (driver.capabilities['se:cdp']) {
       console.log('Test CDP protocol');
       const pt = await driver.getPuppeteer();
       const page = (await pt.pages())[0];

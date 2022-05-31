@@ -45,3 +45,5 @@ export const SF_CAPS_FIELDS = {
   CLEAN_USER_DATA: 'sf:cleanUserData',
   ENVS: 'sf:envs',
 };
+
+export const REGISTER_TIMEOUT_IN_MS = 10e3;

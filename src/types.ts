@@ -37,7 +37,6 @@ export const configurationSchema = yup.object({
 
   tmpFolder: yup.string().default(`./tmp`),
 
-  registerTimeout: yup.number().default(10),
   registerTo: yup.string().optional(),
   registerAs: yup.string().optional(),
 
