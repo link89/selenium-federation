@@ -111,7 +111,7 @@ export class HubService {
       this.sessionIndex.set(sessionId, {
         nodeUrl: candidate.nodeUrl,
         sessionId,
-        expireAfter: Date.now() + this.config.sessionTimeout,
+        expireAfter: Date.now() + this.config.sessionTimeout * 1e3,
       });
       return Right(res);
     } catch (e) {
@@ -246,7 +246,7 @@ export class HubService {
   private getSessionById(sessionId: string): SessionRecord | undefined {
     const session = this.sessionIndex.get(sessionId);
     if (!session) return;
-    session.expireAfter = Date.now() + this.config.sessionTimeout;
+    session.expireAfter = Date.now() + this.config.sessionTimeout * 1e3;
     return session;
   }
 

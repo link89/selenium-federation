@@ -35,5 +35,5 @@ void (async () => {
     } catch (e) {
       console.error(e);
     }
-  }, { concurrency: 3 });
+  }, { concurrency: 2 });
 })();
