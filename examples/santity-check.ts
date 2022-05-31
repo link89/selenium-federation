@@ -18,7 +18,7 @@ void (async () => {
       const browserName = browser.config.browserName;
       const driver = await remote({ ...opt, capabilities: { browserName, 'sf:browserUUID': browser.config.uuid } });
 
-      await driver.url(getNodesUrl);
+      await driver.url(`https://baidu.com`);
       await driver.getTitle();
 
       if (driver.capabilities['se:cdp']) {

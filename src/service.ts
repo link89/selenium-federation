@@ -233,6 +233,7 @@ export class HubService {
       if (value.expireAfter < now) {
         // It's safe to do so according to https://stackoverflow.com/a/35943995/3099733
         // PS: Don't do this in Python.
+        console.log(`remove expired node: ${key}`);
         this.nodesIndex.delete(key);
       }
     }
@@ -253,14 +254,14 @@ export class HubService {
 
   private deleteSessionById(sessionId: string) {
     this.sessionIndex.delete(sessionId);
-
     // a quick and dirty method to reclaim expired session to avoid memory leak
     // may use formal ttl cache if this implemetation have problem
     const now = Date.now();
     if (this.lastSessionReclaimTime < now) {
-      this.lastSessionReclaimTime = now + 1800e3;
+      this.lastSessionReclaimTime = now + 600e3;
       for (const [id, session] of this.sessionIndex.entries()) {
         if (session.expireAfter < now) {
+          console.log(`remove expired session: ${id}`);
           this.sessionIndex.delete(id);
         }
       }

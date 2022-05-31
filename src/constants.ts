@@ -46,4 +46,4 @@ export const SF_CAPS_FIELDS = {
   ENVS: 'sf:envs',
 };
 
-export const REGISTER_TIMEOUT_IN_MS = 10e3;
+export const REGISTER_TIMEOUT_IN_MS = 30e3;
