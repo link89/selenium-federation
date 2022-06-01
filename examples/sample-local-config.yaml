@@ -15,10 +15,6 @@ drivers:
     maxSessions: 2
     webdriver:
       path: ./chromedriver.exe
-    defaultCapabilities:
-      "goog:chromeOptions":
-        args:
-          - --headless
 
   - browserName: MicrosoftEdge
     maxSessions: 2
