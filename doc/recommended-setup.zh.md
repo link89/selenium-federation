@@ -111,7 +111,7 @@ drivers:
     maxSessions: 2
     webdriver:
       path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/chromedriver-101 
-    defaultCapabilities:  # 设定缺省的 capabilities 字段, 典型使用场景是支持多版本 chrome, 以及 electron 应用所在路径
+    defaultCapabilities:  # 设定缺省的 capabilities 字段, 典型使用场景是指定不同版本 chrome路径, 或者 electron 应用所在路径
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
 
