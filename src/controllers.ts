@@ -194,7 +194,7 @@ export class LocalController implements IController {
       socket.destroy();
       return;
     }
-    // FIXME: I'am not should if the proxy will get reclaimed by the system.
+    // FIXME: I'am not sure if the proxy will get reclaimed by the system.
     // Potential memory leak risk alert!
     const proxy = createProxyServer({
       target: cdpEndpoint,
