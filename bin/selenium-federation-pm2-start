@@ -8,7 +8,7 @@ const argv = yargs.usage('Start selenium-federation with pm2.').options({
   'name': {
     description: 'pm2 app name',
     string: true,
-    default: 'selenium-federation',
+    required: true,
   },
   'config': {
     description: 'configuration file',
@@ -17,7 +17,6 @@ const argv = yargs.usage('Start selenium-federation with pm2.').options({
     alias: 'c',
   }
 }).strict().argv;
-
 
 const bin = join(__dirname, 'selenium-federation');  // requirement of windows
 

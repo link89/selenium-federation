@@ -12,15 +12,15 @@
 
 但也需要指出, 在一些情况下`selenium-federation`未必是更好的选择, 这些情况包括
 
-* 全自动环境配置(自动检测浏览器版本, 自动下载资源, etc), 开箱即用: 这种情况下推荐使用: [webdriver-manager](https://github.com/angular/webdriver-manager), [selenium-standalone](https://github.com/vvo/selenium-standalone)
-* 企业级部署, 或者无桌面端测试需求: 这种情况下 `selenium-grid`, `selenoid` 会是更好的选则.
+* 全自动环境配置(自动检测浏览器版本, 自动下载资源, etc), 开箱即用: 推荐使用: [webdriver-manager](https://github.com/angular/webdriver-manager), [selenium-standalone](https://github.com/vvo/selenium-standalone)
+* 企业级大规模部署, 或者无桌面端测试需求: 这种情况下 `selenium-grid`, `selenoid` 会是更好的选则.
 
-`selenium-federation` 存在的目的不是为了替代已有的工具, 而是在尽可能保持功能兼容的前提下, 以简化运维, 保障可靠性为基本原则, 提供额外的特性, 其中关键特性包括
+`selenium-federation` 存在的目的不是为了替代已有的工具, 而是在尽可能保持功能兼容的前提下, 以简化运维, 保障可靠性为原则, 以研发团队可以自行维护为目标, 提供一些必要的特性, 这些特性包括
 
 * 支持远程加载配置文件和资源
-* 更好的进程管理和临时文件清理
+* 更好的进程回收和临时文件清理, 保障长时间运行的可靠性
 * 更灵活的匹配机制
-* 支持预设 `webdriver` capabilities
+* 支持预设 capabilities 
 * 提供支持 web 测试与桌面测试的能力 (通过集成 `auto-cmd` 实现)
 
 本文档接下来以配置一个简单的集群为例, 介绍如何使用这些特性来搭建一个桌面测试集群.
@@ -35,7 +35,7 @@ npm install -g selenium-federation pm2
 
 该命令同时安装了 `pm2` 用于进程管理(推荐, 但非必要).
 
-如果同时需要使用 `auto-cmd` 所提供的桌面测试能力, 还需要确保安装 `Python3.8` 以及 `auto-cmd`, 该部分内容会在之后完善. (TODO)
+如果同时需要使用 `auto-cmd` 所提供的桌面测试能力, 还需要确保安装 `Python3.8` 以及 `auto-cmd`, 这部分内容会在之后完善. (TODO)
 
 
 ## 配置
@@ -55,7 +55,8 @@ npm install -g selenium-federation pm2
 hub 节点不负责实际的测试执行, 因此它的配置十分简单, 推荐配置如下:
 
 ```yaml
-role: hub
+role: hub  # 指定角色为 hub
+
 host: 0.0.0.0  # 监听地址
 port: 5555  # 监听端口
 
@@ -73,6 +74,85 @@ selenium-federation-pm2-start --name hub -c ./hub-config.yaml
 selenium-federation -c ./hub-config.yaml
 ```
 此处使用推荐的方式由 `pm2` 来启动并管理进程. 到此 hub 节点的配置就完成了.
+
+
+### 配置 local 节点
+
+local 节点由于需要负责实际的执行工作, 因此配置会略为复杂, 完整的配置文件如下
+
+```yaml
+role: local # 指定角色为 local
+
+host: 0.0.0.0
+port: 4444
+
+tags:  # 此标签可在创建 session 时通过 sf:platformTags 匹配
+  - mac
+  - mac-intel
+  - osx-11
+
+sessionIdleTimeout: 60  # 全局的session超时设置, session不被使用的时间超过该值(秒)时会被强制关闭
+maxSessions: 5  # 该节点的最大session总数, 默认为 #cpu - 1
+
+registerTo: http://192.168.1.100:5555/wd/hub/register  # 注册节点地址
+
+drivers:
+  - browserName: chrome
+    browserVersion: stable  # browserVersion 字段支持任意字符串
+    sessionIdleTime: 120  # 该浏览器的超时设置, 优先级高于全局设置
+    maxSessions: 2  # 该浏览器的最大并发 session 数
+    tags:  # 此标签可在创建 session 时通过 sf:browserTags 匹配
+      - primary
+    webdriver:
+      path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/chromedriver-100  # 指定远程位置,会自动进行下载和使用
+
+  - browserName: chrome
+    browserVersion: beta
+    maxSessions: 2
+    webdriver:
+      path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/chromedriver-101 
+    defaultCapabilities:  # 支持设定缺省的 capabilities 字段
+      "goog:chromeOptions":
+        binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
+
+  - browserName: chrome
+    browserVersion: canary
+    maxSessions: 2
+    webdriver:
+      path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/chromedriver-102
+    defaultCapabilities:
+      "goog:chromeOptions":
+        binary: /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary
+
+  - browserName: MicrosoftEdge
+    maxSessions: 2
+    webdriver:
+      path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/msedgedriver-100
+
+  - browserName: firefox
+    maxSessions: 2
+    webdriver:
+      path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/geckodriver-0.31.0
+
+  - browserName: safari
+    maxSessions: 1
+    webdriver:
+      path: safaridriver  # 也可以使用全局命令或者相对/绝对路径
+```
+
+各配置项的用途可查看注解. 这里你会留意到在配置文件里推荐 `webdriver.path` 通过 url 指定, `selenium-federation` 自动进行下载和使用. 再仔细观察则会发现, 这里的资源地址都位于 `http://192.168.1.100:5555/fs/` 位置下, 回顾上一节的 hub 配置你会发现该文件服务是由 hub 节点提供的, 这是为何 `selenium-federation` 集成文件服务的原因. 推荐的文件服务包括:
+
+* 公司内部的 gitlab 仓库 (最推荐, 便于跟踪变更, 注意权限需要设置为开放否则无法下载)
+* `selenium-federation` hub 节点的文件服务 (最简单, 无需额外安装其它工具或服务)
+* 对象存储服务, 如 s3, minio, seafile, etc (注意权限)
+
+不只如此, 启动命令时也支持读取远程的配置文件, 这也是推荐的使用方式, 因为这样一来在 local 节点上可以无需手动下载任何资源文件.
+
+同样的, 在执行命令前, 我们推荐创建一个专门的工作目录并进入到该目录中, 然后执行
+
+```bash
+selenium-federation-pm2-start --name local01 -c http://192.168.1.100:5555/fs/configs/local01-config.yaml
+```
 
 
 
