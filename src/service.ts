@@ -222,7 +222,7 @@ export class HubService {
     const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data, { strict: true });  // remove this if it is too slow
     const expireAfter = Date.now() + REGISTER_TIMEOUT_IN_MS;
     nodes.forEach(node => {
-      node.config.registerAs = nodeUrl;
+      node.config.publicUrl = nodeUrl;
       this.nodesIndex.set(node.config.uuid, { url: nodeUrl, node, expireAfter });
     });
   }
@@ -504,7 +504,7 @@ export class LocalService {
     // suggest a new time for next auto register
     this.nextRegisterTime = Date.now() + REGISTER_TIMEOUT_IN_MS / 2;
     const data: RegisterDto = {
-      registerAs: this.config.registerAs || `http://%s:${this.config.port}`,
+      registerAs: this.config.publicUrl || `http://%s:${this.config.port}`,
     };
     const url = this.config.registerTo;
     try {

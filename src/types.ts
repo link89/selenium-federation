@@ -28,6 +28,7 @@ export const configurationSchema = yup.object({
   role: yup.string().oneOf(ROLES).defined(),
   port: yup.number().default(4444),
   host: yup.string().default('0.0.0.0'),
+  publicUrl: yup.string().optional(),
   tags: yup.array(yup.string().defined()).default([]),
   uuid: yup.string().default(() => uuidv4()),
   platformName: yup.string().default(getW3CPlatformName()),
@@ -35,12 +36,10 @@ export const configurationSchema = yup.object({
   sessionTimeout: yup.number().default(60),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
 
-  tmpFolder: yup.string().default(`./tmp`),
+  drivers: yup.array(driverConfigurationSchema).default([]),
 
   registerTo: yup.string().optional(),
-  registerAs: yup.string().optional(),
-
-  drivers: yup.array(driverConfigurationSchema).default([]),
+  tmpFolder: yup.string().default(`./tmp`),
 
   sentry: yup.object({
     dsn: yup.string().defined(),
