@@ -140,7 +140,7 @@ drivers:
       path: safaridriver  # 也可以使用全局命令或者相对/绝对路径
 ```
 
-各配置项的用途可查看注解. 这里你会留意到在配置文件里推荐 `webdriver.path` 通过 url 指定, `selenium-federation` 自动进行下载和使用. 再仔细观察则会发现, 这里的资源地址都位于 `http://192.168.1.100:5555/fs/` 位置下, 回顾上一节的 hub 配置你会发现该文件服务是由 hub 节点提供的, 这是为何 `selenium-federation` 集成文件服务的原因. 推荐的文件服务包括:
+各配置项的用途可查看注解. 这里你会留意到在配置文件里推荐 `webdriver.path` 通过 url 指定, `selenium-federation` 会自动下载和使用. 再仔细观察则会发现, 这里的资源地址都位于 `http://192.168.1.100:5555/fs/` 位置下, 回顾上一节的 hub 配置你会发现该文件服务是由 hub 节点提供的, 这是为何 `selenium-federation` 集成文件服务的原因. 推荐的文件服务包括:
 
 * 公司内部的 gitlab 仓库 (最推荐, 便于跟踪变更, 注意权限需要设置为开放否则无法下载)
 * `selenium-federation` hub 节点的文件服务 (最简单, 无需额外安装其它工具或服务)
@@ -153,3 +153,5 @@ drivers:
 ```bash
 selenium-federation-pm2-start --name sf-local01 -c http://192.168.1.100:5555/fs/configs/local01-config.yaml
 ```
+
+(To be continue...)
