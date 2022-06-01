@@ -5,25 +5,26 @@
 `selenium-federation` 是针对Web自动化和桌面应用自动化的测试环境搭建提供的一个解决方案. 该方案主要
 
 * 满足跨平台的 Web 自动化, 桌面应用自动化以及二者混合自动化的执行需求
-* 适合由项目团队独立维护一个中小规模(<50节点)的桌面测试集群
-* 兼容大部分 `selenium-grid` 和 `selenoid` 接口, 可以直接迁移使用
+* 适合由项目团队以较小的代价去独立维护一个中小规模(<50节点)的桌面测试集群
+* 兼容部分 `selenium-grid` 和 `selenoid` 接口, 如 CDP 代理, 多数情况下可无需更改代码使用 
 * 支持 `webdriver`, `puppeteer`, `playwright`, `testcafe` 等测试框架
 * 通过 `auto-cmd` 支持桌面端自动化
+* 易于二次开发 (欢迎 fork 并自由地进行改造)
 
 但也需要指出, 在一些情况下`selenium-federation`未必是更好的选择, 这些情况包括
 
-* 全自动环境配置(自动检测浏览器版本, 自动下载资源, etc), 开箱即用: 推荐使用: [webdriver-manager](https://github.com/angular/webdriver-manager), [selenium-standalone](https://github.com/vvo/selenium-standalone)
-* 企业级大规模部署, 或者无桌面端测试需求: 这种情况下 `selenium-grid`, `selenoid` 会是更好的选则.
+* 本地开箱即用(自动检测浏览器版本, 自动下载资源, etc): 推荐使用: [webdriver-manager](https://github.com/angular/webdriver-manager), [selenium-standalone](https://github.com/vvo/selenium-standalone)
+* 企业级大规模部署, 或者无桌面端测试需求: 这种情况下 `selenium-grid`, `selenoid` 会是更好的选择.
 
-`selenium-federation` 存在的目的不是为了替代已有的工具, 而是在尽可能保持功能兼容的前提下, 以简化运维, 保障可靠性为原则, 以研发团队可以自行维护为目标, 提供一些必要的特性, 这些特性包括
+`selenium-federation` 存在的意义不是为了替代已有的工具, 而是在尽量与`selenium`保持功能兼容的前提下, 以简化运维, 保障可靠性为原则, 以研发团队可用较小的代价自行维护为目标, 提供一些必要的特性, 这些特性包括
 
 * 支持远程加载配置文件和资源
 * 更好的进程回收和临时文件清理, 保障长时间运行的可靠性
 * 更灵活的匹配机制
 * 支持预设 capabilities 
-* 提供支持 web 测试与桌面测试的能力 (通过集成 `auto-cmd` 实现)
+* 提供桌面测试的能力 (通过集成 `auto-cmd` 实现)
 
-本文档接下来以配置一个简单的集群为例, 介绍如何使用这些特性来搭建一个桌面测试集群.
+本文档将以配置一个简单的集群为例, 介绍如何高效地使用这一工具.
 
 ## 安装
 
@@ -33,10 +34,9 @@
 npm install -g selenium-federation pm2
 ```
 
-该命令同时安装了 `pm2` 用于进程管理(推荐, 但非必要).
+该命令在安装`selenium-federation` 同时安装了 `pm2` 用于进程管理(推荐, 但非必要).
 
 如果同时需要使用 `auto-cmd` 所提供的桌面测试能力, 还需要确保安装 `Python3.8` 以及 `auto-cmd`, 这部分内容会在之后完善. (TODO)
-
 
 ## 配置
 
@@ -64,11 +64,11 @@ fileServer: # 文件服务, 可以通过 http://192.168.1.100/fs/ 访问
   root: .  # 提供文件服务的路径, 保存此路径下的文件可通过上述地址被访问到
 ```
 
-建议创建一个专门的工作目录, 将配置文件保存在该目录下一个名为 `hub-config.yaml` 的文件中. 然后进入到该目录后, 执行以下命令启动 hub 节点
+ 接下来需要创建一个专门的工作目录, 将配置保存在该目录下一个名为 `hub-config.yaml` 的文件中. 然后进入到该目录后, 执行以下命令启动 hub 节点
 
 ```bash
 # 推荐: 通过 pm2 启动并管理服务
-selenium-federation-pm2-start --name hub -c ./hub-config.yaml
+selenium-federation-pm2-start --name sf-hub -c ./hub-config.yaml
 
 # 另一种方式: 将服务启动于前台运行, 通常只在调试中使用
 selenium-federation -c ./hub-config.yaml
@@ -111,7 +111,7 @@ drivers:
     maxSessions: 2
     webdriver:
       path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/chromedriver-101 
-    defaultCapabilities:  # 支持设定缺省的 capabilities 字段
+    defaultCapabilities:  # 设定缺省的 capabilities 字段, 典型使用场景是支持多版本 chrome, 以及 electron 应用所在路径
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
 
@@ -135,7 +135,7 @@ drivers:
       path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/geckodriver-0.31.0
 
   - browserName: safari
-    maxSessions: 1
+    maxSessions: 1  # safari 该值需要填写1
     webdriver:
       path: safaridriver  # 也可以使用全局命令或者相对/绝对路径
 ```
@@ -151,14 +151,5 @@ drivers:
 同样的, 在执行命令前, 我们推荐创建一个专门的工作目录并进入到该目录中, 然后执行
 
 ```bash
-selenium-federation-pm2-start --name local01 -c http://192.168.1.100:5555/fs/configs/local01-config.yaml
+selenium-federation-pm2-start --name sf-local01 -c http://192.168.1.100:5555/fs/configs/local01-config.yaml
 ```
-
-
-
-
-
-
-
-
-
