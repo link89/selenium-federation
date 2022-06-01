@@ -6,7 +6,7 @@ const { join } = require('path');
 const yargs = require('yargs/yargs')(process.argv.slice(2));
 const argv = yargs.usage('Start selenium-federation with pm2.')
   .example('selenium-federation-pm2-start --name sf -c config.yaml', 'start with name sf in pm2')
-  .example('selenium-federation-pm2-start --name sf -c config.yaml -- --exp-backoff-restart-delay=100', 'passing extra pm2 options after --')
+  .example('selenium-federation-pm2-start --name sf -c config.yaml -- --restart-delay=3000', 'passing extra pm2 options after --')
   .options({
     'name': {
       description: 'pm2 app name',
