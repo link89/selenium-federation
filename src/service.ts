@@ -111,7 +111,7 @@ export class HubService {
       this.sessionIndex.set(sessionId, {
         nodeUrl: candidate.nodeUrl,
         sessionId,
-        expireAfter: Date.now() + this.config.sessionTimeout * 1e3,
+        expireAfter: Date.now() + this.config.sessionIdleTimeout * 1e3,
       });
       return Right(res);
     } catch (e) {
@@ -248,7 +248,7 @@ export class HubService {
   private getSessionById(sessionId: string): SessionRecord | undefined {
     const session = this.sessionIndex.get(sessionId);
     if (!session) return;
-    session.expireAfter = Date.now() + this.config.sessionTimeout * 1e3;
+    session.expireAfter = Date.now() + this.config.sessionIdleTimeout * 1e3;
     return session;
   }
 
@@ -548,7 +548,7 @@ class WebdriverManager {
   }
 
   get sessionTimeoutInSeconds() {
-    return this.driverConfig.sessionTimeout || this.config.sessionTimeout;
+    return this.driverConfig.sessionIdleTimeout || this.config.sessionIdleTimeout;
   }
 
   public hasSession(sessionId: string) {

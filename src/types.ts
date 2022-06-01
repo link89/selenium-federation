@@ -11,7 +11,7 @@ const ROLES = ['local', 'hub'];
 export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   browserVersion: yup.string().optional(),
-  sessionTimeout: yup.number(),
+  sessionIdleTimeout: yup.number(),
   uuid: yup.string().default(() => uuidv4()),
   tags: yup.array(yup.string().defined()).default([]),
   webdriver: yup.object({
@@ -33,7 +33,7 @@ export const configurationSchema = yup.object({
   uuid: yup.string().default(() => uuidv4()),
   platformName: yup.string().default(getW3CPlatformName()),
 
-  sessionTimeout: yup.number().default(60),
+  sessionIdleTimeout: yup.number().default(60),
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
 
   drivers: yup.array(driverConfigurationSchema).default([]),
