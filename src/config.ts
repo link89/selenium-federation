@@ -28,8 +28,12 @@ export async function getAndInitConfig(): Promise<Configuration> {
     console.log(`> prepare tmpFolder: ${_config.tmpFolder}`);
     await fs.promises.mkdir(_config.tmpFolder, { recursive: true });
 
-    console.log(`> fetch remote resources`);
+    console.log(`> prepare file server root`);
+    if (_config.fileServer && !_config.fileServer.disable) {
+      await fs.promises.mkdir(_config.fileServer.root, { recursive: true });
+    }
 
+    console.log(`> fetch remote resources`);
     for (const driver of _config.drivers) {
       if (!isHttpUrl(driver.webdriver.path)) continue;
       const webdriverUrl = driver.webdriver.path;
