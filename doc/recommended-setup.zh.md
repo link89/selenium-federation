@@ -152,7 +152,7 @@ provision:  # 执行配置任务
       cmds:
         - open -W {download_file_path}  # 通过占位符 {download_file_path} 在命令行中指定下载的文件路径
         - cp -r "/Volumes/Google Chrome/Google Chrome.app" /Applications/  # 该任务演示如何自动安装 chrome
-      neverSkip: false 
+      neverSkip: true  # 默认值为 false, 可无需设置. 任务如果成功执行过下次将被跳过 
 
     - cmds: 
         - echo 'hello world'
