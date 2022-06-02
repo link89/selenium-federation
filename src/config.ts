@@ -1,12 +1,12 @@
 import yargs from 'yargs/yargs';
 import { parse } from 'yaml';
-import { Configuration, configurationSchema } from './types';
+import { Configuration, configurationSchema, ProvisionTask } from './types';
 import { isHttpUrl, readPathOrUrl, saveUrlToFile } from './utils';
 import * as fs from 'fs';
 import { join } from 'path';
 import { basename } from 'path';
-import { nanoid } from 'nanoid';
 import { createHash } from 'node:crypto';
+import { exec } from 'shelljs';
 
 const jsonStringify = require('json-stringify-deterministic');
 
@@ -51,44 +51,32 @@ export async function getAndInitConfig(): Promise<Configuration> {
         console.log(`>>> you need to remove the old file or suggest a new name by append "#some_new_file_name" to the url to workaround`);
       } else {
         console.log(`>> start to download ${webdriverUrl} to ${filePath}`);
-        const tmpFilePath = join(webdriverFolder, `${nanoid()}.tmp`);
-        await saveUrlToFile(webdriverUrl, tmpFilePath);
-        await fs.promises.rename(tmpFilePath, filePath);
-        await fs.promises.chmod(filePath, 0o755);  // grant execution permission to downloaded drivers
+        await saveUrlToFile(webdriverUrl, filePath);
+        await fs.promises.chmod(filePath, 0o755);  // grant execution permission
         console.log(`>> success to download ${filePath}`);
       }
       driver.webdriver.path = filePath;
     }
 
     console.log('> execute provision tasks...');
-    const digest = createHash('sha256')
-      .update(jsonStringify(_config.provision))
-      .digest()
-    const digestFile = join(_config.tmpFolder, `provision-${digest}.sha256.digest`);
+    for (const task of _config.provision.tasks) {
 
-    if (fs.existsSync(digestFile) && !_config.provision.force) {
-      console.log(`>> detect ${digestFile}, skip provision tasks`);
-      console.log(`>>> you may set provision.force to true or remove ${digestFile} to run tasks`);
-    } else {
-      if (_config.provision.tasks.length > 0) {
-        for (const task of _config.provision.tasks) {
-          console.log(`>> start to run task:`);
-          console.log(jsonStringify(task));
-          // TODO: execute task
-
-
-        }
-        console.log(`all ${_config.provision.tasks.length} task(s) success, create ${digestFile} to skip uncessary rerun next time.`)
-        await fs.promises.writeFile(digestFile, Date().toString());
-      } else {
-        console.log(`>> no tasks to run`)
+      const taskString = jsonStringify(task);
+      const taskDigest = createHash('sha256').update(taskString).digest();
+      const taskDigestFile = join(_config.tmpFolder, `provision-task-${taskDigest}.sha256.digest`);
+      if (fs.existsSync(taskDigestFile) && !task.neverSkip) {
+        console.log(`>> detect ${taskDigestFile}, skip task: ${taskString}`);
+        console.log(`>>> you may set neverSkip to true or remove ${taskDigestFile} to run this task`);
+        continue;
       }
+      console.log(`>> start to run task: ${taskString}`);
+      await runProvisionTask(task, { downloadFolder });
+      console.log(`>> create digest file ${taskDigestFile} to skip this task next time`);
+      await fs.promises.writeFile(taskDigestFile, taskString);
     }
   }
-
   return _config;
 }
-
 
 function getFileNameFromUrl(url: string) {
   const urlObj = new URL(url);
@@ -96,4 +84,20 @@ function getFileNameFromUrl(url: string) {
     return urlObj.hash.slice(1);
   }
   return basename(urlObj.pathname);
+}
+
+async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolder: string }) {
+  let downloadFilePath: string | undefined;
+  if (task.download) {
+    const downloadFilePath = join(ctx.downloadFolder, getFileNameFromUrl(task.download));
+    await saveUrlToFile(task.download, downloadFilePath);
+  }
+
+  for (let cmd of task.cmds) {
+    if (downloadFilePath) {
+      cmd = cmd.replace('{download_file_path}', downloadFilePath);
+    }
+    console.log(`start to execute cmd: ${cmd}`);
+    exec(cmd);
+  }
 }

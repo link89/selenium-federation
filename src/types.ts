@@ -11,6 +11,7 @@ const stringArray = yup.array(yup.string().required()).default([]);
 const provisionTask = yup.object({
   download: yup.string().optional(),
   cmds: stringArray,
+  neverSkip: yup.boolean().default(false),
 }).defined();
 
 export const driverConfigurationSchema = yup.object({
@@ -44,7 +45,6 @@ export const configurationSchema = yup.object({
   drivers: yup.array(driverConfigurationSchema).default([]),
 
   provision: yup.object({
-    force: yup.boolean().default(false),
     tasks: yup.array(provisionTask).default([]),
   }).optional(),
 
@@ -94,6 +94,7 @@ export interface SessionDto extends yup.Asserts<typeof sessionDtoSchema> { };
 export interface DriverDto extends yup.Asserts<typeof driverDtoSchema> { };
 export interface NodeDto extends yup.Asserts<typeof nodeDtoSchema> { };
 export interface RegisterDto extends yup.Asserts<typeof registerDtoSchema> { };
+export interface ProvisionTask extends yup.Asserts<typeof provisionTask> { };
 
 export interface SessionPathParams {
   sessionId: string,

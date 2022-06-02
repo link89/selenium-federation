@@ -2,6 +2,8 @@ import axios from "axios";
 import Bluebird from "bluebird";
 import * as fs from 'fs';
 import * as stream from 'stream';
+import { dirname, join } from 'path';
+import { nanoid } from "nanoid";
 
 interface IRetryOption {
   max?: number;
@@ -223,7 +225,9 @@ export function isHttpUrl(pathOrUrl: string) {
 }
 
 export async function saveUrlToFile(url: string, path: string) {
-  const writer = fs.createWriteStream(path);
+  const dir = dirname(path);
+  const tmpFile = join(dir, `${nanoid()}.tmp`);
+  const writer = fs.createWriteStream(tmpFile);
   await axios.request({
     method: 'GET',
     url,
@@ -231,5 +235,6 @@ export async function saveUrlToFile(url: string, path: string) {
   }).then(res => {
     res.data.pipe(writer);
     return stream.promises.finished(writer);
-  })
+  });
+  await fs.promises.rename(tmpFile, path);
 }
