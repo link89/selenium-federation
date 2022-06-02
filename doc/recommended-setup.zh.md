@@ -145,6 +145,18 @@ drivers:
     maxSessions: 1  # safari 该值需要填写1
     webdriver:
       path: safaridriver  # 也可以使用全局命令或者相对/绝对路径
+
+provision:  # 执行配置任务
+  tasks:
+    - download: https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg   # 可选参数, 下载执行任务所需的文件, 建议将文件保存在内部的文件服务中使用, 增加下载速度和可靠性
+      cmds:
+        - open -W {download_file_path}  # 通过占位符 {download_file_path} 在命令行中指定下载的文件路径
+        - cp -r "/Volumes/Google Chrome/Google Chrome.app" /Applications/  # 该任务演示如何自动安装 chrome
+      neverSkip: false 
+
+    - cmds: 
+        - echo 'hello world'
+      neverSkip: true  # 每任务执行成功后会生成一个占位文件, 如果该文件存在, 并且任务没有被改变过, 下次启动 sf 时该任务会自动跳过, 通过设置该字段为 true 强制该任务不被跳过
 ```
 
 各配置项的用途可查看注解. 这里你会留意到在配置文件里推荐 `webdriver.path` 通过 url 指定, `selenium-federation` 会自动下载和使用. 再仔细观察则会发现, 这里的资源地址都位于 `http://192.168.1.100:5555/fs/` 位置下, 回顾上一节的 hub 配置你会发现该文件服务是由 hub 节点提供的, 这是为何 `selenium-federation` 内置了文件服务的原因: 免除您额外安装和配置 nginx/apache 的烦恼. 除了使用内置的文件服务外, 推荐的文件服务包括:
@@ -155,7 +167,9 @@ drivers:
 
 不仅如此, 启动命令时也支持读取远程的配置文件, 这也是推荐的使用方式, 这样一来在 local 节点上可以无需手动下载任何资源文件.
 
-同样的, 在执行命令前, 我们推荐创建一个专门的工作目录并进入到该目录中, 然后执行
+另一部分值得关注的特性是 provison, 该功能类似 `ansible`, 里面设置的任务会在每次启动 `selenium-federation` 时被执行. 该功能主要用于安装浏览器, 简化配置过程.
+
+配置完成后将其保存在本地文件或者远程文件中, 进入工作目录后执行以下命令启动服务即可.
 
 ```bash
 selenium-federation-pm2-start --name sf-local-01 -c http://192.168.1.100:5555/fs/configs/local-01-config.yaml

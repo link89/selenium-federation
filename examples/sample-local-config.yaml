@@ -38,6 +38,8 @@ provision:
       cmds:
         - open -W {download_file_path}
         - cp -r "/Volumes/Google Chrome/Google Chrome.app" /Applications/
+      neverSkip: false
+
     - cmds:
         - echo 'hello world'
       neverSkip: true
