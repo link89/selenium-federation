@@ -26,7 +26,7 @@ provision:
       # the webdriver.path should set to ./chromedriver.exe
     - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_win32.zip
       cmds:
-        - powershell Expand-Archive {download_file_path} -DestinationPath .
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
       
       # download and unzip chromedriver on mac osx, same for other drivers
       # the webdriver.path should set to ./chromedriver 

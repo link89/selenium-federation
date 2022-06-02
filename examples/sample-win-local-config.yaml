@@ -26,14 +26,14 @@ drivers:
 
 provision:
   tasks:
-    - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_win32.zip
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/101.0.4951.41/chromedriver_win32.zip
       cmds:
-        - powershell Expand-Archive {download_file_path} -DestinationPath .
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
 
     - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip 
       cmds:
-        - powershell Expand-Archive {download_file_path} -DestinationPath .
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
 
     - download: https://msedgedriver.azureedge.net/102.0.1245.30/edgedriver_win64.zip
       cmds:
-        - powershell Expand-Archive {download_file_path} -DestinationPath .
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
