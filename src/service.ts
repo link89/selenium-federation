@@ -39,7 +39,7 @@ export class HubService {
 
   private nodesIndex = new Map<string, RegistedNode>();
   private sessionIndex = new Map<string, SessionRecord>();
-  private lastSessionReclaimTime = 0;
+  private nextExpiredSessionCleanTime = 0;
   private createSessionMutex = new Semaphore(1);
 
   constructor(
@@ -257,8 +257,8 @@ export class HubService {
     // a quick and dirty method to reclaim expired session to avoid memory leak
     // may use formal ttl cache if this implemetation have problem
     const now = Date.now();
-    if (this.lastSessionReclaimTime < now) {
-      this.lastSessionReclaimTime = now + 600e3;
+    if (this.nextExpiredSessionCleanTime < now) {
+      this.nextExpiredSessionCleanTime = now + 600e3;
       for (const [id, session] of this.sessionIndex.entries()) {
         if (session.expireAfter < now) {
           console.log(`remove expired session: ${id}`);
