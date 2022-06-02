@@ -64,7 +64,6 @@ export async function getAndInitConfig(): Promise<Configuration> {
 
     log(chalk.blue.bold('> execute provision tasks...'));
     for (const task of _config.provision.tasks) {
-
       const taskString = jsonStringify(task);
       const taskDigest = createHash('sha256').update(taskString).digest().toString('hex');
       const taskDigestFile = join(provisionFolder, `provision-task-${taskDigest}.sha256.digest`);
