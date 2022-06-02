@@ -152,7 +152,7 @@ provision:  # 执行配置任务
       cmds:
         - open -W {download_file_path}  # 通过占位符 {download_file_path} 在命令行中指定下载的文件路径
         - cp -r "/Volumes/Google Chrome/Google Chrome.app" /Applications/  # 该任务演示如何自动安装 chrome
-      neverSkip: true  # 默认值为 false, 可无需设置. 任务如果成功执行过下次将被跳过 
+      neverSkip: false # 默认值即为 false, 可无需设置. 任务如果成功执行过下次将被跳过 
 
     - cmds: 
         - echo 'hello world'
@@ -167,11 +167,15 @@ provision:  # 执行配置任务
 
 不仅如此, 启动命令时也支持读取远程的配置文件, 这也是推荐的使用方式, 这样一来在 local 节点上可以无需手动下载任何资源文件.
 
-另一部分值得关注的特性是 provison, 该功能类似 `ansible`, 里面设置的任务会在每次启动 `selenium-federation` 时被执行. 该功能主要用于安装浏览器, 简化配置过程.
+另一部分值得关注的特性是 provison, 该功能可以视为一个极简的 `ansible` 替代, 为实现浏览器的自动安装而设计. 里面设置的任务会在每次启动 `selenium-federation` 时被执行, 已执行过的任务会被跳过.
 
-配置完成后将其保存在本地文件或者远程文件中, 进入工作目录后执行以下命令启动服务即可.
+所有配置完成后将其保存在本地文件或者远程文件中, 进入工作目录后执行以下命令启动服务即可.
 
 ```bash
+# 初次启动时, 可先不使用 pm2 启动, 方便观察配置初始化是否成功
+selenium-federation -c http://192.168.1.100:5555/fs/configs/local-01-config.yaml
+
+# 执行成功过后, 再退出执行, 改用以下命令通过 pm2 启动
 selenium-federation-pm2-start --name sf-local-01 -c http://192.168.1.100:5555/fs/configs/local-01-config.yaml
 ```
 
