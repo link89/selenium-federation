@@ -28,6 +28,8 @@ export async function getAndInitConfig(): Promise<Configuration> {
     console.log(`> prepare tmpFolder: ${_config.tmpFolder}`);
     await fs.promises.mkdir(_config.tmpFolder, { recursive: true });
 
+    const webdriverFolder = 'webdrivers';
+    const installerFolder = 'installers';
     console.log(`> prepare file server root`);
     if (_config.fileServer && !_config.fileServer.disable) {
       await fs.promises.mkdir(_config.fileServer.root, { recursive: true });
@@ -38,12 +40,12 @@ export async function getAndInitConfig(): Promise<Configuration> {
       if (!isHttpUrl(driver.webdriver.path)) continue;
       const webdriverUrl = driver.webdriver.path;
       const fileName = getFileNameFromUrl(webdriverUrl);
-      const filePath = join(_config.tmpFolder, fileName);
+      const filePath = join(_config.tmpFolder, webdriverFolder, fileName);
       if (fs.existsSync(filePath)) {
         console.log(`>> file ${filePath} already exists, skip download ${webdriverUrl}`);
       } else {
         console.log(`>> start to download ${webdriverUrl} to ${filePath}`);
-        const tmpFilePath = join(_config.tmpFolder, `${nanoid(8)}.tmp`);
+        const tmpFilePath = join(_config.tmpFolder, webdriverFolder, `${nanoid()}.tmp`);
         await saveUrlToFile(webdriverUrl, tmpFilePath);
         await fs.promises.rename(tmpFilePath, filePath);
         await fs.promises.chmod(filePath, 0o755);  // grant execution permission to downloaded drivers
