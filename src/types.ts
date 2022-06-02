@@ -7,7 +7,6 @@ import type { Context } from 'koa';
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
 const ROLES = ['local', 'hub'];
 
-
 export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   browserVersion: yup.string().optional(),
@@ -37,6 +36,13 @@ export const configurationSchema = yup.object({
   maxSessions: yup.number().default(Math.max(1, os.cpus().length - 1)),
 
   drivers: yup.array(driverConfigurationSchema).default([]),
+
+  installations: yup.array(yup.object({
+    name: yup.string().required(),
+    installer: yup.string().required(),
+    cmds: yup.array(yup.string().required()).default([]),
+    force: yup.boolean().default(false),
+  })).default([]),
 
   registerTo: yup.string().optional(),
   tmpFolder: yup.string().default(`./tmp`),
@@ -77,7 +83,6 @@ export const nodeDtoSchema = yup.object({
 export const registerDtoSchema = yup.object({
   registerAs: yup.string().required(),
 }).defined();
-
 
 export interface Configuration extends yup.Asserts<typeof configurationSchema> { };
 export interface DriverConfiguration extends yup.Asserts<typeof driverConfigurationSchema> { };
