@@ -7,6 +7,12 @@ import type { Context } from 'koa';
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
 const ROLES = ['local', 'hub'];
 
+const stringArray = yup.array(yup.string().required()).default([]);
+const provisionTask = yup.object({
+  download: yup.string().optional(),
+  cmds: yup.array(stringArray).required(),
+}).defined();
+
 export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   browserVersion: yup.string().optional(),
@@ -28,7 +34,7 @@ export const configurationSchema = yup.object({
   port: yup.number().default(4444),
   host: yup.string().default('0.0.0.0'),
   publicUrl: yup.string().optional(),
-  tags: yup.array(yup.string().defined()).default([]),
+  tags: stringArray,
   uuid: yup.string().default(() => uuidv4()),
   platformName: yup.string().default(getW3CPlatformName()),
 
@@ -37,12 +43,10 @@ export const configurationSchema = yup.object({
 
   drivers: yup.array(driverConfigurationSchema).default([]),
 
-  installations: yup.array(yup.object({
-    name: yup.string().required(),
-    installer: yup.string().required(),
-    cmds: yup.array(yup.string().required()).default([]),
+  provision: yup.object({
     force: yup.boolean().default(false),
-  })).default([]),
+    tasks: yup.array(provisionTask).default([]),
+  }).optional(),
 
   registerTo: yup.string().optional(),
   tmpFolder: yup.string().default(`./tmp`),
@@ -55,7 +59,7 @@ export const configurationSchema = yup.object({
   autoCmdHttp: yup.object({
     disable: yup.boolean().default(false),
     path: yup.string().defined(),
-    args: yup.array(yup.string().defined()).default([]),
+    args: stringArray,
   }).default(undefined),
 
   fileServer: yup.object({
