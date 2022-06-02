@@ -57,6 +57,7 @@
     "@sentry/tracing": "^6.0.2",
     "axios": "^0.21.0",
     "bluebird": "^3.7.2",
+    "chalk": "^4.1.0",
     "get-port": "^5.1.1",
     "http-proxy": "^1.18.1",
     "json-stringify-deterministic": "^1.0.7",

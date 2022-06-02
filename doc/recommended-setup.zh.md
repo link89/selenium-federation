@@ -40,7 +40,7 @@ npm install -g selenium-federation pm2
 
 ```bash
 selenium-federation --help
-selenium-federation-pm2-start --help
+sf-pm2-start --help
 ```
 
 如果同时需要使用 `auto-cmd` 所提供的桌面测试能力, 还需要确保安装 `Python3.8` 以及 `auto-cmd`, 这部分内容会在之后完善. (TODO)
@@ -75,7 +75,7 @@ fileServer: # 文件服务, 可以通过 http://192.168.1.100/fs/ 访问
 
 ```bash
 # 推荐: 通过 pm2 启动并管理服务
-selenium-federation-pm2-start --name sf-hub -c ./hub-config.yaml
+sf-pm2-start --name sf-hub -c ./hub-config.yaml
 
 # 另一种方式: 将服务启动于前台运行, 通常只在调试中使用
 selenium-federation -c ./hub-config.yaml
@@ -176,7 +176,7 @@ provision:  # 执行配置任务
 selenium-federation -c http://192.168.1.100:5555/fs/configs/local-01-config.yaml
 
 # 执行成功过后, 再退出执行, 改用以下命令通过 pm2 启动
-selenium-federation-pm2-start --name sf-local-01 -c http://192.168.1.100:5555/fs/configs/local-01-config.yaml
+sf-pm2-start --name sf-local-01 -c http://192.168.1.100:5555/fs/configs/local-01-config.yaml
 ```
 
 (To be continue...)

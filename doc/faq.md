@@ -8,7 +8,6 @@ Then you can create a file named `pm2-startup.bat` and add the command `pm2 resu
 
 
 ## Auto Login Operating System
-To use the auto reboot feature of `selenium-federation`, you need to ensure login the system automatically after rebooting.
 
 ### Windows
 
