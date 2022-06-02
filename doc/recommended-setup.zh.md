@@ -5,7 +5,7 @@
 `selenium-federation` 是针对Web自动化和桌面应用自动化的测试环境搭建提供的一个解决方案. 该方案主要
 
 * 满足跨平台的 Web 自动化, 桌面应用自动化以及二者混合自动化的执行需求
-* 适合由项目团队以较小的代价去独立维护一个中小规模(<50节点)的桌面测试集群
+* 适合由项目团队以较小的代价独立维护一个中小规模(<50节点)的桌面测试集群
 * 兼容部分 `selenium-grid` 和 `selenoid` 接口, 如 CDP 代理, 多数情况下可无需更改代码使用 
 * 支持 `webdriver`, `puppeteer`, `playwright`, `testcafe` 等测试框架
 * 通过 `auto-cmd` 支持桌面端自动化
@@ -13,8 +13,8 @@
 
 但也需要指出, 在一些情况下`selenium-federation`未必是更好的选择, 这些情况包括
 
-* 本地开箱即用(自动检测浏览器版本, 自动下载资源, etc): 推荐使用: [webdriver-manager](https://github.com/angular/webdriver-manager), [selenium-standalone](https://github.com/vvo/selenium-standalone)
-* 企业级大规模部署, 或者无桌面端测试需求: 这种情况下 `selenium-grid`, `selenoid` 会是更好的选择.
+* 零配置开箱即用(自动检测浏览器版本, 自动下载资源, etc),这种场景下推荐使用: [webdriver-manager](https://github.com/angular/webdriver-manager), [selenium-standalone](https://github.com/vvo/selenium-standalone)
+* 企业级的大规模部署和管理, 或者无桌面功能相关的测试需求: 这种情况下 `selenium-grid`, `selenoid` 会是更好的选择.
 
 `selenium-federation` 存在的意义不是为了替代已有的工具, 而是在尽量与`selenium`保持功能兼容的前提下, 以简化运维, 保障可靠性为原则, 以研发团队可用较小的代价自行维护为目标, 提供一些必要的特性, 这些特性包括
 
@@ -146,7 +146,7 @@ drivers:
 * `selenium-federation` hub 节点的文件服务 (最简单, 无需额外安装其它工具或服务)
 * 对象存储服务, 如 s3, minio, seafile, etc (注意权限)
 
-不只如此, 启动命令时也支持读取远程的配置文件, 这也是推荐的使用方式, 因为这样一来在 local 节点上可以无需手动下载任何资源文件.
+不仅如此, 启动命令时也支持读取远程的配置文件, 这也是推荐的使用方式, 这样一来在 local 节点上可以无需手动下载任何资源文件.
 
 同样的, 在执行命令前, 我们推荐创建一个专门的工作目录并进入到该目录中, 然后执行
 
