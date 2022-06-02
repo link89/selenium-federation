@@ -1,0 +1,44 @@
+role: local
+
+host: 0.0.0.0
+port: 4444
+sessionIdleTimeout: 60
+maxSessions: 5
+
+registerTo: http://localhost:5555
+
+drivers:
+  - browserName: chrome
+    browserVersion: stable
+    maxSessions: 2
+    webdriver:
+      path: ./chromedriver
+
+  - browserName: MicrosoftEdge
+    maxSessions: 2
+    webdriver:
+      path: ./msedgedriver
+
+  - browserName: firefox
+    maxSessions: 2
+    webdriver:
+      path: ./geckodriver
+
+  - browserName: safari
+    maxSessions: 1
+    webdriver:
+      path: safaridriver
+
+provision:
+  tasks:
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_mac64.zip
+      cmds:
+        - unzip -f {download_file_path} 
+
+    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-macos.tar.gz
+      cmds:
+        - tar -xvf {download_file_path}
+
+    - download: https://msedgedriver.azureedge.net/102.0.1249.0/edgedriver_mac64.zip
+      cmds:
+        - unzip -f {download_file_path} 
