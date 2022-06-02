@@ -1,0 +1,35 @@
+# This file is to collect some useful provision tasks as an reference.
+# Feel free to copy to your own configuration file
+
+# Webidriver download sites
+
+# chromedriver: https://chromedriver.storage.googleapis.com/index.html 
+# chromedriver Chinese mirror: https://registry.npmmirror.com/binary.html?path=chromedriver/
+# geckodriver: https://github.com/mozilla/geckodriver/releases
+# geckodriver Chinese mirror: https://repo.huaweicloud.com/geckodriver/
+# msedgedriver: https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/
+
+
+provision:
+  tasks:
+      # install chrome on mac os using dmg file 
+    - download: https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg
+      cmds:
+        - open -W {download_file_path}
+        - cp -r "/Volumes/Google Chrome/Google Chrome.app" /Applications/ 
+
+      # install chrome on mac os using homebrew
+    - cmds:
+        - brew install google-chrome
+      
+      # download and unzip chromedriver on windows, same for other drivers
+      # the webdriver.path should set to ./chromedriver.exe
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_win32.zip
+      cmds:
+        - powershell Expand-Archive {download_file_path} -DestinationPath .
+      
+      # download and unzip chromedriver on mac osx, same for other drivers
+      # the webdriver.path should set to ./chromedriver 
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_mac64.zip
+      cmds:
+        - unzip {download_file_path}

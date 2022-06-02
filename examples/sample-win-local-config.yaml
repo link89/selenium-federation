@@ -1,0 +1,39 @@
+role: local
+
+host: 0.0.0.0
+port: 4444
+sessionIdleTimeout: 60
+maxSessions: 5
+
+registerTo: http://localhost:5555
+
+drivers:
+  - browserName: chrome
+    browserVersion: stable
+    maxSessions: 2
+    webdriver:
+      path: ./chromedriver.exe
+
+  - browserName: MicrosoftEdge
+    maxSessions: 2
+    webdriver:
+      path: ./msedgedriver.exe
+
+  - browserName: firefox
+    maxSessions: 2
+    webdriver:
+      path: ./geckodriver.exe
+
+provision:
+  tasks:
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_win32.zip
+      cmds:
+        - powershell Expand-Archive {download_file_path} -DestinationPath .
+
+    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip 
+      cmds:
+        - powershell Expand-Archive {download_file_path} -DestinationPath .
+
+    - download: https://msedgedriver.azureedge.net/102.0.1245.30/edgedriver_win64.zip
+      cmds:
+        - powershell Expand-Archive {download_file_path} -DestinationPath .
