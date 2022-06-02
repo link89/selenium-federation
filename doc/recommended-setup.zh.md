@@ -40,7 +40,7 @@ npm install -g selenium-federation pm2
 
 ## 配置
 
-`selenium-federation` 中包括两种类型的节点
+`selenium-federation`  定义了两种类型的节点
 
 * local 节点: 浏览器所在节点, 用于实际执行测试, 可独立使用, 也可以注册到 hub 节点上使用.
 * hub 节点: 转发请求到相应的 local 节点, 多个 local 节点注册到 hub 节点上即构成一个测试集群.
@@ -48,7 +48,7 @@ npm install -g selenium-federation pm2
 本文以搭建一个包括一个 hub 节点和一个 local 节点为例来说明推荐的使用方式. 为了方便, 这里假定它们的 IP 地址如下
 
 * hub: 192.168.1.100
-* local01: 192.168.1.101
+* local-01: 192.168.1.101
 
 ### 配置 hub 节点
 
@@ -151,7 +151,7 @@ drivers:
 同样的, 在执行命令前, 我们推荐创建一个专门的工作目录并进入到该目录中, 然后执行
 
 ```bash
-selenium-federation-pm2-start --name sf-local01 -c http://192.168.1.100:5555/fs/configs/local01-config.yaml
+selenium-federation-pm2-start --name sf-local-01 -c http://192.168.1.100:5555/fs/configs/local-01-config.yaml
 ```
 
 (To be continue...)
