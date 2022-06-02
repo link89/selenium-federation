@@ -31,9 +31,11 @@ export async function getAndInitConfig(): Promise<Configuration> {
     console.log(`> prepare tmpFolder: ${_config.tmpFolder}`);
     const webdriverFolder = join(_config.tmpFolder, 'webdrivers');
     const downloadFolder = join(_config.tmpFolder, 'downloads');
+    const provisionFolder = join(_config.tmpFolder, 'provisions');
     await fs.promises.mkdir(_config.tmpFolder, { recursive: true });
     await fs.promises.mkdir(webdriverFolder, { recursive: true });
     await fs.promises.mkdir(downloadFolder, { recursive: true });
+    await fs.promises.mkdir(provisionFolder, { recursive: true });
 
     console.log(`> prepare file server root`);
     if (_config.fileServer && !_config.fileServer.disable) {
@@ -62,8 +64,8 @@ export async function getAndInitConfig(): Promise<Configuration> {
     for (const task of _config.provision.tasks) {
 
       const taskString = jsonStringify(task);
-      const taskDigest = createHash('sha256').update(taskString).digest();
-      const taskDigestFile = join(_config.tmpFolder, `provision-task-${taskDigest}.sha256.digest`);
+      const taskDigest = createHash('sha256').update(taskString).digest().toString('base64');
+      const taskDigestFile = join(provisionFolder, `provision-task-${taskDigest}.sha256.digest`);
       if (fs.existsSync(taskDigestFile) && !task.neverSkip) {
         console.log(`>> detect ${taskDigestFile}, skip task: ${taskString}`);
         console.log(`>>> you may set neverSkip to true or remove ${taskDigestFile} to run this task`);
@@ -89,7 +91,8 @@ function getFileNameFromUrl(url: string) {
 async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolder: string }) {
   let downloadFilePath: string | undefined;
   if (task.download) {
-    const downloadFilePath = join(ctx.downloadFolder, getFileNameFromUrl(task.download));
+    downloadFilePath = join(ctx.downloadFolder, getFileNameFromUrl(task.download));
+    console.log(`start to download ${task.download} to ${downloadFilePath}`);
     await saveUrlToFile(task.download, downloadFilePath);
   }
 

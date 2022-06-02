@@ -31,3 +31,13 @@ drivers:
     maxSessions: 1
     webdriver:
       path: safaridriver
+
+provision:
+  tasks:
+    - download: https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg
+      cmds:
+        - open -W {download_file_path}
+        - cp -r "/Volumes/Google Chrome/Google Chrome.app" /Applications/
+    - cmds:
+        - echo 'hello world'
+      neverSkip: true

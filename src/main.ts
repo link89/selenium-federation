@@ -11,11 +11,6 @@ import { serveStatic, LocalController, onError, IController, HubController } fro
 import { ProcessManager } from "./process";
 import axios from "axios";
 
-// TODO: handle uncaughtException properly
-process.on('uncaughtException', function (err) {
-  console.error(`suppress uncaughtException:`);
-  console.error(err);
-});
 
 
 // Get started

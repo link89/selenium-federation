@@ -294,8 +294,10 @@ export class LocalService {
   ) { }
 
   init() {
-    ['SIGINT', 'SIGTERM'].forEach(signal => {
-      process.on(signal, () => {
+    ['SIGINT', 'SIGTERM', 'uncaughtException'].forEach(signal => {
+      process.on(signal, (...argv) => {
+        console.log(`on ${signal}, argv:`);
+        console.log(argv);
         console.log(`terminating...`);
         return this.closeActiveSessions().then(() => {
           process.exit();
@@ -306,6 +308,7 @@ export class LocalService {
       this.autoRegister();
     }
   }
+
 
   public get busySlots() {
     return _.sumBy(this.webdriverManagers, driver => driver.busySlots);
