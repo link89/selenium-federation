@@ -29,7 +29,7 @@ export async function getAndInitConfig(): Promise<Configuration> {
     log(chalk.blue.bold(`> read config from: ${pathOrUrl}`));
     const data = await readPathOrUrl(pathOrUrl, { encoding: 'utf-8' });
     log(chalk.green(data));
-   
+
     _config = configurationSchema.validateSync(parse(data));
 
     log(chalk.blue.bold(`> prepare tmpFolder: ${_config.tmpFolder}`));
@@ -53,14 +53,12 @@ export async function getAndInitConfig(): Promise<Configuration> {
       const fileName = getFileNameFromUrl(webdriverUrl);
       const filePath = join(webdriverFolder, fileName);
       if (fs.existsSync(filePath)) {
-        log(chalk.yellow(`>> file ${filePath} already exists, skip download ${webdriverUrl}`));
-        log(chalk.bgYellow(`>>> you need to remove the old file or suggest a new name by append "#some_new_file_name" to the url to workaround`));
-      } else {
-        log(chalk.green(`>> start to download ${webdriverUrl} to ${filePath}`));
-        await saveUrlToFile(webdriverUrl, filePath);
-        await fs.promises.chmod(filePath, 0o755);  // grant execution permission
-        log(chalk.green(`>> success to download ${filePath}`));
+        log(chalk.yellow(`>> file ${filePath} already exists, will be overwritten with ${webdriverUrl}`));
       }
+      log(chalk.green(`>> start to download ${webdriverUrl} to ${filePath}`));
+      await saveUrlToFile(webdriverUrl, filePath);
+      await fs.promises.chmod(filePath, 0o755);  // grant execution permission
+      log(chalk.green(`>> success to download ${filePath}`));
       driver.webdriver.path = filePath;
     }
 
@@ -86,7 +84,7 @@ export async function getAndInitConfig(): Promise<Configuration> {
 
 function getFileNameFromUrl(url: string) {
   const urlObj = new URL(url);
-  if(urlObj.hash) {
+  if (urlObj.hash) {
     return urlObj.hash.slice(1);
   }
   return basename(urlObj.pathname);
