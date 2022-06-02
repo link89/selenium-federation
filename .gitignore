@@ -105,6 +105,7 @@ dist
 
 # webdriver files
 *driver*
+Driver_Notes/
 
 # default tmp folder
 tmp
