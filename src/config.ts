@@ -46,6 +46,7 @@ export async function getAndInitConfig(): Promise<Configuration> {
         const tmpFilePath = join(_config.tmpFolder, `${nanoid(8)}.tmp`);
         await saveUrlToFile(webdriverUrl, tmpFilePath);
         await fs.promises.rename(tmpFilePath, filePath);
+        await fs.promises.chmod(filePath, 0o755);  // grant execution permission to downloaded drivers
         console.log(`>> success to download ${filePath}`);
       }
       driver.webdriver.path = filePath;
