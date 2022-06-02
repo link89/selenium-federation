@@ -37,7 +37,7 @@ export async function getAndInitConfig(): Promise<Configuration> {
       await fs.promises.mkdir(_config.fileServer.root, { recursive: true });
     }
 
-    console.log(`> fetch remote resources`);
+    console.log(`> download webdrivers ...`);
     for (const driver of _config.drivers) {
       if (!isHttpUrl(driver.webdriver.path)) continue;
       const webdriverUrl = driver.webdriver.path;
