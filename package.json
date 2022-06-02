@@ -58,6 +58,7 @@
     "bluebird": "^3.7.2",
     "get-port": "^5.1.1",
     "http-proxy": "^1.18.1",
+    "json-stringify-deterministic": "^1.0.7",
     "koa": "^2.13.4",
     "koa-bodyparser": "^2.5.0",
     "koa-logger": "^3.2.1",

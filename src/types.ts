@@ -10,7 +10,7 @@ const ROLES = ['local', 'hub'];
 const stringArray = yup.array(yup.string().required()).default([]);
 const provisionTask = yup.object({
   download: yup.string().optional(),
-  cmds: yup.array(stringArray).required(),
+  cmds: stringArray,
 }).defined();
 
 export const driverConfigurationSchema = yup.object({

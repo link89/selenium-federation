@@ -244,7 +244,6 @@ export class HubService {
     return this.nodesIndex.get(nodeId);
   }
 
-
   private getSessionById(sessionId: string): SessionRecord | undefined {
     const session = this.sessionIndex.get(sessionId);
     if (!session) return;
