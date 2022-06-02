@@ -258,7 +258,7 @@ export class HubService {
     // may use formal ttl cache if this implemetation have problem
     const now = Date.now();
     if (this.nextExpiredSessionCleanTime < now) {
-      this.nextExpiredSessionCleanTime = now + 600e3;
+      this.nextExpiredSessionCleanTime = now + 600e3;  // clean expired session every 10 mins
       for (const [id, session] of this.sessionIndex.entries()) {
         if (session.expireAfter < now) {
           console.log(`remove expired session: ${id}`);
