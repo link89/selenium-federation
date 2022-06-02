@@ -101,7 +101,7 @@ tags:  # 此标签可在创建 session 时通过 sf:platformTags 匹配
 sessionIdleTimeout: 60  # 全局的session超时设置, session不被使用的时间超过该值(秒)时会被强制关闭
 maxSessions: 5  # 该节点的最大session总数, 默认为 #cpu - 1
 
-registerTo: http://192.168.1.100:5555/wd/hub/register  # 注册节点地址
+registerTo: http://192.168.1.100:5555  # 注册到 hub 节点地址
 
 drivers:
   - browserName: chrome

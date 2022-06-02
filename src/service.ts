@@ -506,12 +506,18 @@ export class LocalService {
     const data: RegisterDto = {
       registerAs: this.config.publicUrl || `http://%s:${this.config.port}`,
     };
-    const url = this.config.registerTo;
+    const baseURL= this.config.registerTo;
     try {
-      const res = await this.axios.request({ method: 'POST', url, data, timeout: 5e3, });
+      const res = await this.axios.request({
+        method: 'POST',
+        baseURL,
+        url: '/wd/hub/register',
+        data,
+        timeout: 5e3,
+      });
       return res;
     } catch (e) {
-      console.error(`register to ${url} failed: ${String(e)}`); // suppress error
+      console.error(`register to ${baseURL} failed: ${String(e)}`); // suppress error
     }
   }
 }

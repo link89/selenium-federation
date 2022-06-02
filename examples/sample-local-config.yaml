@@ -8,7 +8,7 @@ maxSessions: 5
 fileServer:
   root: .
 
-registerTo: http://localhost:5555/wd/hub/register
+registerTo: http://localhost:5555
 
 drivers:
   - browserName: chrome
