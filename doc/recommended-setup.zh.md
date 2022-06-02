@@ -13,7 +13,7 @@
 
 但也需要指出, 在一些情况下`selenium-federation`未必是更好的选择, 这些情况包括
 
-* 零配置开箱即用(自动检测浏览器版本, 自动下载资源, etc),这种场景下推荐使用: [webdriver-manager](https://github.com/angular/webdriver-manager), [selenium-standalone](https://github.com/vvo/selenium-standalone)
+* 零配置开箱即用(自动检测浏览器版本, 自动下载资源, etc), 推荐使用: [webdriver-manager](https://github.com/angular/webdriver-manager), [selenium-standalone](https://github.com/vvo/selenium-standalone)
 * 企业级的大规模部署和管理, 或者无桌面功能相关的测试需求: 这种情况下 `selenium-grid`, `selenoid` 会是更好的选择.
 
 `selenium-federation` 存在的意义不是为了替代已有的工具, 而是在尽量与`selenium`保持功能兼容的前提下, 以简化运维, 保障可靠性为原则, 以研发团队可用较小的代价自行维护为目标, 提供一些必要的特性, 这些特性包括
