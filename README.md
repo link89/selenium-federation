@@ -1,5 +1,7 @@
 # Selenium Federation
-A lightweight alternative to `selenium4`.
+
+
+
 
 ## Introduction
 `selenium-federation` is a lightweight solution to set up a cross-platform browser farm that is 95% compatible with `selenium4`.
@@ -24,11 +26,10 @@ A lightweight alternative to `selenium4`.
 
 ### Install
 ```bash
-npm install -g selenium-federation
+npm install -g selenium-federation pm2
 
 # testing
 selenium-federation --help
-selenium-federation-check --help
 selenium-federation-pm2-start --help
 ```
 
