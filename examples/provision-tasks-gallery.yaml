@@ -33,5 +33,5 @@ provision:
       # the webdriver.path should set to ./chromedriver 
     - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_mac64.zip
       cmds:
-        - unzip {download_file_path}
+        - unzip -f {download_file_path}
         - mv chromedriver chromedriver-latest  # (optional) rename after unzip, but don't forget to change webdriver.path to ./chromedriver-latest
