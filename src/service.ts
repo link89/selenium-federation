@@ -58,7 +58,7 @@ export class HubService {
           data: request.data,
           timeout: 2e3,
         });
-        const driver = await driverDtoSchema.validate(res.data, { strict: true });  // remove this if it is too slow
+        const driver = await driverDtoSchema.validate(res.data, { strict: true });  // skip validate if it is too slow
         return { nodeUrl, driver };
       } catch (e) {
         console.error(e); // supress error
@@ -219,7 +219,7 @@ export class HubService {
       timeout: 5e3,
     });
 
-    const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data, { strict: true });  // remove this if it is too slow
+    const nodes = await yup.array(nodeDtoSchema).defined().validate(res.data, { strict: true });  // skip validate if it is too slow
     const expireAfter = Date.now() + REGISTER_TIMEOUT_IN_MS;
     nodes.forEach(node => {
       node.config.publicUrl = nodeUrl;
