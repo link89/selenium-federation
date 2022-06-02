@@ -36,6 +36,13 @@ npm install -g selenium-federation pm2
 
 该命令在安装`selenium-federation` 同时安装了 `pm2` 用于进程管理(推荐, 但非必要).
 
+安装成功后, 将会增加以下两个全局命令,
+
+```bash
+selenium-federation --help
+selenium-federation-pm2-start --help
+```
+
 如果同时需要使用 `auto-cmd` 所提供的桌面测试能力, 还需要确保安装 `Python3.8` 以及 `auto-cmd`, 这部分内容会在之后完善. (TODO)
 
 ## 配置
