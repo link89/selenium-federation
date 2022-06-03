@@ -45,4 +45,10 @@ provision:
     - download: https://www.7-zip.org/a/7z2107-x64.msi
       cmds:
         - msiexec /i "{download_file_path}" /qn /log 7z-install.log.txt
+
+    # download and unzip ffmpeg on windows 
+    # please ensure you already have 7z installed
+    - download: https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.7z
+      cmds:
+        - "C:\Program Files\7-Zip\7z.exe" e {download_file_path}
     
