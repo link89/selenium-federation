@@ -19,7 +19,7 @@ void (async () => {
       const driver = await remote({ ...opt, capabilities: { browserName, 'sf:browserUUID': browser.config.uuid } });
       await driver.setTimeout({pageLoad: 60e3, script: 60e3, implicit: 60e3});
 
-      await driver.url(`https://bing.com`);
+      await driver.url(`https://html5test.com/`);
       await driver.getTitle();
 
       if (driver.capabilities['se:cdp']) {
@@ -28,7 +28,6 @@ void (async () => {
         const page = (await pt.pages())[0];
         await page.coverage.startJSCoverage();
         await page.coverage.stopJSCoverage();
-        await page.title()
       }
       await new Promise(resolve => setTimeout(resolve, 1e3));
       await driver.deleteSession();
@@ -36,5 +35,5 @@ void (async () => {
     } catch (e) {
       console.error(e);
     }
-  }, { concurrency: 2 });
+  }, { concurrency: 1 });
 })();
