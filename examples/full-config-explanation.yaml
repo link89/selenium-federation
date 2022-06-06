@@ -19,7 +19,7 @@ publicUrl:
 sessionIdleTimeout: 60
 
 
-# Mac concurrency sessions can be run on this node, 
+# Max concurrency sessions can be run on this node, 
 # default: #cpu - 1 
 maxSessions: 5
 
