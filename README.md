@@ -20,7 +20,7 @@ If those are not your cases, then you may consider other tools that implement th
 ## Fetures
 * Compatible with Selenium Webdriver protocol.
 * Support CDP proxy (compatible with `selenium-grid v4`'s).
-* Compatible popular test tools/frameworks like `webdriver.io`, `testcafe`, `puppeteer`, etc.
+* Compatible with popular test tools/frameworks like `webdriver.io`, `testcafe`, `puppeteer`, `playwright` etc.
 * Support `ansible` style self-provisioning tasks.
 * Support native apps automation via `auto-cmd`.
 

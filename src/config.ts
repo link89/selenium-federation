@@ -69,7 +69,7 @@ export async function getAndInitConfig(): Promise<Configuration> {
       const taskDigestFile = join(provisionFolder, `provision-task-${taskDigest}.sha256.digest`);
       if (fs.existsSync(taskDigestFile) && !task.neverSkip) {
         log(chalk.yellow(`>> detect ${taskDigestFile}, skip task: ${taskString}`));
-        log(chalk.bgYellow(`>>> you may set neverSkip to true or remove ${taskDigestFile} to run this task`));
+        log(chalk.yellowBright(`>>> you may set neverSkip to true or remove ${taskDigestFile} to run this task`));
         continue;
       }
       log(chalk.green(`>> start to run task: ${taskString}`));
