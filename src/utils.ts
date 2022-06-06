@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import * as stream from 'stream';
 import { dirname, join } from 'path';
 import { nanoid } from "nanoid";
+import { promisify } from 'util';
 
 interface IRetryOption {
   max?: number;
@@ -234,7 +235,7 @@ export async function saveUrlToFile(url: string, path: string) {
     responseType: 'stream',
   }).then(res => {
     res.data.pipe(writer);
-    return stream.promises.finished(writer);
+    return promisify(stream.finished)(writer);
   });
   await fs.promises.rename(tmpFile, path);
 }

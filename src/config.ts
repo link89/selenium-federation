@@ -5,7 +5,7 @@ import { isHttpUrl, readPathOrUrl, saveUrlToFile } from './utils';
 import * as fs from 'fs';
 import { join } from 'path';
 import { basename } from 'path';
-import { createHash } from 'node:crypto';
+import { createHash } from 'crypto';
 import { exec } from 'shelljs';
 import chalk from 'chalk';
 const log = console.log;

@@ -33,7 +33,7 @@ provision:
   tasks:
     - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_mac64.zip
       cmds:
-        - unzip -f {download_file_path} 
+        - unzip -o {download_file_path}
 
     - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-macos.tar.gz
       cmds:
@@ -41,4 +41,4 @@ provision:
 
     - download: https://msedgedriver.azureedge.net/102.0.1249.0/edgedriver_mac64.zip
       cmds:
-        - unzip -f {download_file_path} 
+        - unzip -o {download_file_path}
