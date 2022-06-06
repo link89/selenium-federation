@@ -89,7 +89,7 @@ mkdir sf-workspace
 cd sf-workspace
 
 # Run service in pm2
-sf-pm2-start --name sf-local01 -c https://raw.githubusercontent.com/link89/selenium-federation/main/examples/sample-mac-local-config.yaml 
+sf-pm2-start --name sf-local-01 -c local-config.yaml 
 
 # check service status in pm2
 pm2 ps
@@ -98,7 +98,7 @@ pm2 ps
 Compare with the previous example, everything is the same except a requirement field `--name` to specify an app name in the `pm2`. If you want to set more `pm2 start` options, you can pass them after `--`, for example
 
 ```bash
-sf-pm2-start --name sf-local01 -c https://raw.githubusercontent.com/link89/selenium-federation/main/examples/sample-mac-local-config.yaml -- --restart-delay=3000
+sf-pm2-start --name sf-local-01 -c local-config.yaml -- --restart-delay=3000
 ```
 
 ### Use Provision Task to Download Webdriver Binary
