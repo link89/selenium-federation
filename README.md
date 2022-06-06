@@ -40,7 +40,7 @@ sf-pm2-start --help
 
 ### Run Service in Foreground
 
-You can use the following command to start `selenium-federation` in foreground. It's suggested to create a dedicated workspace to run the service, as it may create some folders and download resources to the current directory.
+You can use the following command to start `selenium-federation` in foreground. It's suggested to create a dedicated workspace to run the service, as it may create some folders and download resources to the current working directory.
 
 ```bash
 # Create workspace
