@@ -7,6 +7,7 @@
 * You are in a development team that need to maintain a medium scale (less than 50 devices) test infrustructure by yourself.
 * Your tests need to be executed on different OS and browsers.
 * You have electron apps or native apps to test.
+* You are a hacker that want to make your hands dirty to do something cool.
 
 If those are not your cases, then you may consider other tools that implement the Selenium protocol.
 
@@ -32,7 +33,7 @@ If those are not your cases, then you may consider other tools that implement th
 ```bash
 npm install -g selenium-federation pm2
 
-# print help
+# Run the following command to read manuals
 selenium-federation --help
 sf-pm2-start --help
 ```
@@ -74,5 +75,64 @@ const opt = {
   await new Promise(resolve => setTimeout(resolve, 5e3));
   await driver.deleteSession();
 })();
-
 ```
+
+### Run service in background with pm2
+
+Foreground run is good for local use as it prints logs in screen directly. But if you are to setup a test infrusturcture that will run for a long time, we provide another command to run service in `pm2`.
+
+```bash
+sf-pm2-start --name sf-local01 -c https://raw.githubusercontent.com/link89/selenium-federation/main/examples/sample-mac-local-config.yaml 
+
+# check service status in pm2
+pm2 ps
+```
+
+Compare with the previous example, everything is the same except a requirement field `--name` to specify an app name in the `pm2`. If you want to set more `pm2 start` options, you can pass them after `--`, for example
+
+```bash
+sf-pm2-start --name sf-local01 -c https://raw.githubusercontent.com/link89/selenium-federation/main/examples/sample-mac-local-config.yaml -- --restart-delay=3000
+```
+
+### Use Provision Task to Download Webdriver Binary
+
+`provision task` is one of the key features of `selenium-federation` to simplify the OPS tasks. The most common use case is to download webdriver binary file automatically. For example,
+
+```yaml
+drivers:
+  - browserName: chrome
+    browserVersion: stable
+    maxSessions: 2
+    webdriver:
+      path: ./chromedriver.exe  # reference to the binary file that download and unpacked by provision task
+      args: ["--verbose"]
+
+  - browserName: MicrosoftEdge
+    maxSessions: 2
+    webdriver:
+      path: ./msedgedriver.exe
+
+  - browserName: firefox
+    maxSessions: 2
+    webdriver:
+      path: ./geckodriver.exe
+
+provision:
+  tasks:
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/101.0.4951.41/chromedriver_win32.zip
+      cmds:
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .  # unpack to workspace
+
+    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip 
+      cmds:
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
+
+    - download: https://msedgedriver.azureedge.net/102.0.1245.30/edgedriver_win64.zip
+      cmds:
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
+```
+
+Here we define 3 tasks to download webdirver binary for `Chrome`, `Firefox` and `Microsoft Edge` browsers and use them in `drivers[n].webdirver.path`.
+
+More example could be found in [provision-task-gallery](/examples/provision-tasks-gallery.yaml).
+
