@@ -1,0 +1,76 @@
+# Define the role of the service, only have 2 valid value: local or hub
+role: local
+
+# The host and port that you want the service to listen to.
+# default host: 0.0.0.0
+# default port: 4444 (follow the convention of selenium-grid)
+host: 0.0.0.0
+port: 4444
+
+# This field is useful when selenium-federation cannot decide its public IP and port correctly.
+# You don't need to set this in most case. 
+# If you need to use this option, please set a url that can be accessed by other machines.
+# default: null
+# example: http://192.168.1.101:4444
+publicUrl: 
+
+# selenium-federation will kill session if no requests is sent to the session longer then this timeout.
+# default: 60 (seconds)
+sessionIdleTimeout: 60
+
+
+# Mac concurrency sessions can be run on this node, 
+# default: #cpu - 1 
+maxSessions: 5
+
+# Register this service to a hub node
+# default: null
+# example: http://192.168.1.100:4444
+registerTo: 
+
+
+# Tags define here can be used to match capabilities via `sf:platformTags` 
+# default: null
+tags:
+  - mac
+  - mac-intel
+  - osx-15
+
+# List of driver configurations
+drivers:
+
+  - browserName: chrome  # Required, name of browser. 
+    browserVersion: stable  # Optional, version of browser
+    maxSessions: 2  # Optional, max browser sessions that allow to open at the same time, default value: 1 
+    sessionIdleTimeout: 60  # Optional, override the global timeout
+    webdriver:  # Required
+      path: ./chromedriver.exe  # Required, path to the webdriver binary, can be global command, relative/absolute path and URL
+      args: ["--verbose"]  # Optional, addtional arguments that you want to use when start webdriver process
+      envs:  # Optional, addtional environment variable that you want to pass to webdriver process
+        TMP: /tmp
+
+  - browserName: MicrosoftEdge  # anther driver configuration ...
+    maxSessions: 2
+    webdriver:
+      path: ./msedgedriver.exe
+
+  - browserName: firefox 
+    maxSessions: 2
+    webdriver:
+      path: ./geckodriver.exe
+
+
+# List of provision tasks
+provision:
+  tasks:
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/101.0.4951.41/chromedriver_win32.zip
+      cmds:
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
+
+    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip 
+      cmds:
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
+
+    - download: https://msedgedriver.azureedge.net/102.0.1245.30/edgedriver_win64.zip
+      cmds:
+        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .

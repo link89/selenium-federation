@@ -54,7 +54,9 @@ selenium-federation -c https://raw.githubusercontent.com/link89/selenium-federat
 selenium-federation -c https://raw.githubusercontent.com/link89/selenium-federation/main/examples/sample-mac-local-config.yaml 
 ```
 
-And now your can run test on it with your favorite framework with the url `http://localhost:4444/wd/hub`. The base url `/wd/hbb` is the same as `selenium-grid`'s for the sake of compatiblity. Here is a simple example written with `webdriver.io`.
+`selenium-federation` only have one option to load configuration from local file or remote URL. All configuration options can be found in [full-config-explanation](/examples/full-config-explanation.yaml)
+
+And now your can run test on it with your favorite framework with the url `http://localhost:4444/wd/hub`. The base url `/wd/hub` is the same as `selenium-grid`'s for the sake of compatiblity. Here is a simple example written with `webdriver.io`.
 
 ```typescript
 import { remote } from "webdriverio";
@@ -79,9 +81,14 @@ const opt = {
 
 ### Run service in background with pm2
 
-Foreground run is good for local use as it prints logs in screen directly. But if you are to setup a test infrusturcture that will run for a long time, we provide another command to run service in `pm2`.
+Foreground run is good for local debug as it prints logs in screen directly. But if you are to setup a test infrusturcture that will run for a long time, we provide another command to run service in `pm2`.
 
 ```bash
+# Do forget to create workspace
+mkdir sf-workspace
+cd sf-workspace
+
+# Run service in pm2
 sf-pm2-start --name sf-local01 -c https://raw.githubusercontent.com/link89/selenium-federation/main/examples/sample-mac-local-config.yaml 
 
 # check service status in pm2
@@ -133,6 +140,6 @@ provision:
 ```
 
 Here we define 3 tasks to download webdirver binary for `Chrome`, `Firefox` and `Microsoft Edge` browsers and use them in `drivers[n].webdirver.path`.
-
 More example could be found in [provision-task-gallery](/examples/provision-tasks-gallery.yaml).
+
 
