@@ -101,9 +101,23 @@ Compare with the previous example, everything is the same except a requirement f
 sf-pm2-start --name sf-local-01 -c local-config.yaml -- --restart-delay=3000
 ```
 
+### Start hub service
+
+To start a hub service is very simple, here is a typeical configuration of hub.
+```yaml
+role: hub
+host: 0.0.0.0
+port: 4444
+
+fileServer: 
+  root: .
+```
+Here we also start a `fileServer` with the hub node, you can access the file service via http://localhost:4444/fs/
+
+
 ### Use Provision Task to Download Webdriver Binary
 
-`provision task` is one of the key features of `selenium-federation` to simplify the OPS tasks. The most common use case is to download webdriver binary file automatically. For example,
+`provision task` is one of the key features of `selenium-federation` to simplify the OPS tasks. The most common use case is to download webdriver binary automatically. For example,
 
 ```yaml
 drivers:
@@ -141,5 +155,3 @@ provision:
 
 Here we define 3 tasks to download webdirver binary for `Chrome`, `Firefox` and `Microsoft Edge` browsers and use them in `drivers[n].webdirver.path`.
 More example could be found in [provision-task-gallery](/examples/provision-tasks-gallery.yaml).
-
-
