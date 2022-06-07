@@ -1,63 +1,71 @@
-# Define the role of the service, only have 2 valid value: local or hub
+# Required. Define the role of the service: local or hub.
 role: local
 
-# The host and port that you want the service to listen to.
+# Optional. Define the host and port that you want the service to listen to.
 # default host: 0.0.0.0
 # default port: 4444 (follow the convention of selenium-grid)
 host: 0.0.0.0
 port: 4444
 
-# This field is useful when selenium-federation cannot decide its public IP and port correctly.
-# You don't need to set this in most case. 
+# Optional. This field is useful when selenium-federation cannot decide its public IP and port correctly.
+# You don't need to set this in most case.
 # If you need to use this option, please set a url that can be accessed by other machines.
 # default: null
 # example: http://192.168.1.101:4444
-publicUrl: 
+publicUrl:
 
-# selenium-federation will kill session if no requests is sent to the session longer then this timeout.
+# Optional. selenium-federation will kill session if no requests is sent to the session longer then this timeout.
 # default: 60 (seconds)
 sessionIdleTimeout: 60
 
 
-# Max concurrency sessions can be run on this node, 
-# default: #cpu - 1 
+# Optional. Max concurrency sessions can be run on this node,
+# default: #cpu - 1
 maxSessions: 5
 
-# Register this service to a hub node
+# Optional. Register this service to a hub node
 # default: null
 # example: http://192.168.1.100:4444
-registerTo: 
+registerTo:
 
 
-# Tags define here can be used to match capabilities via `sf:platformTags` 
+# Optional. Tags define here can be used to match capabilities via `sf:platformTags`
 # default: null
 tags:
   - mac
   - mac-intel
   - osx-15
 
-# List of driver configurations
+# Optional. Directory to save temporary files
+# default: ./tmp
+tmpFolder:
+
+# Required(local mode only). List of driver configurations
 drivers:
 
-  - browserName: chrome  # Required, name of browser. 
+  - browserName: chrome  # Required, name of browser.
     browserVersion: stable  # Optional, version of browser
-    maxSessions: 2  # Optional, max browser sessions that allow to open at the same time, default value: 1 
-    sessionIdleTimeout: 60  # Optional, override the global timeout
+    maxSessions: 2  # Optional, max browser sessions that allow to open at the same time, default value: 1
+    sessionIdleTimeout: 60  # Optional, override the global sessionIdleTimeout
+    cleanUserData: true  # Optional, clean user data after session close, default value: true
+    tags:
+      - v100
     webdriver:  # Required
-      path: ./chromedriver.exe  # Required, path to the webdriver binary, can be global command, relative/absolute path and URL
+      path: ./chromedrive  # Required, path to the webdriver binary, can be global command, relative/absolute path and URL
       args: ["--verbose"]  # Optional, addtional arguments that you want to use when start webdriver process
       envs:  # Optional, addtional environment variable that you want to pass to webdriver process
         TMP: /tmp
 
-  - browserName: MicrosoftEdge  # anther driver configuration ...
+  - browserName: chrome  # anther driver configuration
+    browserVersion: beta
     maxSessions: 2
+    tags:
+      - v101
     webdriver:
-      path: ./msedgedriver.exe
-
-  - browserName: firefox 
-    maxSessions: 2
-    webdriver:
-      path: ./geckodriver.exe
+      path: ./chromedrive-101
+    defaultCapabilities:  # Optional, default capabilities. It will be merged with the requests capabilites
+      "goog:chromeOptions":
+        binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
 
 
 # List of provision tasks
@@ -67,7 +75,7 @@ provision:
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
 
-    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip 
+    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
 
