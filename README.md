@@ -54,7 +54,7 @@ selenium-federation -c https://raw.githubusercontent.com/link89/selenium-federat
 selenium-federation -c https://raw.githubusercontent.com/link89/selenium-federation/main/examples/sample-mac-local-config.yaml 
 ```
 
-`selenium-federation` only have one option to load configuration from local file or remote URL. All configuration options can be found in [full-config-explanation](/examples/full-config-explanation.yaml)
+`selenium-federation` only have one option to load configuration from local file or remote URL. All configuration options can be found in [full-config-example](/examples/full-config-example.yaml)
 
 And now your can run test on it with your favorite framework with the url `http://localhost:4444/wd/hub`. The base url `/wd/hub` is the same as `selenium-grid`'s for the sake of compatiblity. Here is a simple example written with `webdriver.io`.
 
