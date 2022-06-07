@@ -118,6 +118,8 @@ export class ResponseCapabilities {
       newResponseData.capabilities['se:cdp'] = this.cdpEndpoint;
       newResponseData.capabilities['se:cdpVersion'] = 'FIXME';  // FIXME
     }
+    // set node session url
+    newResponseData.capabilities['sf:sessionUrl'] =  `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
     return raw;
   }
 }
