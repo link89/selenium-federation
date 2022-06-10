@@ -12,8 +12,7 @@
   ],
   "bin": {
     "selenium-federation": "./bin/selenium-federation",
-    "selenium-federation-check": "./bin/selenium-federation-check",
-    "selenium-federation-pm2-start": "./bin/selenium-federation-pm2-start"
+    "sf-pm2-start": "./bin/sf-pm2-start"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
