@@ -36,6 +36,7 @@
   "homepage": "https://github.com/link89/selenium-federation#readme",
   "devDependencies": {
     "@types/bluebird": "^3.5.33",
+    "@types/chrome-remote-interface": "^0.31.4",
     "@types/http-proxy": "^1.17.9",
     "@types/koa": "^2.11.6",
     "@types/koa__router": "^8.0.11",
@@ -46,6 +47,7 @@
     "@types/shelljs": "^0.8.11",
     "@types/uuid": "^8.3.0",
     "@types/yargs": "^15.0.10",
+    "chrome-remote-interface": "^0.31.2",
     "ts-node": "^10.8.0",
     "typescript": "^4.7.2",
     "webdriverio": "^7.19.7"
