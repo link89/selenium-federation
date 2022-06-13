@@ -68,42 +68,41 @@ export class RequestCapabilities {
 
 export class ResponseCapabilities {
 
-  public readonly rawResponseData: any;
+  public readonly rawResponseCapabilities: any;
   public readonly sessionId: string;
   public readonly browserName: string;
   public readonly browserVersion: string;
 
   constructor(private rawResponse: any, private request: RequestCapabilities) {
-    this.rawResponseData = rawResponse?.value?.capabilities || rawResponse?.value; //  w3c format || json wired format
+    this.rawResponseCapabilities = rawResponse?.value?.capabilities || rawResponse?.value; //  w3c format || json wired format
     this.sessionId = rawResponse.sessionId || rawResponse.value.sessionId;  //  w3c format || json wired format
 
-    this.browserName = this.rawResponseData?.browserName;
-    this.browserVersion = this.rawResponseData?.browserVersion;
+    this.browserName = this.rawResponseCapabilities?.browserName;
+    this.browserVersion = this.rawResponseCapabilities?.browserVersion;
   }
-
 
   get cdpEndpoint() {
     return `${this.request.getSessionBaseUrl(true)}/${this.sessionId}/se/cdp`;
   }
 
   get chromeDebuggerAddress() {
-    return this.rawResponseData?.["goog:chromeOptions"]?.debuggerAddress;
+    return this.rawResponseCapabilities?.["goog:chromeOptions"]?.debuggerAddress;
   }
 
   get chromeUserDataDir() {
-    return this.rawResponseData?.chrome?.userDataDir;
+    return this.rawResponseCapabilities?.chrome?.userDataDir;
   }
 
   get msEdgeDebuggerAddress() {
-    return this.rawResponseData?.["ms:edgeOptions"]?.debuggerAddress;
+    return this.rawResponseCapabilities?.["ms:edgeOptions"]?.debuggerAddress;
   }
 
   get msEdgeUserDataDir() {
-    return this.rawResponseData?.capabilities?.msedge?.userDataDir;
+    return this.rawResponseCapabilities?.capabilities?.msedge?.userDataDir;
   }
 
   get firefoxProfilePath() {
-    return this.rawResponseData?.['moz:profile'];
+    return this.rawResponseCapabilities?.['moz:profile'];
   }
 
   get isCdpSupported(): boolean {
@@ -111,17 +110,17 @@ export class ResponseCapabilities {
   }
 
   get jsonObject() {
-    const raw = _.cloneDeep(this.rawResponse);
+    const copiedResponse = _.cloneDeep(this.rawResponse);
     // patch capabilities
-    const newResponseData = raw?.value?.capabilities || raw?.value;
+    const copiedResponseCapabilities = copiedResponse?.value?.capabilities || copiedResponse?.value;
     // set cdp endpoint
     if (this.isCdpSupported) {
-      newResponseData['se:cdp'] = this.cdpEndpoint;
-      newResponseData['se:cdpVersion'] = 'FIXME';  // FIXME
+      copiedResponseCapabilities['se:cdp'] = this.cdpEndpoint;
+      copiedResponseCapabilities['se:cdpVersion'] = 'FIXME';  // FIXME
     }
     // set node session url
-    newResponseData['sf:sessionUrl'] =  `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
-    return raw;
+    copiedResponseCapabilities['sf:sessionUrl'] =  `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
+    return copiedResponse;
   }
 }
 
