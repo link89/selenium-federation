@@ -1,4 +1,5 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { v4 as uuidv4 } from 'uuid';
 import { retry } from "./utils";
 import { ChildProcess } from 'child_process';
 import { DriverConfiguration, SessionDto } from "./types";
@@ -24,7 +25,7 @@ export class RequestCapabilities {
         'https': 'wss',
       }[proto] || 'ws';
     }
-    return `${proto}://${this.request.host}${this.request.path}`;
+    return `${proto}://${this.request.host}${_.trimEnd(this.request.path, '/')}`;
   }
 
   get browserName() { return this.getValue('browserName'); }
@@ -67,38 +68,34 @@ export class RequestCapabilities {
 
 export class ResponseCapabilities {
 
-  private rawResponseData: any
+  public readonly rawResponseData: any;
+  public readonly sessionId: string;
+  public readonly browserName: string;
+  public readonly browserVersion: string;
 
   constructor(private rawResponse: any, private request: RequestCapabilities) {
-    this.rawResponseData = rawResponse?.value || rawResponse; //  w3c format || json wired format
+    this.rawResponseData = rawResponse?.value?.capabilities || rawResponse?.value; //  w3c format || json wired format
+    this.sessionId = rawResponse.sessionId || rawResponse.value.sessionId;  //  w3c format || json wired format
+
+    this.browserName = this.rawResponseData?.browserName;
+    this.browserVersion = this.rawResponseData?.browserVersion;
   }
 
-  get sessionId() {
-    return this.rawResponseData?.sessionId;
-  }
-
-  get sessionBaseUrl() {
-    return `${this.request}`
-  }
-
-  get browserVersion() {
-    return this.rawResponseData?.capabilities?.browserVersion;
-  }
 
   get cdpEndpoint() {
     return `${this.request.getSessionBaseUrl(true)}/${this.sessionId}/se/cdp`;
   }
 
   get chromeDebuggerAddress() {
-    return this.rawResponseData?.capabilities?.["goog:chromeOptions"]?.debuggerAddress;
+    return this.rawResponseData?.["goog:chromeOptions"]?.debuggerAddress;
   }
 
   get chromeUserDataDir() {
-    return this.rawResponseData?.capabilities?.chrome?.userDataDir;
+    return this.rawResponseData?.chrome?.userDataDir;
   }
 
   get msEdgeDebuggerAddress() {
-    return this.rawResponseData?.capabilities?.["ms:edgeOptions"]?.debuggerAddress;
+    return this.rawResponseData?.["ms:edgeOptions"]?.debuggerAddress;
   }
 
   get msEdgeUserDataDir() {
@@ -106,20 +103,24 @@ export class ResponseCapabilities {
   }
 
   get firefoxProfilePath() {
-    return this.rawResponseData?.capabilities?.['moz:profile'];
+    return this.rawResponseData?.['moz:profile'];
+  }
+
+  get isCdpSupported(): boolean {
+    return Boolean(this.chromeDebuggerAddress || this.msEdgeDebuggerAddress || 'nodejs' == this.browserName);
   }
 
   get jsonObject() {
     const raw = _.cloneDeep(this.rawResponse);
     // patch capabilities
-    const newResponseData = raw.value || raw;
+    const newResponseData = raw?.value?.capabilities || raw?.value;
     // set cdp endpoint
-    if (this.chromeDebuggerAddress || this.msEdgeDebuggerAddress) {
-      newResponseData.capabilities['se:cdp'] = this.cdpEndpoint;
-      newResponseData.capabilities['se:cdpVersion'] = 'FIXME';  // FIXME
+    if (this.isCdpSupported) {
+      newResponseData['se:cdp'] = this.cdpEndpoint;
+      newResponseData['se:cdpVersion'] = 'FIXME';  // FIXME
     }
     // set node session url
-    newResponseData.capabilities['sf:sessionUrl'] =  `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
+    newResponseData['sf:sessionUrl'] =  `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
     return raw;
   }
 }
@@ -145,6 +146,7 @@ export function createSession(
     case 'MicrosoftEdge': return new ChromiumSession(request, webdriverConfiguration, processManager, axios);
     case 'firefox': return new FirefoxSession(request, webdriverConfiguration, processManager, axios);
     case 'safari': return new CommonWebdriverSession(request, webdriverConfiguration, processManager, axios);
+    case 'nodejs': return new NodeJsSession(request, webdriverConfiguration, processManager, axios);
     default: throw Error(`browser ${request.browserName} is not supported`);
   }
 }
@@ -179,9 +181,9 @@ abstract class AbstractWebdriveSession implements ISession {
 
   async start() {
     const { port, webdriverProcess } = await this.processManager.spawnWebdriverProcess({
-      path: this.webdriverConfiguration.webdriver.path,
-      envs: { ...this.webdriverConfiguration.webdriver.envs, ...this.request.environmentVariables },
-      args: this.webdriverConfiguration.webdriver.args,
+      path: this.webdriverConfiguration.command.path,
+      envs: { ...this.webdriverConfiguration.command.envs, ...this.request.environmentVariables },
+      args: this.webdriverConfiguration.command.args,
     });
     // TODO: handle webdriver error properly
     // The suggested way is to accept an error handler when session is created,
@@ -287,5 +289,82 @@ class ChromiumSession extends CommonWebdriverSession {
 class FirefoxSession extends CommonWebdriverSession {
   get userDataDir() {
     return this.response?.firefoxProfilePath;
+  }
+}
+
+
+class NodeJsSession implements ISession {
+  public id: string;
+  protected process?: ChildProcess;
+  protected port?: number;
+  public response?: ResponseCapabilities;
+
+  constructor(
+    public request: RequestCapabilities,
+    protected webdriverConfiguration: DriverConfiguration,
+    protected processManager: ProcessManager,
+    protected axios: AxiosInstance,
+  ) {
+    this.id = uuidv4();
+  }
+
+  async start() {
+    const { port, nodejsProcess} = await this.processManager.spawnNodeJsProcess({
+      path: this.webdriverConfiguration.command.path,
+      envs: { ...this.webdriverConfiguration.command.envs, ...this.request.environmentVariables },
+      args: this.webdriverConfiguration.command.args,
+    });
+    // TODO: handle webdriver error properly
+    // The suggested way is to accept an error handler when session is created,
+    // which can allow the caller to decide what to do when unexpected error happens.
+    nodejsProcess.on('error', (err) => console.error(err));
+    this.port = port;
+    this.process = nodejsProcess;
+    this.response = new ResponseCapabilities({
+      value: {
+        sessionId: this.id,
+        capabilities: {
+          browserName: 'nodejs',
+        }
+      }
+    }, this.request);
+    return this.response;
+  }
+
+  public async forward(request: AxiosRequestConfig): Promise<any> {
+    throw Error(`nodejs session not support webdriver protocols`)
+  }
+
+  public async stop() {
+    await this.kill();
+  }
+
+  public async kill() {
+    if (this.process) {
+      try {
+        this.processManager.killProcessGroup(this.process)
+      } catch (e) {
+        console.warn(`ingore error during kill process`, e);
+      }
+    }
+  }
+
+  async getCdpEndpoint() {
+    const res = await retry(async () => {
+      return await this.axios.request({
+        baseURL: `http://localhost:${this.port}`,
+        url: '/json',
+        method: 'GET',
+      });
+    }, {max: 5, interval: 1e3});
+
+    return res!.data?.[0]?.webSocketDebuggerUrl as string;
+  }
+
+  get jsonObject(): SessionDto {
+    return {
+      id: this.id,
+      responseCapabilities: this.response?.jsonObject
+    }
   }
 }

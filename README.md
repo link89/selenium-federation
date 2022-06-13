@@ -124,18 +124,18 @@ drivers:
   - browserName: chrome
     browserVersion: stable
     maxSessions: 2
-    webdriver:
+    command:
       path: ./chromedriver.exe  # reference to the binary file that download and unpacked by provision task
       args: ["--verbose"]
 
   - browserName: MicrosoftEdge
     maxSessions: 2
-    webdriver:
+    command:
       path: ./msedgedriver.exe
 
   - browserName: firefox
     maxSessions: 2
-    webdriver:
+    command:
       path: ./geckodriver.exe
 
 provision:

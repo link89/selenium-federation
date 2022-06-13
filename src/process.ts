@@ -4,6 +4,12 @@ import getPort from "get-port";
 import { Configuration } from "./types";
 import { retry } from "./utils";
 
+interface ProcessParams {
+  path: string;
+  args: string[];
+  envs: { [key: string]: string };
+}
+
 export class AutoCmdProcess {
   public readonly axios: AxiosInstance;
 
@@ -54,7 +60,7 @@ export class ProcessManager {
     }
   }
 
-  async spawnWebdriverProcess(params: { path: string, args: string[], envs: { [key: string]: string } }) {
+  async spawnWebdriverProcess(params: ProcessParams) {
     const port = await getPort();
     let path = params.path;
     console.log(`start webdriver process ${path} ${params.args}`);
@@ -63,6 +69,17 @@ export class ProcessManager {
       env: { ...process.env, ...params.envs, }
     });
     return { port, webdriverProcess };
+  }
+
+  async spawnNodeJsProcess(params: ProcessParams) {
+    const port = await getPort();
+    let path = params.path;
+    console.log(`start nodejs process ${path} ${params.args}`);
+    const nodejsProcess = spawn(path, [...params.args, `--inspect=:${port}`, `-i`], {
+      stdio: ['pipe', 1, 2], detached: !this.isWindows, windowsHide: this.isWindows,
+      env: { ...process.env, ...params.envs, }
+    });
+    return { port, nodejsProcess };
   }
 
   async getOrSpawnAutoCmdProcess() {

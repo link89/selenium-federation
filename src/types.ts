@@ -4,7 +4,7 @@ import { getW3CPlatformName } from './utils';
 import { v4 as uuidv4 } from 'uuid';
 import type { Context } from 'koa';
 
-const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge'];
+const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge', 'nodejs'];
 const ROLES = ['local', 'hub'];
 
 const stringArray = yup.array(yup.string().required()).default([]);
@@ -20,7 +20,7 @@ export const driverConfigurationSchema = yup.object({
   sessionIdleTimeout: yup.number(),
   uuid: yup.string().default(() => uuidv4()),
   tags: yup.array(yup.string().defined()).default([]),
-  webdriver: yup.object({
+  command: yup.object({
     path: yup.string().defined(),
     args: yup.array(yup.string().defined()).default([]),
     envs: yup.object().default({}),
