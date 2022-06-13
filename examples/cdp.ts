@@ -1,15 +1,6 @@
 import CDP from 'chrome-remote-interface';
 import axios from "axios";
 
-const opt = {
-  hostname: 'localhost',
-  port: 4444,
-  path: '/wd/hub',
-  capabilities: {
-    browserName: 'chrome',
-  }
-};
-
 (async () => {
   const res = await axios.request({
     method: 'POST',
@@ -31,7 +22,7 @@ const opt = {
       expression: `console.log("hello world")`,
     });
 
-t   } finally {
+  } finally {
     await axios.request({
       method: 'DELETE',
       url: `http://localhost:4444/wd/hub/session/${res.data.sessionId}`,
