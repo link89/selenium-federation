@@ -1,4 +1,5 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { v4 as uuidv4 } from 'uuid';
 import { retry } from "./utils";
 import { ChildProcess } from 'child_process';
 import { DriverConfiguration, SessionDto } from "./types";
@@ -77,8 +78,8 @@ export class ResponseCapabilities {
     return this.rawResponseData?.sessionId;
   }
 
-  get sessionBaseUrl() {
-    return `${this.request}`
+  get browserName() {
+    return this.rawResponseData?.capabilities?.browserName;
   }
 
   get browserVersion() {
@@ -109,12 +110,16 @@ export class ResponseCapabilities {
     return this.rawResponseData?.capabilities?.['moz:profile'];
   }
 
+  get isCdpSupported(): boolean {
+    return Boolean(this.chromeDebuggerAddress || this.msEdgeDebuggerAddress || 'nodejs' == this.browserName);
+  }
+
   get jsonObject() {
     const raw = _.cloneDeep(this.rawResponse);
     // patch capabilities
     const newResponseData = raw.value || raw;
     // set cdp endpoint
-    if (this.chromeDebuggerAddress || this.msEdgeDebuggerAddress) {
+    if (this.isCdpSupported) {
       newResponseData.capabilities['se:cdp'] = this.cdpEndpoint;
       newResponseData.capabilities['se:cdpVersion'] = 'FIXME';  // FIXME
     }
@@ -145,6 +150,7 @@ export function createSession(
     case 'MicrosoftEdge': return new ChromiumSession(request, webdriverConfiguration, processManager, axios);
     case 'firefox': return new FirefoxSession(request, webdriverConfiguration, processManager, axios);
     case 'safari': return new CommonWebdriverSession(request, webdriverConfiguration, processManager, axios);
+    case 'nodejs': return new NodeJsSession(request, webdriverConfiguration, processManager, axios);
     default: throw Error(`browser ${request.browserName} is not supported`);
   }
 }
@@ -287,5 +293,77 @@ class ChromiumSession extends CommonWebdriverSession {
 class FirefoxSession extends CommonWebdriverSession {
   get userDataDir() {
     return this.response?.firefoxProfilePath;
+  }
+}
+
+
+class NodeJsSession implements ISession {
+  public id: string;
+  protected process?: ChildProcess;
+  protected port?: number;
+  public response?: ResponseCapabilities;
+
+  constructor(
+    public request: RequestCapabilities,
+    protected webdriverConfiguration: DriverConfiguration,
+    protected processManager: ProcessManager,
+    protected axios: AxiosInstance,
+  ) {
+    this.id = uuidv4();
+  }
+
+  async start() {
+    const { port, nodejsProcess} = await this.processManager.spawnNodeJsProcess({
+      path: this.webdriverConfiguration.webdriver.path,
+      envs: { ...this.webdriverConfiguration.webdriver.envs, ...this.request.environmentVariables },
+      args: this.webdriverConfiguration.webdriver.args,
+    });
+    // TODO: handle webdriver error properly
+    // The suggested way is to accept an error handler when session is created,
+    // which can allow the caller to decide what to do when unexpected error happens.
+    nodejsProcess.on('error', (err) => console.error(err));
+    this.port = port;
+    this.process = nodejsProcess;
+    this.response = new ResponseCapabilities({
+      sessionId: this.id,
+      capabilities: {
+        browserName: 'nodejs',
+      }
+    }, this.request);
+    return this.response;
+  }
+
+  public async forward(request: AxiosRequestConfig): Promise<any> {
+    throw Error(`nodejs session not support webdriver protocols`)
+  }
+
+  public async stop() {
+    await this.kill();
+  }
+
+  public async kill() {
+    if (this.process) {
+      try {
+        this.processManager.killProcessGroup(this.process)
+      } catch (e) {
+        console.warn(`ingore error during kill process`, e);
+      }
+    }
+  }
+
+  async getCdpEndpoint() {
+    const res = await this.axios.request({
+      baseURL: `http://localhost:${this.port}`,
+      url: '/json',
+      method: 'GET',
+    });
+    return res.data?.[0]?.webSocketDebuggerUrl as string;
+  }
+
+  get jsonObject(): SessionDto {
+    return {
+      id: this.id,
+      responseCapabilities: this.response?.jsonObject
+    }
   }
 }
