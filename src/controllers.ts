@@ -2,7 +2,7 @@ import { AxiosRequestConfig, AxiosResponse } from "axios";
 import { LocalService, HubService, TerminateOptions } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
-import { createProxyServer } from 'http-proxy';
+import Server from 'http-proxy';
 import { Duplex } from "stream";
 import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
@@ -114,7 +114,11 @@ export class LocalController implements IController {
 
   constructor(
     private readonly localService: LocalService,
-  ) { }
+    private proxy: Server,
+  ) {
+    this.proxy.on('error', (err) => console.error(err));
+    this.proxy.on('econnreset', (err) => console.error(err));
+  }
 
   onTermiateRequest: RequestHandler = async (ctx, next) => {
     const query = ctx.request.query;
@@ -195,20 +199,14 @@ export class LocalController implements IController {
       return;
     }
 
-    // FIXME: I'am not sure if the proxy will get reclaimed by the system.
-    // memory leak risk alert!!!
-    const proxy = createProxyServer({
+    // capture socket error, it happens when webdirver close socket connection
+    socket.on('error', (err) => console.error(err));
+
+    logMessage(`create websocket proxy to ${cdpEndpoint}`);
+    this.proxy.ws(req, socket, header, {
       target: cdpEndpoint,
       ws: true,
     });
-
-    // capture socket error, it happens when webdirver close socket connection
-    socket.on('error', (err) => console.error(err));
-    proxy.on('error', (err) => console.error(err));
-    proxy.on('econnreset', (err) => console.error(err));
-
-    logMessage(`create websocket proxy to ${cdpEndpoint}`);
-    proxy.ws(req, socket, header);
   }
 
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {

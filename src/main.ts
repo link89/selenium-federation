@@ -2,6 +2,7 @@ import Koa from "koa";
 import Router from "@koa/router";
 import bodyparser from "koa-bodyparser";
 import logger from "koa-logger";
+import { createProxyServer } from 'http-proxy';
 
 import { getAndInitConfig } from "./config";
 import * as Sentry from "@sentry/node";
@@ -32,7 +33,8 @@ import axios from "axios";
 
     const localService = LocalService.of(config, processManager);
     localService.init();
-    controller = new LocalController(localService);
+    const proxy = createProxyServer({});
+    controller = new LocalController(localService, proxy);
   } else if ('hub' === config.role) {
     const hubService = new HubService(config, axios.create({}));
     controller = new HubController(hubService);
