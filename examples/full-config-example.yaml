@@ -49,9 +49,9 @@ drivers:
     sessionIdleTimeout: 60  # Optional, override the global sessionIdleTimeout
     cleanUserData: true  # Optional, clean user data after session close, default value: true
     tags:
-      - v100
+      - v102
     command:  # Required
-      path: ./chromedrive  # Required, path to the webdriver binary, can be global command, relative/absolute path and URL
+      path: ./chromedrive-102  # Required, path to the webdriver binary, can be global command, relative/absolute path and URL
       args: ["--verbose"]  # Optional, addtional arguments that you want to use when start webdriver process
       envs:  # Optional, addtional environment variable that you want to pass to webdriver process
         TMP: /tmp
@@ -61,9 +61,9 @@ drivers:
     browserVersion: beta
     maxSessions: 2
     tags:
-      - v101
+      - v103
     command:
-      path: ./chromedrive-101
+      path: ./chromedrive-103
     defaultCapabilities:  # Optional, default capabilities. It will be merged with the requests capabilites
       "goog:chromeOptions":
         binary: /Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta
@@ -72,14 +72,12 @@ drivers:
 # List of provision tasks
 provision:
   tasks:
-    - download: https://registry.npmmirror.com/-/binary/chromedriver/101.0.4951.41/chromedriver_win32.zip
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/102.0.5005.61/chromedriver_mac64.zip
       cmds:
-        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
+        - unzip -o {download_file_path}
+        - mv chromedriver chromedriver-102
 
-    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip
+    - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_mac64.zip
       cmds:
-        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
-
-    - download: https://msedgedriver.azureedge.net/102.0.1245.30/edgedriver_win64.zip
-      cmds:
-        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
+        - unzip -o {download_file_path}
+        - mv chromedriver chromedriver-103
