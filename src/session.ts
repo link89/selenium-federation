@@ -25,7 +25,7 @@ export class RequestCapabilities {
         'https': 'wss',
       }[proto] || 'ws';
     }
-    return `${proto}://${this.request.host}${this.request.path}`;
+    return `${proto}://${this.request.host}${_.trimEnd(this.request.path, '/')}`;
   }
 
   get browserName() { return this.getValue('browserName'); }
@@ -321,9 +321,11 @@ class NodeJsSession implements ISession {
     this.port = port;
     this.process = nodejsProcess;
     this.response = new ResponseCapabilities({
-      sessionId: this.id,
-      capabilities: {
-        browserName: 'nodejs',
+      value: {
+        sessionId: this.id,
+        capabilities: {
+          browserName: 'nodejs',
+        }
       }
     }, this.request);
     return this.response;
