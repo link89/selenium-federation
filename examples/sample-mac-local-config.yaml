@@ -5,8 +5,6 @@ port: 4444
 sessionIdleTimeout: 60
 maxSessions: 5
 
-registerTo: http://localhost:5555
-
 drivers:
   - browserName: chrome
     browserVersion: stable
