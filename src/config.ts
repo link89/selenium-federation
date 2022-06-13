@@ -48,8 +48,8 @@ export async function getAndInitConfig(): Promise<Configuration> {
 
     log(chalk.blue.bold(`> download webdrivers...`));
     for (const driver of _config.drivers) {
-      if (!isHttpUrl(driver.webdriver.path)) continue;
-      const webdriverUrl = driver.webdriver.path;
+      if (!isHttpUrl(driver.command.path)) continue;
+      const webdriverUrl = driver.command.path;
       const fileName = getFileNameFromUrl(webdriverUrl);
       const filePath = join(webdriverFolder, fileName);
       if (fs.existsSync(filePath)) {
@@ -59,7 +59,7 @@ export async function getAndInitConfig(): Promise<Configuration> {
       await saveUrlToFile(webdriverUrl, filePath);
       await fs.promises.chmod(filePath, 0o755);  // grant execution permission
       log(chalk.green(`>> success to download ${filePath}`));
-      driver.webdriver.path = filePath;
+      driver.command.path = filePath;
     }
 
     log(chalk.blue.bold('> execute provision tasks...'));

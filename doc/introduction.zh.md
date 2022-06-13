@@ -110,13 +110,13 @@ drivers:
     maxSessions: 2  # 该浏览器的最大并发 session 数
     tags:  # 此标签可在创建 session 时通过 sf:browserTags 匹配
       - primary
-    webdriver:
+    command:
       path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/chromedriver-100  # 指定远程位置,会自动进行下载和使用
 
   - browserName: chrome
     browserVersion: beta
     maxSessions: 2
-    webdriver:
+    command:
       path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/chromedriver-101 
     defaultCapabilities:  # 设定缺省的 capabilities 字段, 典型使用场景包括指定不同版本 chrome 路径, 或者 electron 应用所在路径
       "goog:chromeOptions":
@@ -125,7 +125,7 @@ drivers:
   - browserName: chrome
     browserVersion: canary
     maxSessions: 2
-    webdriver:
+    command:
       path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/chromedriver-102
     defaultCapabilities:
       "goog:chromeOptions":
@@ -133,17 +133,17 @@ drivers:
 
   - browserName: MicrosoftEdge
     maxSessions: 2
-    webdriver:
+    command:
       path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/msedgedriver-100
 
   - browserName: firefox
     maxSessions: 2
-    webdriver:
+    command:
       path: http://192.168.1.100:5555/fs/webdrivers/mac-intel/geckodriver-0.31.0
 
   - browserName: safari
     maxSessions: 1  # safari 该值需要填写1
-    webdriver:
+    command:
       path: safaridriver  # 也可以使用全局命令或者相对/绝对路径
 
 provision:  # 执行配置任务
@@ -159,7 +159,7 @@ provision:  # 执行配置任务
       neverSkip: true  # 每任务执行成功后会生成一个占位文件, 如果该文件存在, 并且任务没有被编辑过, 下次启动 sf 时该任务会自动跳过, 通过设置该字段为 true 强制该任务不被跳过
 ```
 
-各配置项的用途可查看注解. 这里你会留意到在配置文件里推荐 `webdriver.path` 通过 url 指定, `selenium-federation` 会自动下载和使用. 再仔细观察则会发现, 这里的资源地址都位于 `http://192.168.1.100:5555/fs/` 位置下, 回顾上一节的 hub 配置你会发现该文件服务是由 hub 节点提供的, 这是为何 `selenium-federation` 内置了文件服务的原因: 免除您额外安装和配置 nginx/apache 的烦恼. 除了使用内置的文件服务外, 推荐的文件服务包括:
+各配置项的用途可查看注解. 这里你会留意到在配置文件里推荐 `command.path` 通过 url 指定, `selenium-federation` 会自动下载和使用. 再仔细观察则会发现, 这里的资源地址都位于 `http://192.168.1.100:5555/fs/` 位置下, 回顾上一节的 hub 配置你会发现该文件服务是由 hub 节点提供的, 这是为何 `selenium-federation` 内置了文件服务的原因: 免除您额外安装和配置 nginx/apache 的烦恼. 除了使用内置的文件服务外, 推荐的文件服务包括:
 
 * 公司内部的 gitlab 仓库 (最推荐, 便于跟踪变更, 注意权限需要设置为开放否则无法下载)
 * `selenium-federation` hub 节点的文件服务 (最简单, 无需额外安装其它工具或服务)

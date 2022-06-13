@@ -185,9 +185,9 @@ abstract class AbstractWebdriveSession implements ISession {
 
   async start() {
     const { port, webdriverProcess } = await this.processManager.spawnWebdriverProcess({
-      path: this.webdriverConfiguration.webdriver.path,
-      envs: { ...this.webdriverConfiguration.webdriver.envs, ...this.request.environmentVariables },
-      args: this.webdriverConfiguration.webdriver.args,
+      path: this.webdriverConfiguration.command.path,
+      envs: { ...this.webdriverConfiguration.command.envs, ...this.request.environmentVariables },
+      args: this.webdriverConfiguration.command.args,
     });
     // TODO: handle webdriver error properly
     // The suggested way is to accept an error handler when session is created,
@@ -314,9 +314,9 @@ class NodeJsSession implements ISession {
 
   async start() {
     const { port, nodejsProcess} = await this.processManager.spawnNodeJsProcess({
-      path: this.webdriverConfiguration.webdriver.path,
-      envs: { ...this.webdriverConfiguration.webdriver.envs, ...this.request.environmentVariables },
-      args: this.webdriverConfiguration.webdriver.args,
+      path: this.webdriverConfiguration.command.path,
+      envs: { ...this.webdriverConfiguration.command.envs, ...this.request.environmentVariables },
+      args: this.webdriverConfiguration.command.args,
     });
     // TODO: handle webdriver error properly
     // The suggested way is to accept an error handler when session is created,

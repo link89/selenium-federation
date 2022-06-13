@@ -11,18 +11,18 @@ drivers:
   - browserName: chrome
     browserVersion: stable
     maxSessions: 2
-    webdriver:
+    command:
       path: ./chromedriver.exe
       args: ["--verbose"]
 
   - browserName: MicrosoftEdge
     maxSessions: 2
-    webdriver:
+    command:
       path: ./msedgedriver.exe
 
   - browserName: firefox
     maxSessions: 2
-    webdriver:
+    command:
       path: ./geckodriver.exe
 
 provision:
@@ -31,7 +31,7 @@ provision:
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
 
-    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip 
+    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
 

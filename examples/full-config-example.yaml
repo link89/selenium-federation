@@ -50,7 +50,7 @@ drivers:
     cleanUserData: true  # Optional, clean user data after session close, default value: true
     tags:
       - v100
-    webdriver:  # Required
+    command:  # Required
       path: ./chromedrive  # Required, path to the webdriver binary, can be global command, relative/absolute path and URL
       args: ["--verbose"]  # Optional, addtional arguments that you want to use when start webdriver process
       envs:  # Optional, addtional environment variable that you want to pass to webdriver process
@@ -61,7 +61,7 @@ drivers:
     maxSessions: 2
     tags:
       - v101
-    webdriver:
+    command:
       path: ./chromedrive-101
     defaultCapabilities:  # Optional, default capabilities. It will be merged with the requests capabilites
       "goog:chromeOptions":

@@ -33,18 +33,18 @@ provision:
         - brew install google-chrome
 
     # download and unzip chromedriver on windows, same for other drivers
-    # here we suppose webdriver.path should set to ./chromedriver.exe
+    # here we suppose command.path should set to ./chromedriver.exe
     - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_win32.zip
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
-        - move /y chromedriver.exe chromedriver-latest.exe  # (optional) rename after unzip, but don't forget to change webdriver.path to ./chromedirver-latest.exe
+        - move /y chromedriver.exe chromedriver-latest.exe  # (optional) rename after unzip, but don't forget to change command.path to ./chromedirver-latest.exe
 
     # download and unzip chromedriver on mac osx, same for other drivers
-    # here we suppose webdriver.path is set to ./chromedriver
+    # here we suppose command.path is set to ./chromedriver
     - download: https://registry.npmmirror.com/-/binary/chromedriver/103.0.5060.24/chromedriver_mac64.zip
       cmds:
         - unzip -o {download_file_path}
-        - mv chromedriver chromedriver-latest  # (optional) rename after unzip, but don't forget to change webdriver.path to ./chromedriver-latest
+        - mv chromedriver chromedriver-latest  # (optional) rename after unzip, but don't forget to change command.path to ./chromedriver-latest
 
     # install 7z on windows
     - download: https://www.7-zip.org/a/7z2107-x64.msi

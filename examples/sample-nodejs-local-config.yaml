@@ -8,6 +8,7 @@ maxSessions: 5
 drivers:
   - browserName: nodejs
     maxSessions: 5
-    webdriver:
+    sessionIdleTimeout: 3600
+    command:
       path: node
 

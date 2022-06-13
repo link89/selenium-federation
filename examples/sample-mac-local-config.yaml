@@ -11,22 +11,22 @@ drivers:
   - browserName: chrome
     browserVersion: stable
     maxSessions: 2
-    webdriver:
+    command:
       path: ./chromedriver
 
   - browserName: MicrosoftEdge
     maxSessions: 2
-    webdriver:
+    command:
       path: ./msedgedriver
 
   - browserName: firefox
     maxSessions: 2
-    webdriver:
+    command:
       path: ./geckodriver
 
   - browserName: safari
     maxSessions: 1
-    webdriver:
+    command:
       path: safaridriver
 
 provision:

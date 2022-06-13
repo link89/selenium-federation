@@ -20,7 +20,7 @@ export const driverConfigurationSchema = yup.object({
   sessionIdleTimeout: yup.number(),
   uuid: yup.string().default(() => uuidv4()),
   tags: yup.array(yup.string().defined()).default([]),
-  webdriver: yup.object({
+  command: yup.object({
     path: yup.string().defined(),
     args: yup.array(yup.string().defined()).default([]),
     envs: yup.object().default({}),
