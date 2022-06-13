@@ -68,38 +68,34 @@ export class RequestCapabilities {
 
 export class ResponseCapabilities {
 
-  private rawResponseData: any
+  public readonly rawResponseData: any;
+  public readonly sessionId: string;
+  public readonly browserName: string;
+  public readonly browserVersion: string;
 
   constructor(private rawResponse: any, private request: RequestCapabilities) {
-    this.rawResponseData = rawResponse?.value || rawResponse; //  w3c format || json wired format
+    this.rawResponseData = rawResponse?.value?.capabilities || rawResponse?.value; //  w3c format || json wired format
+    this.sessionId = rawResponse.sessionId || rawResponse.value.sessionId;  //  w3c format || json wired format
+
+    this.browserName = this.rawResponseData?.browserName;
+    this.browserVersion = this.rawResponseData?.browserVersion;
   }
 
-  get sessionId() {
-    return this.rawResponseData?.sessionId;
-  }
-
-  get browserName() {
-    return this.rawResponseData?.capabilities?.browserName;
-  }
-
-  get browserVersion() {
-    return this.rawResponseData?.capabilities?.browserVersion;
-  }
 
   get cdpEndpoint() {
     return `${this.request.getSessionBaseUrl(true)}/${this.sessionId}/se/cdp`;
   }
 
   get chromeDebuggerAddress() {
-    return this.rawResponseData?.capabilities?.["goog:chromeOptions"]?.debuggerAddress;
+    return this.rawResponseData?.["goog:chromeOptions"]?.debuggerAddress;
   }
 
   get chromeUserDataDir() {
-    return this.rawResponseData?.capabilities?.chrome?.userDataDir;
+    return this.rawResponseData?.chrome?.userDataDir;
   }
 
   get msEdgeDebuggerAddress() {
-    return this.rawResponseData?.capabilities?.["ms:edgeOptions"]?.debuggerAddress;
+    return this.rawResponseData?.["ms:edgeOptions"]?.debuggerAddress;
   }
 
   get msEdgeUserDataDir() {
@@ -107,7 +103,7 @@ export class ResponseCapabilities {
   }
 
   get firefoxProfilePath() {
-    return this.rawResponseData?.capabilities?.['moz:profile'];
+    return this.rawResponseData?.['moz:profile'];
   }
 
   get isCdpSupported(): boolean {
@@ -117,14 +113,14 @@ export class ResponseCapabilities {
   get jsonObject() {
     const raw = _.cloneDeep(this.rawResponse);
     // patch capabilities
-    const newResponseData = raw.value || raw;
+    const newResponseData = raw?.value?.capabilities || raw?.value;
     // set cdp endpoint
     if (this.isCdpSupported) {
-      newResponseData.capabilities['se:cdp'] = this.cdpEndpoint;
-      newResponseData.capabilities['se:cdpVersion'] = 'FIXME';  // FIXME
+      newResponseData['se:cdp'] = this.cdpEndpoint;
+      newResponseData['se:cdpVersion'] = 'FIXME';  // FIXME
     }
     // set node session url
-    newResponseData.capabilities['sf:sessionUrl'] =  `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
+    newResponseData['sf:sessionUrl'] =  `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
     return raw;
   }
 }
@@ -352,12 +348,15 @@ class NodeJsSession implements ISession {
   }
 
   async getCdpEndpoint() {
-    const res = await this.axios.request({
-      baseURL: `http://localhost:${this.port}`,
-      url: '/json',
-      method: 'GET',
-    });
-    return res.data?.[0]?.webSocketDebuggerUrl as string;
+    const res = await retry(async () => {
+      return await this.axios.request({
+        baseURL: `http://localhost:${this.port}`,
+        url: '/json',
+        method: 'GET',
+      });
+    }, {max: 5, interval: 1e3});
+
+    return res!.data?.[0]?.webSocketDebuggerUrl as string;
   }
 
   get jsonObject(): SessionDto {

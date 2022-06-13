@@ -144,7 +144,7 @@ export class LocalController implements IController {
   onGetBestMatchRequest: RequestHandler = async (ctx, next) => {
     const request = new RequestCapabilities(ctx.request);
     const driver = this.localService.getBestAvailableWebdirver(request);
-    if(driver) {
+    if (driver) {
       setHttpResponse(ctx, {
         status: 200,
         body: driver.jsonObject,
@@ -194,15 +194,21 @@ export class LocalController implements IController {
       socket.destroy();
       return;
     }
+
     // FIXME: I'am not sure if the proxy will get reclaimed by the system.
-    // Potential memory leak risk alert!
+    // memory leak risk alert!!!
     const proxy = createProxyServer({
       target: cdpEndpoint,
+      ws: true,
     });
+
+    // capture socket error, it happens when webdirver close socket connection
+    socket.on('error', (err) => console.error(err));
+    proxy.on('error', (err) => console.error(err));
+    proxy.on('econnreset', (err) => console.error(err));
+
     logMessage(`create websocket proxy to ${cdpEndpoint}`);
     proxy.ws(req, socket, header);
-    // capture socket error, it happens when webdirver close socket connection
-    proxy.on('error', (err) => console.error(err));
   }
 
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {
@@ -290,7 +296,7 @@ const setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
   if (response.headers) {
     ctx.set(response.headers);
   }
-  if ('object' === typeof(response.body)) {
+  if ('object' === typeof (response.body)) {
     ctx.body = JSON.stringify(response.body);
   } else {
     ctx.body = response.body;
