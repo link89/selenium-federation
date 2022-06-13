@@ -198,15 +198,22 @@ export class LocalController implements IController {
       socket.destroy();
       return;
     }
-
     // capture socket error, it happens when webdirver close socket connection
     socket.on('error', (err) => console.error(err));
-
     logMessage(`create websocket proxy to ${cdpEndpoint}`);
+
+    // this.proxy.on('proxyReqWs', (proxyReq) => { });
+
+    const targetUrl = new URL(cdpEndpoint);
     this.proxy.ws(req, socket, header, {
       target: cdpEndpoint,
+      ignorePath: true,
       ws: true,
+      headers: {
+        host: targetUrl.host,
+      }
     });
+
   }
 
   onAutoCmdRequest: RequestHandler = async (ctx, next) => {

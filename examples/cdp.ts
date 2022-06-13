@@ -18,6 +18,7 @@ import * as fs from 'fs';
   const cdpUrl = res.data?.value?.capabilities?.['se:cdp'] || res.data?.value?.['se:cdp'];
   console.log(cdpUrl);
 
+  await new Promise(resolve => setTimeout(resolve, 5e3));
   try {
     const options = {
       protocol,
