@@ -75,8 +75,8 @@ export class ProcessManager {
     const port = await getPort();
     let path = params.path;
     console.log(`start nodejs process ${path} ${params.args}`);
-    const nodejsProcess = spawn(path, [...params.args, `--inspect=:${port}`], {
-      stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
+    const nodejsProcess = spawn(path, [...params.args, `--inspect=:${port}`, `-i`], {
+      stdio: ['pipe', 1, 2], detached: !this.isWindows, windowsHide: this.isWindows,
       env: { ...process.env, ...params.envs, }
     });
     return { port, nodejsProcess };
