@@ -15,10 +15,11 @@ import * as fs from 'fs';
   });
 
   const protocol = JSON.parse(fs.readFileSync(`${__dirname}/cdp-protocol.json`, 'utf-8'));
-  const cdpUrl = res.data?.value?.capabilities?.['se:cdp'] || res.data?.value?.['se:cdp'];
+  const sessionId = res.data?.value?.sessionId || res.data?.sessionId;
+  const caps = res.data?.value?.capabilities || res.data?.value;
+  const cdpUrl = caps?.['se:cdp'];
   console.log(cdpUrl);
 
-  await new Promise(resolve => setTimeout(resolve, 5e3));
   try {
     const options = {
       protocol,
@@ -26,6 +27,7 @@ import * as fs from 'fs';
     } as CDP.Options;
 
     const cdp = await CDP(options);
+    await new Promise(resolve => setTimeout(resolve, 5e3));
 
     await cdp.Runtime.evaluate({
       expression: `console.log("hello world")`,
@@ -38,7 +40,7 @@ import * as fs from 'fs';
   } finally {
     await axios.request({
       method: 'DELETE',
-      url: `http://localhost:4444/wd/hub/session/${res.data.sessionId}`,
+      url: `http://localhost:4444/wd/hub/session/${sessionId}`,
     })
   }
 
