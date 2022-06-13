@@ -184,6 +184,7 @@ abstract class AbstractWebdriveSession implements ISession {
       path: this.webdriverConfiguration.command.path,
       envs: { ...this.webdriverConfiguration.command.envs, ...this.request.environmentVariables },
       args: this.webdriverConfiguration.command.args,
+      cwd: this.webdriverConfiguration.command.cwd,
     });
     // TODO: handle webdriver error properly
     // The suggested way is to accept an error handler when session is created,
@@ -313,11 +314,13 @@ class NodeJsSession implements ISession {
       path: this.webdriverConfiguration.command.path,
       envs: { ...this.webdriverConfiguration.command.envs, ...this.request.environmentVariables },
       args: this.webdriverConfiguration.command.args,
+      cwd: this.webdriverConfiguration.command.cwd,
     });
     // TODO: handle webdriver error properly
     // The suggested way is to accept an error handler when session is created,
     // which can allow the caller to decide what to do when unexpected error happens.
     nodejsProcess.on('error', (err) => console.error(err));
+
     this.port = port;
     this.process = nodejsProcess;
     this.response = new ResponseCapabilities({

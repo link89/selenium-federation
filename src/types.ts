@@ -22,6 +22,7 @@ export const driverConfigurationSchema = yup.object({
   tags: yup.array(yup.string().defined()).default([]),
   command: yup.object({
     path: yup.string().defined(),
+    cwd: yup.string().optional(),
     args: yup.array(yup.string().defined()).default([]),
     envs: yup.object().default({}),
   }).defined(),

@@ -8,6 +8,7 @@ interface ProcessParams {
   path: string;
   args: string[];
   envs: { [key: string]: string };
+  cwd?: string;
 }
 
 export class AutoCmdProcess {
@@ -66,7 +67,7 @@ export class ProcessManager {
     console.log(`start webdriver process ${path} ${params.args}`);
     const webdriverProcess = spawn(path, [...params.args, `--port=${port}`], {
       stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
-      env: { ...process.env, ...params.envs, }
+      env: { ...process.env, ...params.envs, }, cwd: params.cwd,
     });
     return { port, webdriverProcess };
   }
@@ -77,7 +78,7 @@ export class ProcessManager {
     console.log(`start nodejs process ${path} ${params.args}`);
     const nodejsProcess = spawn(path, [...params.args, `--inspect=:${port}`, `-i`], {
       stdio: ['pipe', 1, 2], detached: !this.isWindows, windowsHide: this.isWindows,
-      env: { ...process.env, ...params.envs, }
+      env: { ...process.env, ...params.envs, }, cwd: params.cwd,
     });
     return { port, nodejsProcess };
   }

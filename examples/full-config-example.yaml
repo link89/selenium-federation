@@ -55,6 +55,7 @@ drivers:
       args: ["--verbose"]  # Optional, addtional arguments that you want to use when start webdriver process
       envs:  # Optional, addtional environment variable that you want to pass to webdriver process
         TMP: /tmp
+      cwd:  # Optional, specifiy a working direct to run this command
 
   - browserName: chrome  # anther driver configuration
     browserVersion: beta
