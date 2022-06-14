@@ -83,7 +83,6 @@ export class HubService {
     let resPromise: Promise<AxiosResponse>;
     let candidate: Candidate | undefined;
 
-
     try {
       await this.createSessionMutex.wait();
       candidate = await this.getBestMatch(request);
