@@ -1,8 +1,8 @@
 import * as yup from 'yup';
 import * as os from 'os';
 import { getW3CPlatformName } from './utils';
-import { v4 as uuidv4 } from 'uuid';
 import type { Context } from 'koa';
+import { nanoid } from 'nanoid';
 
 const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge', 'nodejs'];
 const ROLES = ['local', 'hub'];
@@ -18,7 +18,7 @@ export const driverConfigurationSchema = yup.object({
   browserName: yup.string().oneOf(BROWSER_NAMES).defined(),
   browserVersion: yup.string().optional(),
   sessionIdleTimeout: yup.number(),
-  uuid: yup.string().default(() => uuidv4()),
+  uuid: yup.string().default(() => nanoid()),
   tags: yup.array(yup.string().defined()).default([]),
   command: yup.object({
     path: yup.string().defined(),
@@ -37,7 +37,7 @@ export const configurationSchema = yup.object({
   host: yup.string().default('0.0.0.0'),
   publicUrl: yup.string().optional(),
   tags: stringArray,
-  uuid: yup.string().default(() => uuidv4()),
+  uuid: yup.string().default(() => nanoid()),
   platformName: yup.string().default(getW3CPlatformName()),
 
   sessionIdleTimeout: yup.number().default(60),

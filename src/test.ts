@@ -53,13 +53,22 @@ void (async () => {
 
   const nodes = res.data as NodeDto[];
 
-  const results = await Bluebird.map(flatMap(nodes, node => node.drivers.map(driver => ({ node, driver }))), async (data) => {
+  const nodeResults = nodes.map(node => {
+    return {
+      id: node.config.uuid,
+      url: node.config.publicUrl,
+      os: node.config.platformName,
+    }
+  })
+  console.table(nodeResults);
+
+  const driverResults = await Bluebird.map(flatMap(nodes, node => node.drivers.map(driver => ({ node, driver }))), async (data) => {
     const { node, driver } = data;
     const result = {
-        node: node.config.publicUrl,
-        browser: driver.config.browserName,
-        platform: node.config.platformName,
-        'session#': `${driver.sessions.length}/${driver.config.maxSessions}`,
+      node: node.config.uuid,
+      browser: driver.config.browserName,
+      platform: node.config.platformName,
+      'session#': `${driver.sessions.length}/${driver.config.maxSessions}`,
     };
 
     try {
@@ -68,7 +77,7 @@ void (async () => {
         'sf:browserUUID': driver.config.uuid,
       }
       const browser = await remote({ ...opt, capabilities, logLevel: 'silent' });
-      await browser.setTimeout({ pageLoad: timeoutInMs, script: timeoutInMs, implicit: timeoutInMs});
+      await browser.setTimeout({ pageLoad: timeoutInMs, script: timeoutInMs, implicit: timeoutInMs });
 
       if (appUrl) {
         await browser.url(appUrl);
@@ -95,6 +104,6 @@ void (async () => {
     }
   }, { concurrency });
 
-  console.table(results);
+  console.table(driverResults);
 
 })();
