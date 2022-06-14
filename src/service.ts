@@ -298,9 +298,8 @@ export class LocalService {
         console.log(`on ${signal}, argv:`);
         console.log(argv);
         console.log(`terminating...`);
-        return this.closeActiveSessions().then(() => {
-          process.exit();
-        });
+        this.closeActiveSessions();
+        process.exit();
       })
     });
     if (this.config.registerTo) {
@@ -482,10 +481,10 @@ export class LocalService {
     return _.flatMap(this.webdriverManagers, driver => [...driver.activeSessions]);
   }
 
-  private async closeActiveSessions() {
-    await Bluebird.map(this.activeSessions, async session => {
+  private closeActiveSessions() {
+    this.activeSessions.forEach(async session => {
       session.kill();
-    }, { concurrency: 4 });
+    });
   }
 
   private onSessionChange() {
