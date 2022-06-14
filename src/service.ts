@@ -484,7 +484,7 @@ export class LocalService {
 
   private async closeActiveSessions() {
     await Bluebird.map(this.activeSessions, async session => {
-      await session.kill();
+      session.kill();
     }, { concurrency: 4 });
   }
 
