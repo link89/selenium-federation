@@ -34,8 +34,9 @@ If those are not your cases, then you may consider other tools that implement th
 npm install -g selenium-federation pm2
 
 # Run the following command to read manuals
-selenium-federation --help
-sf-pm2-start --help
+selenium-federation -h
+sf-pm2-start -h
+sf-test -h
 ```
 
 ### Run Service in Foreground
@@ -77,6 +78,12 @@ const opt = {
   await new Promise(resolve => setTimeout(resolve, 5e3));
   await driver.deleteSession();
 })();
+```
+
+Another way to verify the setup is to run the `sf-test` command,
+
+```bash
+sf-test --sf-url http://localhost:4444
 ```
 
 ### Run service in background with pm2
