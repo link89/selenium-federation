@@ -129,7 +129,7 @@ export interface ISession {
   getCdpEndpoint: () => Promise<string | void>;
   start: () => Promise<ResponseCapabilities>;
   stop: () => Promise<void>;
-  kill: () => Promise<void>;
+  kill: () => void;
   forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any>>;
   jsonObject: SessionDto;
 }
@@ -200,7 +200,7 @@ abstract class AbstractWebdriveSession implements ISession {
 
   async stop() {
     await this.axios.delete(`/session/${this.id}`).catch(e => console.error(e));
-    await this.kill();
+    this.kill();
     await this.mayCleanUserData();
     await this.postStop();
   }
@@ -242,7 +242,7 @@ abstract class AbstractWebdriveSession implements ISession {
     return caps;
   }
 
-  public async kill() {
+  public kill() {
     if (this.process) {
       try {
         this.processManager.killProcessGroup(this.process)
@@ -338,10 +338,10 @@ class NodeJsSession implements ISession {
   }
 
   public async stop() {
-    await this.kill();
+    this.kill();
   }
 
-  public async kill() {
+  public kill() {
     if (this.process) {
       try {
         this.processManager.killProcessGroup(this.process)
