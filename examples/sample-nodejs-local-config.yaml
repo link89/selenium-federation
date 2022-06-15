@@ -11,4 +11,3 @@ drivers:
     sessionIdleTimeout: 3600
     command:
       path: node
-

@@ -50,7 +50,7 @@ export class ProcessManager {
   }
 
   killProcessGroup = (process: ChildProcess) => {
-    if (!process.killed) {
+    if (!process.killed || null == process.exitCode ) {
       console.log(`kill process group ${process.pid}`);
       const cmd = this.isWindows ? `taskkill /T /F /PID ${process.pid}` : `kill -9 -- -${process.pid}`;
       try {
