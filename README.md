@@ -1,7 +1,15 @@
 # Selenium Federation
 
 ## Introduction
-`selenium-federation` is a cross-platform Selenium based testing solution that support browsers, electron apps and native apps automation for Desktop environment.
+`selenium-federation` is a cross-platform Selenium compatible testing solution that support browsers, electron apps and native apps automation for Desktop environment.
+
+### Key Fetures
+* Easy to setup.
+* Compatible with Selenium Webdriver protocol.
+* Support CDP proxy (compatible with `selenium-grid v4`'s).
+* Compatible with popular test tools/frameworks like `webdriver.io`, `testcafe`, `puppeteer`, `playwright` etc.
+* Support `ansible` style auto provisioning tasks.
+* Support native apps automation via `auto-cmd`.
 
 ### Applicable scene
 * You are in a development team that need to maintain a medium scale (less than 50 devices) test infrustructure by yourself.
@@ -18,15 +26,7 @@ If those are not your cases, then you may consider other tools that implement th
   * You only have web apps to test.
   * You have mobile apps to test.
 
-## Fetures
-* Compatible with Selenium Webdriver protocol.
-* Support CDP proxy (compatible with `selenium-grid v4`'s).
-* Compatible with popular test tools/frameworks like `webdriver.io`, `testcafe`, `puppeteer`, `playwright` etc.
-* Support `ansible` style self-provisioning tasks.
-* Support native apps automation via `auto-cmd`.
-
-
-## Quick Start
+## Quick Setup
 
 ### Installation
 
@@ -55,7 +55,7 @@ selenium-federation -c https://raw.githubusercontent.com/link89/selenium-federat
 selenium-federation -c https://raw.githubusercontent.com/link89/selenium-federation/main/examples/sample-mac-local-config.yaml 
 ```
 
-`selenium-federation` only have one option to load configuration from local file or remote URL. All configuration options can be found in [full-config-example](/examples/full-config-example.yaml)
+`selenium-federation` only have one option to load configuration from local file or remote URL. All configuration options can be found in [full-config-example](/examples/full-config-example.yaml).
 
 And now your can run test on it with your favorite framework with the url `http://localhost:4444/wd/hub`. The base url `/wd/hub` is the same as `selenium-grid`'s for the sake of compatiblity. Here is a simple example written with `webdriver.io`.
 
@@ -83,7 +83,7 @@ const opt = {
 Another way to verify the setup is to run the `sf-test` command,
 
 ```bash
-sf-test --sf-url http://localhost:4444
+sf-test --sf-url http://localhost:4444 
 ```
 
 ### Run service in background with pm2
@@ -121,29 +121,11 @@ fileServer:
 ```
 Here we also start a `fileServer` with the hub node, you can access the file service via http://localhost:4444/fs/
 
-
 ### Use Provision Task to Download Webdriver Binary
 
-`provision task` is one of the key features of `selenium-federation` to simplify the OPS tasks. The most common use case is to download webdriver binary automatically. For example,
+`provision task` is one of the key features of `selenium-federation` to simplify the system provision. It's inspired by `ansible`.  The most common use case is to download webdriver binary automatically. For example,
 
 ```yaml
-drivers:
-  - browserName: chrome
-    browserVersion: stable
-    maxSessions: 2
-    command:
-      path: ./chromedriver.exe  # reference to the binary file that download and unpacked by provision task
-      args: ["--verbose"]
-
-  - browserName: MicrosoftEdge
-    maxSessions: 2
-    command:
-      path: ./msedgedriver.exe
-
-  - browserName: firefox
-    maxSessions: 2
-    command:
-      path: ./geckodriver.exe
 
 provision:
   tasks:
@@ -151,14 +133,15 @@ provision:
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .  # unpack to workspace
 
-    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip 
-      cmds:
-        - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
-
-    - download: https://msedgedriver.azureedge.net/102.0.1245.30/edgedriver_win64.zip
+    - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
 ```
 
 Here we define 3 tasks to download webdirver binary for `Chrome`, `Firefox` and `Microsoft Edge` browsers and use them in `drivers[n].webdirver.path`.
 More example could be found in [provision-task-gallery](/examples/provision-tasks-gallery.yaml).
+
+
+## Test Execution
+
+`selenium-federation` tries to keep compatible with Selenium and you can just run your existed Selenium test scripts on it. Besides of this, it provides some extra features to make it more powerful.
