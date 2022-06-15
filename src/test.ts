@@ -65,7 +65,7 @@ void (async () => {
       id: node.config.uuid,
       url: node.config.publicUrl,
       os: node.config.platformName,
-      version: node.config.version,
+      "sf-ver.": node.config.version,
       start: node.config.startTime,
     }
   })
