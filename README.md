@@ -136,9 +136,17 @@ provision:
     - download: https://repo.huaweicloud.com/geckodriver/v0.31.0/geckodriver-v0.31.0-win64.zip
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
+
+    # auto upgrade selenium-federation (works on Windows and Mac)
+    # please use it with pm2 or else your service will be terimated after upgrade
+    - neverSkip: true
+      cmds:
+        - npm outdated -g selenium-federation || ( npm install -g selenium-federation && throw_error_to_restart )
 ```
 
-Here we define 3 tasks to download webdirver binary for `Chrome`, `Firefox` and `Microsoft Edge` browsers and use them in `drivers[n].webdirver.path`.
+Here we define 2 tasks to download webdirver binary for `Chrome` and `Firefox`.
+And the last task is use to upgrade selenium-federation automatically on start.
+
 More example could be found in [provision-task-gallery](/examples/provision-tasks-gallery.yaml).
 
 

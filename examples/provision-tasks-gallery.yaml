@@ -22,6 +22,12 @@
 
 provision:
   tasks:
+    # auto upgrade selenium-federation (works on Windows and Mac)
+    # please use it with pm2 or else your service will be terimated after upgrade
+    - neverSkip: true
+      cmds:
+        - npm outdated -g selenium-federation || ( npm install -g selenium-federation && throw_error_to_restart )
+
     # install chrome on mac os using dmg file
     - download: https://dl.google.com/chrome/mac/stable/GGRO/googlechrome.dmg
       cmds:
@@ -55,4 +61,4 @@ provision:
     # please ensure you already have 7z installed
     - download: https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.7z
       cmds:
-        - "C:\Program Files\7-Zip\7z.exe" e {download_file_path}
+        - \"C:\Program Files\7-Zip\7z.exe\" e {download_file_path}
