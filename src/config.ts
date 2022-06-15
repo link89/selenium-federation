@@ -8,10 +8,9 @@ import { basename } from 'path';
 import { createHash } from 'crypto';
 import { exec } from 'shelljs';
 import chalk from 'chalk';
-const log = console.log;
-
 
 const jsonStringify = require('json-stringify-deterministic');
+const log = console.log;
 
 export const argv = yargs(process.argv.slice(2)).
   usage('start selenium-federation service').
@@ -30,7 +29,11 @@ export async function getAndInitConfig(): Promise<Configuration> {
     const data = await readPathOrUrl(pathOrUrl, { encoding: 'utf-8' });
     log(chalk.green(data));
 
-    _config = configurationSchema.validateSync(parse(data));
+    _config = configurationSchema.validateSync({
+      ...parse(data),
+      version: process.env.npm_package_version || require('./package.json').version,
+      startTime: new Date().toString(),
+    });
 
     log(chalk.blue.bold(`> prepare tmpFolder: ${_config.tmpFolder}`));
     const webdriverFolder = join(_config.tmpFolder, 'webdrivers');

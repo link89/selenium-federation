@@ -29,6 +29,9 @@ drivers:
 
 provision:
   tasks:
+    - neverSkip: true
+      cmds:
+        - npm outdated -g selenium-federation || ( npm install -g selenium-federation && throw_error_to_restart )
 
     - download: https://registry.npmmirror.com/-/binary/chromedriver/102.0.5005.61/chromedriver_mac64.zip
       cmds:

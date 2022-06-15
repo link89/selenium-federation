@@ -69,7 +69,8 @@ export const configurationSchema = yup.object({
   }).default(undefined),
 
   // constants
-  startTime: yup.string().default(new Date().toString()),
+  startTime: yup.string(),
+  version: yup.string().required(),
 }).defined();
 
 export const sessionDtoSchema = yup.object({
