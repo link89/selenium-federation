@@ -34,7 +34,7 @@ import axios from "axios";
     const localService = LocalService.of(config, processManager);
     localService.init();
     const proxy = createProxyServer({});
-    controller = new LocalController(localService, proxy);
+    controller = new LocalController(config, localService, proxy);
   } else if ('hub' === config.role) {
     const hubService = new HubService(config, axios.create({}));
     controller = new HubController(hubService);

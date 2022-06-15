@@ -8,7 +8,7 @@ import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage } from "./utils";
 import { LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
-import { NodeDto, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
+import { Configuration, NodeDto, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
@@ -113,6 +113,7 @@ export class HubController implements IController {
 export class LocalController implements IController {
 
   constructor(
+    private readonly config: Configuration,
     private readonly localService: LocalService,
     private proxy: Server,
   ) {
@@ -125,7 +126,10 @@ export class LocalController implements IController {
     await this.localService.terminate(queryToTerminateOptions(query));
     setHttpResponse(ctx, {
       status: 200,
-      body: renderTerminatePage(),
+      body: renderTerminatePage({
+        version: this.config.version,
+        startTime: this.config.startTime,
+      })
     });
   }
 
@@ -348,7 +352,6 @@ const getSessionParams = (ctx: Context) => {
   return { sessionId, path: params[0] ? '/' + params[0] : '' };
 }
 
-
 function queryToTerminateOptions(query: ParsedUrlQuery): TerminateOptions {
   const options: TerminateOptions = {
     confirmed: '1' === query.confirmed,
@@ -358,7 +361,7 @@ function queryToTerminateOptions(query: ParsedUrlQuery): TerminateOptions {
   return options;
 }
 
-function renderTerminatePage() {
+function renderTerminatePage(data: { version: string, startTime: string }) {
   return [
     `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><html>`,
     `<title>Terminate Service</title>`,
@@ -371,6 +374,10 @@ function renderTerminatePage() {
     `<li>Click <a href="/terminate?confirmed=1&force=1">here</a> to teriminated the service immediately (current sessions will be aborted)</li>`,
     `</ul>`,
     `<hr>`,
+    `<ul>`,
+    `<li>Version: ${data.version}</li>`,
+    `<li>Start Time: ${data.startTime}</li>`,
+    `</ul>`,
     `</body>`,
     `</html>`,
   ].join('\n');

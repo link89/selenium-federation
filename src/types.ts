@@ -69,7 +69,7 @@ export const configurationSchema = yup.object({
   }).default(undefined),
 
   // constants
-  startTime: yup.string(),
+  startTime: yup.string().required(),
   version: yup.string().required(),
 }).defined();
 
