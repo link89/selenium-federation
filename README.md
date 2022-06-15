@@ -149,6 +149,9 @@ And the last task is use to upgrade selenium-federation automatically on start.
 
 More example could be found in [provision-task-gallery](/examples/provision-tasks-gallery.yaml).
 
+### Termiate Service From Remote
+
+You can access the page `http://localhost:4444/termiate` to terminate the `selenium-federation` from remote. This is useful when using with `pm2`. For example, you may change the configuration file (which is also in remote) and terminate the current process. `pm2` will bring up the service automatically afterward with the latest configuration.
 
 ## Test Execution
 
