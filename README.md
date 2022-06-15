@@ -31,7 +31,7 @@ If those are not your cases, then you may consider other tools that implement th
 ### Installation
 
 ```bash
-npm install -g selenium-federation pm2
+npm install -g selenium-federation pm2 npm  # upgrade npm to avoid some wired issue
 
 # Run the following command to read manuals
 selenium-federation -h
