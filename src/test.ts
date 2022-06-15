@@ -32,13 +32,20 @@ export const argv = yargs(process.argv.slice(2)).
       number: true,
       required: false,
       default: 30,
-    }
+    },
+    'dry-run': {
+      description: 'print message without test session',
+      boolean: true,
+      required: false,
+      default: false,
+    },
   }).strict().argv;
 
 
 void (async () => {
   const sfUrl = new URL(argv['sf-url']);
   const appUrl = argv['app-url'];
+  const dryRun = argv['dry-run'];
   const concurrency = argv['concurrency'];
   const timeoutInMs = argv['timeout'] * 1e3;
 
@@ -58,6 +65,8 @@ void (async () => {
       id: node.config.uuid,
       url: node.config.publicUrl,
       os: node.config.platformName,
+      version: node.config.version,
+      start: node.config.startTime,
     }
   })
   console.table(nodeResults);
@@ -66,10 +75,11 @@ void (async () => {
     const { node, driver } = data;
     const result = {
       node: node.config.uuid,
-      browser: driver.config.browserName,
-      platform: node.config.platformName,
+      browser: `${driver.config.browserName}@${node.config.platformName}`,
       'session#': `${driver.sessions.length}/${driver.config.maxSessions}`,
+      status: 'DRY_RUN'
     };
+    if (dryRun) return result;
 
     try {
       const capabilities = {
@@ -91,7 +101,7 @@ void (async () => {
 
       return {
         ...result,
-        browser: browser.capabilities.browserName,
+        browser: `${browser.capabilities.browserName}@${browser.capabilities.platformName}`,
         version: browser.capabilities.browserVersion,
         status: 'OK',
       }

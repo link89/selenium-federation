@@ -31,7 +31,7 @@ export async function getAndInitConfig(): Promise<Configuration> {
 
     _config = configurationSchema.validateSync({
       ...parse(data),
-      version: process.env.npm_package_version || require('../package.json').version,
+      version: require('../package.json').version,
       startTime: new Date().toString(),
     });
 
