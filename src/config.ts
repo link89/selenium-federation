@@ -102,6 +102,10 @@ async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolder: stri
       cmd = cmd.replace('{download_file_path}', downloadFilePath);
     }
     console.log(`start to execute cmd: ${cmd}`);
-    exec(cmd, { fatal: true, async: false });
+    const result = exec(cmd);
+    if (result.code > 0) {
+      log(chalk.red(`the following command exit with error code ${result.code}: ${cmd}`));
+      process.exit(result.code);
+    }
   }
 }

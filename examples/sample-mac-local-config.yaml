@@ -30,13 +30,6 @@ drivers:
 provision:
   tasks:
 
-    # auto upgrade selenium-federation (works on Windows and Mac)
-    # this task can be used to upgrade selenium-federation automatically
-    # please use it with pm2 or else your service will be terimated after upgrade
-    - neverSkip: true
-      cmds:
-        - npm outdated -g selenium-federation || ( npm install -g selenium-federation && throw_error )
-
     - download: https://registry.npmmirror.com/-/binary/chromedriver/102.0.5005.61/chromedriver_mac64.zip
       cmds:
         - unzip -o {download_file_path}
