@@ -8,6 +8,7 @@ import _ from 'lodash';
 import { ProcessManager } from "./process";
 import { SF_CAPS_FIELDS } from "./constants";
 import * as fs from 'fs';
+import { exec } from 'shelljs';
 
 
 export class RequestCapabilities {
@@ -144,7 +145,7 @@ export function createSession(
     case 'chrome': return new ChromiumSession(request, webdriverConfiguration, processManager, axios);
     case 'MicrosoftEdge': return new ChromiumSession(request, webdriverConfiguration, processManager, axios);
     case 'firefox': return new FirefoxSession(request, webdriverConfiguration, processManager, axios);
-    case 'safari': return new CommonWebdriverSession(request, webdriverConfiguration, processManager, axios);
+    case 'safari': return new SafariSession(request, webdriverConfiguration, processManager, axios);
     case 'nodejs': return new NodeJsSession(request, webdriverConfiguration, processManager, axios);
     default: throw Error(`browser ${request.browserName} is not supported`);
   }
@@ -179,6 +180,7 @@ abstract class AbstractWebdriveSession implements ISession {
   }
 
   async start() {
+    await this.preStart();
     const { port, webdriverProcess } = await this.processManager.spawnWebdriverProcess({
       path: this.webdriverConfiguration.command.path,
       envs: { ...this.webdriverConfiguration.command.envs, ...this.request.environmentVariables },
@@ -216,6 +218,7 @@ abstract class AbstractWebdriveSession implements ISession {
 
   async getCdpEndpoint(): Promise<string | undefined> { return; }
 
+  async preStart() { }
   async postStop() { }
 
   get userDataDir(): string | undefined { return undefined; }
@@ -292,6 +295,13 @@ class FirefoxSession extends CommonWebdriverSession {
   }
 }
 
+class SafariSession extends CommonWebdriverSession {
+  async preStart() {
+    // sometimes safaridriver may failed to reclaim
+    // it is a valid work around to fix this issue
+    exec('pkill safaridriver');
+  }
+}
 
 class NodeJsSession implements ISession {
   public id: string;
