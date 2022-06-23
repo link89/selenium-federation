@@ -54,7 +54,7 @@ export class ProcessManager {
       console.log(`kill process group ${process.pid}`);
       const cmd = this.isWindows ? `taskkill /T /F /PID ${process.pid}` : `kill -9 -- -${process.pid}`;
       try {
-        execSync(cmd);
+        execSync(cmd, {stdio: 'inherit'});
       } catch (e) {
         console.error(e);
       }

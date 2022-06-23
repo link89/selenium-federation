@@ -194,7 +194,9 @@ abstract class AbstractWebdriveSession implements ISession {
     this.port = port;
     this.process = webdriverProcess;
     this.axios.defaults.baseURL = `http://localhost:${this.port}`;
+    console.log(`webdriver process ${this.process.pid}: wait for ready`);
     await this.waitForReady();
+    console.log(`webdriver process ${this.process.pid}: ready`);
     const res = await this.createSession(this.request);
     this.response = res;
     return res;
@@ -227,7 +229,7 @@ abstract class AbstractWebdriveSession implements ISession {
   get userDataDir(): string | undefined { return undefined; }
 
   private async waitForReady() {
-    await retry(async () => await this.axios.get('/status'), { max: 10, interval: 1e2 });
+    await retry(async () => await this.axios.get('/status'), { max: 10, interval: 5e2 });
   }
 
   private async createSession(request: RequestCapabilities) {

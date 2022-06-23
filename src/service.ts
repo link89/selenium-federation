@@ -580,8 +580,9 @@ class WebdriverManager {
 
       return res;
     } catch (e) {
+      console.error(e);
       if (session) {
-        await session.stop();
+        session.kill();
       }
       throw e;
     } finally {
