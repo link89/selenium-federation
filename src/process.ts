@@ -69,6 +69,7 @@ export class ProcessManager {
       stdio: 'inherit', detached: !this.isWindows, windowsHide: this.isWindows,
       env: { ...process.env, ...params.envs, }, cwd: params.cwd,
     });
+    this.handleProcessError(webdriverProcess);
     return { port, webdriverProcess };
   }
 
@@ -80,6 +81,7 @@ export class ProcessManager {
       stdio: ['pipe', 1, 2], detached: !this.isWindows, windowsHide: this.isWindows,
       env: { ...process.env, ...params.envs, }, cwd: params.cwd,
     });
+    this.handleProcessError(nodejsProcess);
     return { port, nodejsProcess };
   }
 
@@ -96,9 +98,14 @@ export class ProcessManager {
     const autoCmdprocess = spawn(path, [...args, `--port=${port}`],
       { stdio: 'inherit', windowsHide: this.isWindows, env: process.env }
     );
-    // TODO: handle process error properly
-    autoCmdprocess.on('error', (err) => console.error(err));
+    this.handleProcessError(autoCmdprocess);
     this.autoCmdProcess = new AutoCmdProcess(autoCmdprocess, port);
     return this.autoCmdProcess;
+  }
+
+  private handleProcessError = (p: ChildProcess) => {
+    p.on('error', err => {
+      this.killProcessGroup(p);
+    })
   }
 }
