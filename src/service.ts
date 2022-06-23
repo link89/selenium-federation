@@ -572,6 +572,7 @@ class WebdriverManager {
         axios.create({ timeout: LONG_TIMEOUT_IN_MS }),
       );
       const res = await session.start();
+      console.log(`${session.id}: session created`);
       this.addSession(session);
 
       const watchDog = new Watchdog(() => this.destroySession(session.id), this.sessionTimeoutInSeconds);
