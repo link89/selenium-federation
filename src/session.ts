@@ -201,10 +201,13 @@ abstract class AbstractWebdriveSession implements ISession {
   }
 
   async stop() {
-    await this.axios.delete(`/session/${this.id}`).catch(e => console.error(e));
+    console.log(`${this.id}: delete session`);
+    await this.axios.delete(`/session/${this.id}`, { timeout: 5e3 }).catch(e => console.error(e));
+    console.log(`${this.id}: kill process`);
     this.kill();
     await this.mayCleanUserData();
     await this.postStop();
+    console.log(`${this.id}: finish`);
   }
 
   async forward(request: AxiosRequestConfig) {
