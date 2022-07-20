@@ -31,7 +31,7 @@ interface Candidate {
 interface SessionRecord {
   nodeUrl: string;
   sessionId: string;
-  expireAfter: number;
+  createdAt: number;
 }
 
 
@@ -39,13 +39,17 @@ export class HubService {
 
   private nodesIndex = new Map<string, RegistedNode>();
   private sessionIndex = new Map<string, SessionRecord>();
-  private nextExpiredSessionCleanTime = 0;
   private createSessionMutex = new Semaphore(1);
 
   constructor(
     private config: Configuration,
     private axios: AxiosInstance,
   ) { }
+
+  public init() {
+    const sessionMaxAge = 60e3;
+    setInterval(() => this.cleanExpiredSessions(sessionMaxAge), sessionMaxAge);
+  }
 
   async getBestMatch(request: RequestCapabilities): Promise<Candidate | undefined> {
     const nodeUrls = this.getNodes().map(node => node.url);
@@ -107,10 +111,11 @@ export class HubService {
       const res = await resPromise;
       const sessionId = res.data?.sesssionId || res.data?.value?.sessionId;
       if (!sessionId) throw Error(`cannot find session id in response`);
+      console.log(`${sessionId}: session created`);
       this.sessionIndex.set(sessionId, {
         nodeUrl: candidate.nodeUrl,
         sessionId,
-        expireAfter: Date.now() + this.config.sessionIdleTimeout * 1e3,
+        createdAt: Date.now(),
       });
       return Right(res);
     } catch (e) {
@@ -205,6 +210,7 @@ export class HubService {
     const res = await this.forwardWebdriverRequest(sessionId, path, request);
     if (res.isRight()) {
       this.deleteSessionById(sessionId);
+      console.log(`${sessionId}: session deleted`);
     }
     return res;
   }
@@ -246,20 +252,35 @@ export class HubService {
   private getSessionById(sessionId: string): SessionRecord | undefined {
     const session = this.sessionIndex.get(sessionId);
     if (!session) return;
-    session.expireAfter = Date.now() + this.config.sessionIdleTimeout * 1e3;
     return session;
   }
 
   private deleteSessionById(sessionId: string) {
     this.sessionIndex.delete(sessionId);
-    // a quick and dirty method to reclaim expired session to avoid memory leak
-    // may use formal ttl cache if this implemetation have problem
+  }
+
+  private cleanExpiredSessions(maxAge = 60e3) {
+    // a simple method to reclaim expired session to avoid memory leak
+
     const now = Date.now();
-    if (this.nextExpiredSessionCleanTime < now) {
-      this.nextExpiredSessionCleanTime = now + 600e3;  // clean expired session every 10 mins
-      for (const [id, session] of this.sessionIndex.entries()) {
-        if (session.expireAfter < now) {
-          console.log(`remove expired session: ${id}`);
+    const activeSessionIds = new Set(
+      _(this.getNodes())
+        .flatMap(node => node.node.drivers)
+        .flatMap(driver => driver.sessions)
+        .map(session => session.id)
+        .value()
+    );
+
+    console.log(`current active sessions are: `, activeSessionIds);
+    console.log(`current session in index are: `, [...this.sessionIndex.keys()]);
+
+    for (const [id, session] of this.sessionIndex.entries()) {
+      // this session has been in index for more than 10min
+      // we only clean old enough session to avoid some race condition (when the session is newly created)
+      if (session.createdAt + maxAge < now) {
+        // this session is not in the current active sessions
+        if (!activeSessionIds.has(id)) {
+          console.log(`${id}: remove expired session`);
           this.sessionIndex.delete(id);
         }
       }
@@ -599,6 +620,7 @@ class WebdriverManager {
     this.watchDogs.get(session)?.stop();
     await session.stop();
     this.deleteSession(sessionId);
+    console.log(`${sessionId}: session deleted`);
   }
 
   public getSession(sessionId: string) {

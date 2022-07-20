@@ -13,7 +13,6 @@ import { ProcessManager } from "./process";
 import axios from "axios";
 
 
-
 // Get started
 (async () => {
   const config = await getAndInitConfig();
@@ -37,6 +36,7 @@ import axios from "axios";
     controller = new LocalController(config, localService, proxy);
   } else if ('hub' === config.role) {
     const hubService = new HubService(config, axios.create({}));
+    hubService.init();
     controller = new HubController(hubService);
   } else {
     throw Error(`Invalid role: ${config.role}`);
