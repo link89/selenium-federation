@@ -137,11 +137,6 @@ provision:
       cmds:
         - powershell Expand-Archive {download_file_path} -Force -DestinationPath .
 
-    # auto upgrade selenium-federation (works on Windows and Mac)
-    ## Please use it with pm2 or else your service will be terimated after upgrade.
-    ## To trigger the auto upgrade from remote,
-    ## You need to access http://localhost:4444/termiate to termiate the current service,
-    ## and pm2 will start a new service for you automatically.
     - neverSkip: true
       cmds:
         - npm outdated -g selenium-federation || ( npm install -g selenium-federation && throw_error_to_restart )

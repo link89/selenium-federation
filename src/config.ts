@@ -1,12 +1,10 @@
 import yargs from 'yargs/yargs';
 import { parse } from 'yaml';
-import { Configuration, configurationSchema, ProvisionTask } from './types';
-import { isHttpUrl, readPathOrUrl, saveUrlToFile } from './utils';
+import { Configuration, configurationSchema } from './types';
+import { getFileNameFromUrl, isHttpUrl, readPathOrUrl, runProvisionTask, saveUrlToFile } from './utils';
 import * as fs from 'fs';
 import { join } from 'path';
-import { basename } from 'path';
 import { createHash } from 'crypto';
-import { exec } from 'shelljs';
 import chalk from 'chalk';
 
 const jsonStringify = require('json-stringify-deterministic');
@@ -82,33 +80,4 @@ export async function getAndInitConfig(): Promise<Configuration> {
     }
   }
   return _config;
-}
-
-function getFileNameFromUrl(url: string) {
-  const urlObj = new URL(url);
-  if (urlObj.hash) {
-    return urlObj.hash.slice(1);
-  }
-  return basename(urlObj.pathname);
-}
-
-async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolder: string }) {
-  let downloadFilePath: string | undefined;
-  if (task.download) {
-    downloadFilePath = join(ctx.downloadFolder, getFileNameFromUrl(task.download));
-    console.log(`start to download ${task.download} to ${downloadFilePath}`);
-    await saveUrlToFile(task.download, downloadFilePath);
-  }
-
-  for (let cmd of task.cmds) {
-    if (downloadFilePath) {
-      cmd = cmd.replace('{download_file_path}', downloadFilePath);
-    }
-    console.log(`start to execute cmd: ${cmd}`);
-    const result = exec(cmd);
-    if (result.code > 0) {
-      log(chalk.red(`the following command exit with error code ${result.code}: ${cmd}`));
-      process.exit(result.code);
-    }
-  }
 }

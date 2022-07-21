@@ -5,6 +5,11 @@ import * as stream from 'stream';
 import { dirname, join } from 'path';
 import { nanoid } from "nanoid";
 import { promisify } from 'util';
+import { basename } from 'path';
+import chalk from 'chalk';
+import { exec } from 'shelljs';
+import { ChildProcess } from 'child_process';
+import { ProvisionTask } from './types';
 
 interface IRetryOption {
   max?: number;
@@ -238,4 +243,51 @@ export async function saveUrlToFile(url: string, path: string) {
     return promisify(stream.finished)(writer);
   });
   await fs.promises.rename(tmpFile, path);
+}
+
+export function getFileNameFromUrl(url: string) {
+  const urlObj = new URL(url);
+  if (urlObj.hash) {
+    return urlObj.hash.slice(1);
+  }
+  return basename(urlObj.pathname);
+}
+
+export async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolder: string }) {
+  let downloadFilePath: string | undefined;
+  if (task.download) {
+    downloadFilePath = join(ctx.downloadFolder, getFileNameFromUrl(task.download));
+    console.log(`start to download ${task.download} to ${downloadFilePath}`);
+    await saveUrlToFile(task.download, downloadFilePath);
+  }
+
+  for (let cmd of task.cmds) {
+    if (downloadFilePath) {
+      cmd = cmd.replace('{download_file_path}', downloadFilePath);
+    }
+    console.log(`start to execute cmd: ${cmd}`);
+    const child = exec(cmd, { async: true });
+    const result = await waitForChildProcessFinish(child);
+
+    if (result.code > 0) {
+      console.log(chalk.red(`the following command exit with error code ${result.code}: ${cmd}`));
+      process.exit(result.code);
+    }
+  }
+}
+
+async function waitForChildProcessFinish(child: ChildProcess) {
+  let stdout: string = '', stderr: string = '';
+  if (child.stdout) {
+    for await (const chunk of child.stdout) {
+      stdout += chunk;
+    }
+  }
+  if (child.stderr) {
+    for await (const chunk of child.stderr) {
+      stderr += chunk;
+    }
+  }
+  const code: number = await new Promise(resolve => child.on('close', resolve));
+  return { stdout, stderr, code, };
 }
