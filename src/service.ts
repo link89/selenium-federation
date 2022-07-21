@@ -38,7 +38,7 @@ interface SessionRecord {
 export class HubService {
 
   private nodesIndex = new Map<string, RegistedNode>();
-  private sessionIndex = new Map<string, SessionRecord>();
+  private sessionCache = new Map<string, SessionRecord>();
   private createSessionMutex = new Semaphore(1);
 
   constructor(
@@ -47,7 +47,7 @@ export class HubService {
   ) { }
 
   public init() {
-    const sessionMaxAge = 60e3;
+    const sessionMaxAge = 300e3;  // 5 min in ms
     setInterval(() => this.cleanExpiredSessions(sessionMaxAge), sessionMaxAge);
   }
 
@@ -112,7 +112,7 @@ export class HubService {
       const sessionId = res.data?.sesssionId || res.data?.value?.sessionId;
       if (!sessionId) throw Error(`cannot find session id in response`);
       console.log(`${sessionId}: session created`);
-      this.sessionIndex.set(sessionId, {
+      this.sessionCache.set(sessionId, {
         nodeUrl: candidate.nodeUrl,
         sessionId,
         createdAt: Date.now(),
@@ -250,18 +250,41 @@ export class HubService {
   }
 
   private getSessionById(sessionId: string): SessionRecord | undefined {
-    const session = this.sessionIndex.get(sessionId);
-    if (!session) return;
+    // search session in index first
+    let session: SessionRecord | undefined = this.sessionCache.get(sessionId);
+    if (!session) {
+      console.log(`cannot find session ${sessionId} in index, fallback to search in node records`)
+      session = this.findSessionInNodeRecords(sessionId);
+      if (!session) return;
+      // add session to index
+      console.log(`found session in node records and add session ${sessionId} to index`);
+      this.sessionCache.set(sessionId, session);
+    }
     return session;
   }
 
   private deleteSessionById(sessionId: string) {
-    this.sessionIndex.delete(sessionId);
+    this.sessionCache.delete(sessionId);
   }
 
-  private cleanExpiredSessions(maxAge = 60e3) {
-    // a simple method to reclaim expired session to avoid memory leak
+  private findSessionInNodeRecords(sessionId: string): SessionRecord | undefined {
+    for (const node of this.getNodes()) {
+      for (const driver of node.node.drivers) {
+        for (const session of driver.sessions) {
+          if (session.id === sessionId) {
+            return {
+              nodeUrl: node.url,
+              sessionId: sessionId,
+              createdAt: Date.now(),
+            }
+          }
+        }
+      }
+    }
+  }
 
+  private cleanExpiredSessions(maxAge: number) {
+    // a simple method to reclaim expired session by syncing with nodes records every 10min
     const now = Date.now();
     const activeSessionIds = new Set(
       _(this.getNodes())
@@ -272,16 +295,16 @@ export class HubService {
     );
 
     console.log(`current active sessions are: `, activeSessionIds);
-    console.log(`current session in index are: `, [...this.sessionIndex.keys()]);
+    console.log(`current session in index are: `, [...this.sessionCache.keys()]);
 
-    for (const [id, session] of this.sessionIndex.entries()) {
+    for (const [id, session] of this.sessionCache.entries()) {
       // this session has been in index for more than 10min
       // we only clean old enough session to avoid some race condition (when the session is newly created)
       if (session.createdAt + maxAge < now) {
         // this session is not in the current active sessions
         if (!activeSessionIds.has(id)) {
           console.log(`${id}: remove expired session`);
-          this.sessionIndex.delete(id);
+          this.sessionCache.delete(id);
         }
       }
     }
