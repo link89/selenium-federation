@@ -256,7 +256,6 @@ export class HubService {
       console.log(`cannot find session ${sessionId} in cache, fallback to search in node records`)
       session = this.findSessionInNodeRecords(sessionId);
       if (!session) return;
-      // add session to index
       console.log(`found session in node records and add session ${sessionId} to cache`);
       this.sessionCache.set(sessionId, session);
     }
