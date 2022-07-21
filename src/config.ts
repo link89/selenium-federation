@@ -74,7 +74,11 @@ export async function getAndInitConfig(): Promise<Configuration> {
         continue;
       }
       log(chalk.green(`>> start to run task: ${taskString}`));
-      await runProvisionTask(task, { downloadFolder });
+      const result = await runProvisionTask(task, { downloadFolder });
+      if (!result.isSuccess) {
+        log(chalk.redBright(`>> fail to run task, exit selenium-federation`));
+        process.exit(1);
+      }
       log(chalk.green(`>> create digest file ${taskDigestFile} to skip this task next time`));
       await fs.promises.writeFile(taskDigestFile, taskString);
     }

@@ -253,13 +253,26 @@ export function getFileNameFromUrl(url: string) {
   return basename(urlObj.pathname);
 }
 
-export async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolder: string }) {
+
+interface TaskResult {
+  isSuccess: boolean;
+  results: ProcessResult[];
+}
+
+
+export async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolder: string }): Promise<TaskResult> {
   let downloadFilePath: string | undefined;
+
   if (task.download) {
     downloadFilePath = join(ctx.downloadFolder, getFileNameFromUrl(task.download));
     console.log(`start to download ${task.download} to ${downloadFilePath}`);
     await saveUrlToFile(task.download, downloadFilePath);
   }
+
+  const taskResult: TaskResult = {
+    isSuccess: true,
+    results: [],
+  };
 
   for (let cmd of task.cmds) {
     if (downloadFilePath) {
@@ -269,14 +282,23 @@ export async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolde
     const child = exec(cmd, { async: true });
     const result = await waitForChildProcessFinish(child);
 
+    taskResult.results.push(result);
+
     if (result.code > 0) {
-      console.log(chalk.red(`the following command exit with error code ${result.code}: ${cmd}`));
-      process.exit(result.code);
+      taskResult.isSuccess = false;
+      break;  // stop task when one of command failed;
     }
   }
+  return taskResult;
 }
 
-async function waitForChildProcessFinish(child: ChildProcess) {
+interface ProcessResult {
+  stdout: string;
+  stderr: string;
+  code: number;
+}
+
+async function waitForChildProcessFinish(child: ChildProcess): Promise<ProcessResult> {
   let stdout: string = '', stderr: string = '';
   if (child.stdout) {
     for await (const chunk of child.stdout) {
