@@ -250,14 +250,14 @@ export class HubService {
   }
 
   private getSessionById(sessionId: string): SessionRecord | undefined {
-    // search session in index first
+    // search session in cache first
     let session: SessionRecord | undefined = this.sessionCache.get(sessionId);
     if (!session) {
-      console.log(`cannot find session ${sessionId} in index, fallback to search in node records`)
+      console.log(`cannot find session ${sessionId} in cache, fallback to search in node records`)
       session = this.findSessionInNodeRecords(sessionId);
       if (!session) return;
       // add session to index
-      console.log(`found session in node records and add session ${sessionId} to index`);
+      console.log(`found session in node records and add session ${sessionId} to cache`);
       this.sessionCache.set(sessionId, session);
     }
     return session;
