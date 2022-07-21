@@ -143,7 +143,17 @@ provision:
 ```
 
 Here we define 2 tasks to download webdirver binary for `Chrome` and `Firefox`.
-And the last task is use to upgrade selenium-federation automatically on start.
+And the last task is use to upgrade selenium-federation automatically.
+
+You can also run ad-hoc provision task via `/provision` endpoint, for example:
+
+```bash
+curl -X POST -H "Content-Type: application/json" \
+  -d '{"cmds":["unzip -o {download_file_path}"],"download":"https://msedgedriver.azureedge.net/102.0.1249.0/edgedriver_mac64.zip"}' \
+  http://127.0.0.1:4444/provision
+```
+
+Please note that `neverSkip` will always be true when running task via API.
 
 More example could be found in [provision-task-gallery](/examples/provision-tasks-gallery.yaml).
 
