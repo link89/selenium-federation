@@ -6,15 +6,17 @@ import Server from 'http-proxy';
 import { Duplex } from "stream";
 import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
-import { logMessage } from "./utils";
+import { logMessage, runProvisionTask, Semaphore, TaskResult } from "./utils";
 import { LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
-import { Configuration, NodeDto, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
+import { Configuration, NodeDto, provisionTaskSchema, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
 import { Either } from "purify-ts";
 import { ParsedUrlQuery } from 'querystring';
 import { format } from 'util';
+import { nanoid } from "nanoid";
+
 
 
 interface HttpResponse {
@@ -37,6 +39,7 @@ export interface IController {
   onNodeRegiester: RequestHandler;
   onGetNodesRequest: RequestHandler;
   onTermiateRequest: RequestHandler;
+  onRunProvisionTask: RequestHandler;
 }
 
 
@@ -45,6 +48,10 @@ export class HubController implements IController {
   constructor(
     private readonly hubService: HubService,
   ) { }
+
+  onRunProvisionTask: RequestHandler = async (ctx, next) => {
+    throw Error(`termiate endpoint is optional in hub mode`);
+  }
 
   onTermiateRequest: RequestHandler = async (ctx, next) => {
     throw Error(`termiate endpoint is optional in hub mode`);
@@ -112,6 +119,8 @@ export class HubController implements IController {
 
 export class LocalController implements IController {
 
+  private provisionTaskLock = new Semaphore(1);
+
   constructor(
     private readonly config: Configuration,
     private readonly localService: LocalService,
@@ -119,6 +128,25 @@ export class LocalController implements IController {
   ) {
     this.proxy.on('error', (err) => console.error(err));
     this.proxy.on('econnreset', (err) => console.error(err));
+  }
+
+  onRunProvisionTask: RequestHandler = async (ctx, next) => {
+    await this.provisionTaskLock.withLock(async () => {
+      const task = await provisionTaskSchema.validate(ctx.request.body);
+      console.log(`start to run provision task`, task);
+      const downloadFolder = join(this.config.tmpFolder, `ad-hoc-provision-${nanoid()}`);
+      await fs.promises.mkdir(downloadFolder, { recursive: true });
+      let result: TaskResult;
+      try {
+        result = await runProvisionTask(task, { downloadFolder });
+      } finally {
+        await fs.promises.rm(downloadFolder, { recursive: true, force: true })
+      }
+      setHttpResponse(ctx, {
+        status: 200,
+        body: result,
+      });
+    });
   }
 
   onTermiateRequest: RequestHandler = async (ctx, next) => {

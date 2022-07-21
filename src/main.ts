@@ -63,6 +63,7 @@ import axios from "axios";
     // utils
     .post('/auto-cmd', controller.onAutoCmdRequest)
     .get('/terminate', controller.onTermiateRequest)
+    .post('/provision', controller.onRunProvisionTask)
 
   if (config.fileServer && !config.fileServer.disable) {
     rootRouter.all('/fs/(.*)', serveStatic(config.fileServer.root));

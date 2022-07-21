@@ -8,7 +8,8 @@ const BROWSER_NAMES = ['chrome', 'firefox', 'safari', 'MicrosoftEdge', 'nodejs']
 const ROLES = ['local', 'hub'];
 
 const stringArray = yup.array(yup.string().required()).default([]);
-const provisionTask = yup.object({
+
+export const provisionTaskSchema = yup.object({
   download: yup.string().optional(),
   cmds: stringArray,
   neverSkip: yup.boolean().default(false),
@@ -46,7 +47,7 @@ export const configurationSchema = yup.object({
   drivers: yup.array(driverConfigurationSchema).default([]),
 
   provision: yup.object({
-    tasks: yup.array(provisionTask).default([]),
+    tasks: yup.array(provisionTaskSchema).default([]),
   }).optional(),
 
   registerTo: yup.string().optional(),
@@ -98,7 +99,7 @@ export interface SessionDto extends yup.Asserts<typeof sessionDtoSchema> { };
 export interface DriverDto extends yup.Asserts<typeof driverDtoSchema> { };
 export interface NodeDto extends yup.Asserts<typeof nodeDtoSchema> { };
 export interface RegisterDto extends yup.Asserts<typeof registerDtoSchema> { };
-export interface ProvisionTask extends yup.Asserts<typeof provisionTask> { };
+export interface ProvisionTask extends yup.Asserts<typeof provisionTaskSchema> { };
 
 export interface SessionPathParams {
   sessionId: string,

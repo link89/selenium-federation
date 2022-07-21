@@ -6,7 +6,6 @@ import { dirname, join } from 'path';
 import { nanoid } from "nanoid";
 import { promisify } from 'util';
 import { basename } from 'path';
-import chalk from 'chalk';
 import { exec } from 'shelljs';
 import { ChildProcess } from 'child_process';
 import { ProvisionTask } from './types';
@@ -254,7 +253,7 @@ export function getFileNameFromUrl(url: string) {
 }
 
 
-interface TaskResult {
+export interface TaskResult {
   isSuccess: boolean;
   results: ProcessResult[];
 }
@@ -292,7 +291,7 @@ export async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolde
   return taskResult;
 }
 
-interface ProcessResult {
+export interface ProcessResult {
   stdout: string;
   stderr: string;
   code: number;
