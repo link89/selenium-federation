@@ -99,7 +99,7 @@ export class ResponseCapabilities {
   }
 
   get msEdgeUserDataDir() {
-    return this.rawResponseCapabilities?.capabilities?.msedge?.userDataDir;
+    return this.rawResponseCapabilities?.msedge?.userDataDir;
   }
 
   get firefoxProfilePath() {
