@@ -10,6 +10,7 @@
 * Compatible with popular test tools/frameworks like `webdriver.io`, `testcafe`, `puppeteer`, `playwright` etc.
 * Support `ansible` style auto provisioning tasks.
 * Support native apps automation via `auto-cmd`.
+* Clean user-data automatically which allow you to run test for a long time without rebooting your machine.
 
 ### Applicable scene
 * You are in a development team that need to maintain a medium scale (less than 50 devices) test infrustructure by yourself.
