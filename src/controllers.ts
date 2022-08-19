@@ -7,7 +7,7 @@ import { Duplex } from "stream";
 import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage, runProvisionTask, Semaphore, TaskResult } from "./utils";
-import { FILE_STATUS, LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
+import { LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
 import { Configuration, FileError, NodeDto, provisionTaskSchema, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';

@@ -208,7 +208,6 @@ export class HubService {
 
   public async forwardFileRequest(params: { sessionId: string }, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
     const sessionId = params.sessionId;
-    const filename = request.params["filename"];
     const session = this.getSessionById(sessionId);
     if (!session) {
       return Left({
@@ -555,11 +554,11 @@ export class LocalService {
         headers: request.headers,
         config: {}
       })
-    } catch (error) {
+    } catch (e) {
       return Left({
         ...FILE_STATUS.INVALID_PATH,
-        message: `failed to read file ${path}`,
-        stacktrace: new Error().stack || '',
+        message: e.message || `failed to read file ${path}`,
+        stacktrace: e.stack || '',
       });
     }
   }
@@ -587,11 +586,11 @@ export class LocalService {
         headers: request.headers,
         config: {}
       })
-    } catch (error) {
+    } catch (e) {
       return Left({
         ...FILE_STATUS.DELETE_FAILED,
-        message: `failed to delete ${keyword}`,
-        stacktrace: new Error().stack || '',
+        message: e.message || `failed to delete ${keyword}`,
+        stacktrace: e.stack || '',
       });
     }
   }
@@ -614,17 +613,17 @@ export class LocalService {
         isExist = (await fs.promises.readdir(root)).some(file => file.includes(keyword));
       }, { max: retry_times || 10 })
       return Right({
-        data: `${isExist}`,
+        data: isExist,
         status: 200,
         statusText: "delete success",
         headers: request.headers,
         config: {}
       })
-    } catch (error) {
+    } catch (e) {
       return Left({
         ...FILE_STATUS.INVALID_ROOT_PATH,
-        message: `failed to read from ${root}`,
-        stacktrace: new Error().stack || '',
+        message: e.message || `failed to read from ${root}`,
+        stacktrace: e.stack || '',
       });
     }
   }
