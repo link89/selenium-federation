@@ -36,6 +36,25 @@ export const AUTO_CMD_ERRORS = {
   },
 }
 
+export const FILE_STATUS = {
+  INVALID_ROOT_PATH: {
+    code: 404,
+    error: 'invalid root path'
+  },
+  INVALID_PATH: {
+    code: 404,
+    error: 'invalid path'
+  },
+  DELETE_FAILED: {
+    code: 404,
+    error: 'delete failed'
+  },
+  NOT_SUPPORTED_METHOD: {
+    code: 400,
+    error: 'not support method'
+  },
+}
+
 export const SF_CAPS_FIELDS = {
   BROWSER_TAGS: 'sf:browserTags',
   BROWSER_UUID: 'sf:browserUUID',

@@ -1,15 +1,15 @@
 import _ from "lodash";
 import * as yup from 'yup';
-import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { alwaysTrue, identity, Semaphore } from './utils';
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, FileError, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { alwaysTrue, identity, retry, Semaphore } from './utils';
 import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
 import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
-import { AUTO_CMD_ERRORS, LONG_TIMEOUT_IN_MS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
+import { AUTO_CMD_ERRORS, FILE_STATUS, LONG_TIMEOUT_IN_MS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
-
+import { join } from 'path';
+import * as fs from 'fs';
 
 export interface TerminateOptions {
   confirmed: boolean;
@@ -191,6 +191,34 @@ export class HubService {
 
     request.baseURL = nodeUrl;
     request.url = path;
+    request.validateStatus = alwaysTrue;
+    request.transformRequest = identity;
+    request.transformResponse = identity;
+    try {
+      const res = await this.axios.request(request);
+      return Right(res);
+    } catch (e) {
+      return Left({
+        ...WEBDRIVER_ERRORS.UNKNOWN_ERROR,
+        message: e.message || '',
+        stacktrace: e.stack || '',
+      });
+    }
+  }
+
+  public async forwardFileRequest(params: { sessionId: string }, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
+    const sessionId = params.sessionId;
+    const filename = request.params["filename"];
+    const session = this.getSessionById(sessionId);
+    if (!session) {
+      return Left({
+        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
+        message: `session id ${params}, ${request} is invalid`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+    request.baseURL = session.nodeUrl;
+    request.url = `/wd/hub/session/${sessionId}/fs`;
     request.validateStatus = alwaysTrue;
     request.transformRequest = identity;
     request.transformResponse = identity;
@@ -486,6 +514,117 @@ export class LocalService {
         ...AUTO_CMD_ERRORS.UNKNOWN_ERROR,
         message: e.message || '',
         stacktrace: e.stack || '',
+      });
+    }
+  }
+
+  async forwardFileRequest(request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>>{
+    if (request.method === 'GET') {
+      return await this.getFileData(request);
+    }
+    if(request.method === 'DELETE'){
+      return await this.deleteFile(request);
+    }
+    if(request.method === 'POST'){
+      return await this.isExistFile(request);
+    }
+    return Left({
+      ...FILE_STATUS.NOT_SUPPORTED_METHOD,
+      message: `invalid method`,
+      stacktrace: new Error().stack || '',
+    });
+  }
+
+  public async getFileData(request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
+    const root = this.config.downloadFolder;
+    if (!root) {
+      return Left({
+        ...FILE_STATUS.INVALID_ROOT_PATH,
+        message: `download folder is empty`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+    const url = '/' + (request.params['filename']);
+    const path = join(root, url);
+    try {
+      const data = await fs.promises.readFile(path, { encoding: 'utf-8' });
+      return Right({
+        data,
+        status: 200,
+        statusText: "success",
+        headers: request.headers,
+        config: {}
+      })
+    } catch (error) {
+      return Left({
+        ...FILE_STATUS.INVALID_PATH,
+        message: `failed to read file ${path}`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+  }
+
+  public async deleteFile(request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
+    const root = this.config.downloadFolder;
+    if (!root) {
+      return Left({
+        ...FILE_STATUS.INVALID_ROOT_PATH,
+        message: `download folder is empty`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+    const keyword = request.params['keyword'];
+    try {
+      (await fs.promises.readdir(root)).forEach((file) => {
+        if (file.includes(keyword)) {
+          fs.promises.unlink(join(root, file));
+        }
+      })
+      return Right({
+        data: `${keyword}`,
+        status: 200,
+        statusText: "delete success",
+        headers: request.headers,
+        config: {}
+      })
+    } catch (error) {
+      return Left({
+        ...FILE_STATUS.DELETE_FAILED,
+        message: `failed to delete ${keyword}`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+  }
+
+  public async isExistFile(request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
+    const root = this.config.downloadFolder;
+    if (!root) {
+      return Left({
+        ...FILE_STATUS.INVALID_ROOT_PATH,
+        message: `download folder is empty`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+    const data = JSON.parse(request.data);
+    const retry_times = data['retry_times'];
+    const keyword = data["keyword"];
+    try {
+      let isExist = false;
+      await retry(async () => {
+        isExist = (await fs.promises.readdir(root)).some(file => file.includes(keyword));
+      }, { max: retry_times || 10 })
+      return Right({
+        data: `${isExist}`,
+        status: 200,
+        statusText: "delete success",
+        headers: request.headers,
+        config: {}
+      })
+    } catch (error) {
+      return Left({
+        ...FILE_STATUS.INVALID_ROOT_PATH,
+        message: `failed to read from ${root}`,
+        stacktrace: new Error().stack || '',
       });
     }
   }

@@ -42,6 +42,8 @@ export async function getAndInitConfig(): Promise<Configuration> {
     await fs.promises.mkdir(downloadFolder, { recursive: true });
     await fs.promises.mkdir(provisionFolder, { recursive: true });
 
+    log(chalk.blue.bold(`> prepare downloadFolder: ${_config.downloadFolder}`));
+
     log(chalk.blue.bold(`> prepare file server root`));
     if (_config.fileServer && !_config.fileServer.disable) {
       await fs.promises.mkdir(_config.fileServer.root, { recursive: true });

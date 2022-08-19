@@ -69,6 +69,8 @@ export const configurationSchema = yup.object({
     root: yup.string().defined(),
   }).default(undefined),
 
+  downloadFolder: yup.string().default(os.type() == "Darwin" ? `${os.homedir()}/Downloads` : `${os.homedir()}\\Downloads`),
+
   // constants
   startTime: yup.string().required(),
   version: yup.string().required(),
@@ -115,5 +117,7 @@ export interface WebdriverError<T = unknown> {
 }
 
 export interface AutoCmdError<T = unknown> extends WebdriverError<T> { }
+
+export interface FileError<T = unknown> extends WebdriverError<T> { }
 
 export type RequestHandler = (ctx: Context, next: () => Promise<any>) => Promise<void> | void;

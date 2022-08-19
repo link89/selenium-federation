@@ -7,12 +7,12 @@ import { Duplex } from "stream";
 import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage, runProvisionTask, Semaphore, TaskResult } from "./utils";
-import { LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
-import { Configuration, NodeDto, provisionTaskSchema, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
+import { FILE_STATUS, LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
+import { Configuration, FileError, NodeDto, provisionTaskSchema, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
-import { Either } from "purify-ts";
+import { Either, Left } from "purify-ts";
 import { ParsedUrlQuery } from 'querystring';
 import { format } from 'util';
 import { nanoid } from "nanoid";
@@ -35,6 +35,8 @@ export interface IController {
   onAutoCmdRequest: RequestHandler;
   onAutoCmdRequestToNode: RequestHandler;
   onAutoCmdRequestToSession: RequestHandler;
+
+  onFileRequestToSession: RequestHandler
 
   onNodeRegiester: RequestHandler;
   onGetNodesRequest: RequestHandler;
@@ -96,6 +98,15 @@ export class HubController implements IController {
 
   onAutoCmdRequestToNode: RequestHandler = this.onAutoCmdRequest;
   onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
+
+  onFileRequestToSession: RequestHandler = async (ctx, next) => {
+    
+    const request = {
+      ...toForwardRequest(ctx),
+    };
+    const result = await this.hubService.forwardFileRequest(ctx.params || {}, request);
+    setForwardResponse(ctx, result);
+  }
 
   onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
     throw Error(`hub mode won't handle websocket proxy`);
@@ -257,6 +268,15 @@ export class LocalController implements IController {
   }
   onAutoCmdRequestToNode: RequestHandler = this.onAutoCmdRequest;
   onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
+
+  onFileRequestToSession: RequestHandler = async (ctx, next) => {
+    const request = {
+      ...toForwardRequest(ctx),
+    };
+    const result = await this.localService.forwardFileRequest(request);
+    
+    setForwardResponse(ctx, result);
+  }
 
   onNodeRegiester: RequestHandler = (ctx, next) => {
     throw Error(`register endpoint is not supported in local mode`);
