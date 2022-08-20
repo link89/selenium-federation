@@ -71,8 +71,6 @@ export const configurationSchema = yup.object({
     root: yup.string().defined(),
   }).default(undefined),
 
-  downloadFolder: yup.string().default(os.type() == "Darwin" ? `${os.homedir()}/Downloads` : `${os.homedir()}\\Downloads`),
-
   // constants
   startTime: yup.string().required(),
   version: yup.string().required(),
