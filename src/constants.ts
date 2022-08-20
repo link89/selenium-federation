@@ -41,16 +41,16 @@ export const FILE_STATUS = {
     code: 404,
     error: 'invalid root path'
   },
-  INVALID_PATH: {
+  READ_FILE_FAILED: {
     code: 404,
-    error: 'invalid path'
+    error: 'failed to read file'
   },
   DELETE_FAILED: {
     code: 404,
     error: 'delete failed'
   },
   NOT_SUPPORTED_METHOD: {
-    code: 400,
+    code: 405,
     error: 'not support method'
   },
 }

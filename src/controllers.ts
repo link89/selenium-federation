@@ -273,7 +273,7 @@ export class LocalController implements IController {
     const request = {
       ...toForwardRequest(ctx),
     };
-    const result = await this.localService.forwardFileRequest(request);
+    const result = await this.localService.forwardFileRequest(ctx.params || {}, request);
     
     setForwardResponse(ctx, result);
   }

@@ -28,7 +28,9 @@ export const driverConfigurationSchema = yup.object({
     envs: yup.object().default({}),
   }).defined(),
   maxSessions: yup.number().default(1),
-  defaultCapabilities: yup.object().default({}),
+  defaultCapabilities: yup.object({
+    "sf:autoDownloadDirectory": yup.string().optional(),
+  }).default({}),
   cleanUserData: yup.boolean().default(true),
 }).defined();
 

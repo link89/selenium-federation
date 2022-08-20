@@ -1,6 +1,6 @@
 import _ from "lodash";
 import * as yup from 'yup';
-import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, FileError, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, FileError, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types'; import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity, retry, Semaphore } from './utils';
 import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
@@ -212,7 +212,7 @@ export class HubService {
     if (!session) {
       return Left({
         ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
-        message: `session id ${params}, ${request} is invalid`,
+        message: `session id ${sessionId} is invalid`,
         stacktrace: new Error().stack || '',
       });
     }
@@ -517,25 +517,32 @@ export class LocalService {
     }
   }
 
-  async forwardFileRequest(request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>>{
+  async forwardFileRequest(params: { sessionId: string }, request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
+    const session = this.getWebdriverSessionById(params.sessionId);
+    if (!session) {
+      return Left({
+        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
+        message: `session id ${params.sessionId} is invalid`,
+        stacktrace: new Error().stack || '',
+      });
+    }
+    const root = session?.downloadFolder as string;
+
     if (request.method === 'GET') {
-      return await this.getFileData(request);
+      return await this.getFileData(root, request);
     }
-    if(request.method === 'DELETE'){
-      return await this.deleteFile(request);
+    if (request.method === 'DELETE') {
+      return await this.deleteFile(root, request);
     }
-    if(request.method === 'POST'){
-      return await this.isExistFile(request);
-    }
+
     return Left({
       ...FILE_STATUS.NOT_SUPPORTED_METHOD,
-      message: `invalid method`,
+      message: `method not allowed`,
       stacktrace: new Error().stack || '',
     });
   }
 
-  public async getFileData(request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
-    const root = this.config.downloadFolder;
+  public async getFileData(root: string, request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
     if (!root) {
       return Left({
         ...FILE_STATUS.INVALID_ROOT_PATH,
@@ -544,9 +551,17 @@ export class LocalService {
       });
     }
     const url = '/' + (request.params['filename']);
+    const encoding = request.params['encoding'] || 'utf-8';
     const path = join(root, url);
     try {
-      const data = await fs.promises.readFile(path, { encoding: 'utf-8' });
+      let data;
+      const stat = await fs.promises.lstat(path);
+      if (stat.isDirectory()) {
+        const files = await fs.promises.readdir(path, { withFileTypes: true });
+        data = files.map(f => f.name + (f.isDirectory() ? '/' : '')).sort();
+      } else {
+        data = await fs.promises.readFile(path, { encoding });
+      }
       return Right({
         data,
         status: 200,
@@ -556,15 +571,14 @@ export class LocalService {
       })
     } catch (e) {
       return Left({
-        ...FILE_STATUS.INVALID_PATH,
+        ...FILE_STATUS.READ_FILE_FAILED,
         message: e.message || `failed to read file ${path}`,
         stacktrace: e.stack || '',
       });
     }
   }
 
-  public async deleteFile(request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
-    const root = this.config.downloadFolder;
+  public async deleteFile(root: string, request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
     if (!root) {
       return Left({
         ...FILE_STATUS.INVALID_ROOT_PATH,
@@ -573,6 +587,13 @@ export class LocalService {
       });
     }
     const keyword = request.params['keyword'];
+    if (!keyword) {
+      return Left({
+        ...FILE_STATUS.DELETE_FAILED,
+        message: `keyword is undefine`,
+        stacktrace: new Error().stack || '',
+      });
+    }
     try {
       (await fs.promises.readdir(root)).forEach((file) => {
         if (file.includes(keyword)) {
@@ -590,39 +611,6 @@ export class LocalService {
       return Left({
         ...FILE_STATUS.DELETE_FAILED,
         message: e.message || `failed to delete ${keyword}`,
-        stacktrace: e.stack || '',
-      });
-    }
-  }
-
-  public async isExistFile(request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
-    const root = this.config.downloadFolder;
-    if (!root) {
-      return Left({
-        ...FILE_STATUS.INVALID_ROOT_PATH,
-        message: `download folder is empty`,
-        stacktrace: new Error().stack || '',
-      });
-    }
-    const data = JSON.parse(request.data);
-    const retry_times = data['retry_times'];
-    const keyword = data["keyword"];
-    try {
-      let isExist = false;
-      await retry(async () => {
-        isExist = (await fs.promises.readdir(root)).some(file => file.includes(keyword));
-      }, { max: retry_times || 10 })
-      return Right({
-        data: isExist,
-        status: 200,
-        statusText: "delete success",
-        headers: request.headers,
-        config: {}
-      })
-    } catch (e) {
-      return Left({
-        ...FILE_STATUS.INVALID_ROOT_PATH,
-        message: e.message || `failed to read from ${root}`,
         stacktrace: e.stack || '',
       });
     }
@@ -687,7 +675,7 @@ export class LocalService {
     const data: RegisterDto = {
       registerAs: this.config.publicUrl || `http://%s:${this.config.port}`,
     };
-    const baseURL= this.config.registerTo;
+    const baseURL = this.config.registerTo;
     try {
       const res = await this.axios.request({
         method: 'POST',
@@ -754,6 +742,7 @@ class WebdriverManager {
       );
       const res = await session.start();
       console.log(`${session.id}: session created`);
+      console.log(`downloadFolder: ${session.downloadFolder}`);
       this.addSession(session);
 
       const watchDog = new Watchdog(() => this.destroySession(session.id), this.sessionTimeoutInSeconds);
