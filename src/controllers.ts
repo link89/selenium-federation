@@ -352,7 +352,10 @@ export async function getFile(ctx: Context, root: string, isJsonResponse = true)
     console.log(e);
     setHttpResponse(ctx, {
       status: 404,
-      body: e.message,
+      body: {
+        message: e.message || '',
+        stack: e.stack || '',
+      }
     });
   }
 }
@@ -366,14 +369,21 @@ async function deleteFile(ctx: Context, root: string) {
     });
     return;
   }
+  const path = join(root, "/", filename); 
   try {
-    await fs.promises.unlink(join(root, '/', filename));
+    if(fs.existsSync(path)){
+      fs.promises.unlink(join(root, '/', filename));
+    }
     ctx.status = 200;
     ctx.body = `delete ${filename} success`
   } catch (e) {
+    console.log(`error`, e);
     return setHttpResponse(ctx, {
-      status: 404,
-      body: e.message,
+      status: 500,
+      body: {
+        message: e.message || '',
+        stack: e.stack || '',
+      },
     });
   }
 }
