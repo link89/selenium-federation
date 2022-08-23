@@ -1,6 +1,6 @@
 import _ from "lodash";
 import * as yup from 'yup';
-import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, FileError, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types'; import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types'; import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import { alwaysTrue, identity, retry, Semaphore } from './utils';
 import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
@@ -8,8 +8,6 @@ import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
 import { AUTO_CMD_ERRORS, LONG_TIMEOUT_IN_MS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
-import { join } from 'path';
-import * as fs from 'fs';
 
 export interface TerminateOptions {
   confirmed: boolean;
@@ -206,9 +204,7 @@ export class HubService {
     }
   }
 
-  public async forwardFileRequest(params: { sessionId: string, "0": string }, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
-    const { sessionId } = params;
-    const path = '/' + (params[0] || '');
+  public async forwardFileRequest(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
     const session = this.getSessionById(sessionId);
     if (!session) {
       return Left({

@@ -8,11 +8,11 @@ import { IncomingMessage } from 'http';
 import { match } from "path-to-regexp";
 import { logMessage, runProvisionTask, Semaphore, TaskResult } from "./utils";
 import { LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
-import { Configuration, FileError, NodeDto, provisionTaskSchema, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
+import { Configuration, NodeDto, provisionTaskSchema, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
-import { Either, Left, Right } from "purify-ts";
+import { Either } from "purify-ts";
 import { ParsedUrlQuery } from 'querystring';
 import { format } from 'util';
 import { nanoid } from "nanoid";
@@ -100,10 +100,12 @@ export class HubController implements IController {
   onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
 
   onFileRequestToSession: RequestHandler = async (ctx, next) => {
+    const { sessionId } = ctx.params;
+    const path = '/' + (ctx.params[0] || '');
     const request = {
       ...toForwardRequest(ctx),
     };
-    const result = await this.hubService.forwardFileRequest(ctx.params || {}, request);
+    const result = await this.hubService.forwardFileRequest(sessionId, path, request);
     setForwardResponse(ctx, result);
   }
 
@@ -279,10 +281,10 @@ export class LocalController implements IController {
     }
     const root = session?.downloadFolder as string;
     if (ctx.method !== 'GET' && ctx.method !== 'DELETE') return;
-    if(ctx.method === "GET"){
+    if (ctx.method === "GET") {
       await getFile(ctx, root);
     }
-    if(ctx.method === "DELETE"){
+    if (ctx.method === "DELETE") {
       await deleteFile(ctx, root);
     }
   }
@@ -325,7 +327,7 @@ export async function getFile(ctx: Context, root: string, isJsonResponse = true)
   if (!root) {
     setHttpResponse(ctx, {
       status: 404,
-      body: 'download folder is empty',
+      body: 'download folder is undefine',
     });
     return;
   }
@@ -338,7 +340,7 @@ export async function getFile(ctx: Context, root: string, isJsonResponse = true)
       const files = await fs.promises.readdir(path, { withFileTypes: true });
       ctx.status = 200;
       const hrefs = files.map(f => f.name + (f.isDirectory() ? '/' : '')).sort();
-      ctx.body = isJsonResponse? hrefs : renderDirectoyHtml(url, hrefs)
+      ctx.body = isJsonResponse ? hrefs : renderDirectoyHtml(url, hrefs)
     } else {
       if (isJsonResponse) {
         ctx.body = await fs.promises.readFile(path, { encoding });
@@ -356,22 +358,18 @@ export async function getFile(ctx: Context, root: string, isJsonResponse = true)
 }
 
 async function deleteFile(ctx: Context, root: string) {
-  const keyword = ctx.params[0];
-  if (!root || !keyword) {
+  const filename = ctx.params[0];
+  if (!root) {
     setHttpResponse(ctx, {
       status: 404,
-      body: 'download folder or keyword is undefine',
+      body: 'download folder is undefine',
     });
     return;
   }
   try {
-    (await fs.promises.readdir(root)).forEach((file) => {
-      if (file.includes(keyword)) {
-        fs.promises.unlink(join(root, file));
-      }
-    })
+    await fs.promises.unlink(join(root, '/', filename));
     ctx.status = 200;
-    ctx.body = `delete ${keyword} success`
+    ctx.body = `delete ${filename} success`
   } catch (e) {
     return setHttpResponse(ctx, {
       status: 404,
