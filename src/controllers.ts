@@ -282,10 +282,10 @@ export class LocalController implements IController {
     const root = session?.downloadFolder as string;
     if (ctx.method !== 'GET' && ctx.method !== 'DELETE') return;
     if (ctx.method === "GET") {
-      await getFile(ctx, root);
+      return await getFile(ctx, root);
     }
     if (ctx.method === "DELETE") {
-      await deleteFile(ctx, root);
+      return await deleteFile(ctx, root);
     }
   }
 
