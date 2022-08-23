@@ -12,7 +12,7 @@ import { Configuration, FileError, NodeDto, provisionTaskSchema, registerDtoSche
 import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
-import { Either, Left } from "purify-ts";
+import { Either, Left, Right } from "purify-ts";
 import { ParsedUrlQuery } from 'querystring';
 import { format } from 'util';
 import { nanoid } from "nanoid";
@@ -100,7 +100,6 @@ export class HubController implements IController {
   onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
 
   onFileRequestToSession: RequestHandler = async (ctx, next) => {
-    
     const request = {
       ...toForwardRequest(ctx),
     };
@@ -270,12 +269,22 @@ export class LocalController implements IController {
   onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
 
   onFileRequestToSession: RequestHandler = async (ctx, next) => {
-    const request = {
-      ...toForwardRequest(ctx),
-    };
-    const result = await this.localService.forwardFileRequest(ctx.params || {}, request);
-    
-    setForwardResponse(ctx, result);
+    const { sessionId } = getSessionParams(ctx);
+    const session = this.localService.getWebdriverSessionById(sessionId);
+    if (!session) {
+      return setHttpResponse(ctx, {
+        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
+        body: `session id ${sessionId} is invalid`,
+      });
+    }
+    const root = session?.downloadFolder as string;
+    if (ctx.method !== 'GET' && ctx.method !== 'DELETE') return;
+    if(ctx.method === "GET"){
+      await getFile(ctx, root);
+    }
+    if(ctx.method === "DELETE"){
+      await deleteFile(ctx, root);
+    }
   }
 
   onNodeRegiester: RequestHandler = (ctx, next) => {
@@ -308,25 +317,66 @@ export const onError: RequestHandler = (ctx, next) => {
 export function serveStatic(root: string): RequestHandler {
   return async (ctx, next) => {
     if (ctx.method !== 'HEAD' && ctx.method !== 'GET') return;
-    const url = '/' + (ctx.params[0] || '');
-    const path = join(root, url);
+    await getFile(ctx, root, false);
+  }
+}
 
-    try {
-      const stat = await fs.promises.lstat(path);
-      if (stat.isDirectory()) {
-        const files = await fs.promises.readdir(path, { withFileTypes: true });
-        const hrefs = files.map(f => f.name + (f.isDirectory() ? '/' : '')).sort();
-        ctx.status = 200;
-        ctx.body = renderDirectoyHtml(url, hrefs);
+export async function getFile(ctx: Context, root: string, isJsonResponse = true) {
+  if (!root) {
+    setHttpResponse(ctx, {
+      status: 404,
+      body: 'download folder is empty',
+    });
+    return;
+  }
+  const url = '/' + (ctx.params[0] || '');
+  const encoding = ctx.query.encoding as BufferEncoding || 'utf-8';
+  const path = join(root, url);
+  try {
+    const stat = await fs.promises.lstat(path);
+    if (stat.isDirectory()) {
+      const files = await fs.promises.readdir(path, { withFileTypes: true });
+      ctx.status = 200;
+      const hrefs = files.map(f => f.name + (f.isDirectory() ? '/' : '')).sort();
+      ctx.body = isJsonResponse? hrefs : renderDirectoyHtml(url, hrefs)
+    } else {
+      if (isJsonResponse) {
+        ctx.body = await fs.promises.readFile(path, { encoding });
       } else {
         await send(ctx, url, { hidden: true, root });
       }
-    } catch (err) {
-      console.log(err);
-      if (err.status !== 404) {
-        throw err
-      }
     }
+  } catch (e) {
+    console.log(e);
+    setHttpResponse(ctx, {
+      status: 404,
+      body: e.message,
+    });
+  }
+}
+
+async function deleteFile(ctx: Context, root: string) {
+  const keyword = ctx.params[0];
+  if (!root || !keyword) {
+    setHttpResponse(ctx, {
+      status: 404,
+      body: 'download folder or keyword is undefine',
+    });
+    return;
+  }
+  try {
+    (await fs.promises.readdir(root)).forEach((file) => {
+      if (file.includes(keyword)) {
+        fs.promises.unlink(join(root, file));
+      }
+    })
+    ctx.status = 200;
+    ctx.body = `delete ${keyword} success`
+  } catch (e) {
+    return setHttpResponse(ctx, {
+      status: 404,
+      body: e.message,
+    });
   }
 }
 

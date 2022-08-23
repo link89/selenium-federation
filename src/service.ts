@@ -6,7 +6,7 @@ import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
 import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
-import { AUTO_CMD_ERRORS, FILE_STATUS, LONG_TIMEOUT_IN_MS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
+import { AUTO_CMD_ERRORS, LONG_TIMEOUT_IN_MS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
 import { join } from 'path';
 import * as fs from 'fs';
@@ -206,8 +206,9 @@ export class HubService {
     }
   }
 
-  public async forwardFileRequest(params: { sessionId: string }, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
-    const sessionId = params.sessionId;
+  public async forwardFileRequest(params: { sessionId: string, "0": string }, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
+    const { sessionId } = params;
+    const path = '/' + (params[0] || '');
     const session = this.getSessionById(sessionId);
     if (!session) {
       return Left({
@@ -217,7 +218,7 @@ export class HubService {
       });
     }
     request.baseURL = session.nodeUrl;
-    request.url = `/wd/hub/session/${sessionId}/fs`;
+    request.url = `/wd/hub/session/${sessionId}/download-directory${path}`;
     request.validateStatus = alwaysTrue;
     request.transformRequest = identity;
     request.transformResponse = identity;
@@ -512,105 +513,6 @@ export class LocalService {
       return Left({
         ...AUTO_CMD_ERRORS.UNKNOWN_ERROR,
         message: e.message || '',
-        stacktrace: e.stack || '',
-      });
-    }
-  }
-
-  async forwardFileRequest(params: { sessionId: string }, request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
-    const session = this.getWebdriverSessionById(params.sessionId);
-    if (!session) {
-      return Left({
-        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
-        message: `session id ${params.sessionId} is invalid`,
-        stacktrace: new Error().stack || '',
-      });
-    }
-    const root = session?.downloadFolder as string;
-
-    if (request.method === 'GET') {
-      return await this.getFileData(root, request);
-    }
-    if (request.method === 'DELETE') {
-      return await this.deleteFile(root, request);
-    }
-
-    return Left({
-      ...FILE_STATUS.NOT_SUPPORTED_METHOD,
-      message: `method not allowed`,
-      stacktrace: new Error().stack || '',
-    });
-  }
-
-  public async getFileData(root: string, request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
-    if (!root) {
-      return Left({
-        ...FILE_STATUS.INVALID_ROOT_PATH,
-        message: `download folder is empty`,
-        stacktrace: new Error().stack || '',
-      });
-    }
-    const url = '/' + (request.params['filename']);
-    const encoding = request.params['encoding'] || 'utf-8';
-    const path = join(root, url);
-    try {
-      let data;
-      const stat = await fs.promises.lstat(path);
-      if (stat.isDirectory()) {
-        const files = await fs.promises.readdir(path, { withFileTypes: true });
-        data = files.map(f => f.name + (f.isDirectory() ? '/' : '')).sort();
-      } else {
-        data = await fs.promises.readFile(path, { encoding });
-      }
-      return Right({
-        data,
-        status: 200,
-        statusText: "success",
-        headers: request.headers,
-        config: {}
-      })
-    } catch (e) {
-      return Left({
-        ...FILE_STATUS.READ_FILE_FAILED,
-        message: e.message || `failed to read file ${path}`,
-        stacktrace: e.stack || '',
-      });
-    }
-  }
-
-  public async deleteFile(root: string, request: AxiosRequestConfig): Promise<Either<FileError, AxiosResponse>> {
-    if (!root) {
-      return Left({
-        ...FILE_STATUS.INVALID_ROOT_PATH,
-        message: `download folder is empty`,
-        stacktrace: new Error().stack || '',
-      });
-    }
-    const keyword = request.params['keyword'];
-    if (!keyword) {
-      return Left({
-        ...FILE_STATUS.DELETE_FAILED,
-        message: `keyword is undefine`,
-        stacktrace: new Error().stack || '',
-      });
-    }
-    try {
-      (await fs.promises.readdir(root)).forEach((file) => {
-        if (file.includes(keyword)) {
-          fs.promises.unlink(join(root, file));
-        }
-      })
-      return Right({
-        data: `${keyword}`,
-        status: 200,
-        statusText: "delete success",
-        headers: request.headers,
-        config: {}
-      })
-    } catch (e) {
-      return Left({
-        ...FILE_STATUS.DELETE_FAILED,
-        message: e.message || `failed to delete ${keyword}`,
         stacktrace: e.stack || '',
       });
     }
