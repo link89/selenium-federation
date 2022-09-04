@@ -97,6 +97,10 @@ export class ResponseCapabilities {
     return `${this.request.getSessionBaseUrl(true)}/${this.sessionId}/se/cdp`;
   }
 
+  get downloadDirectoryEndpoint() {
+    return `${this.request.getSessionBaseUrl(false)}/${this.sessionId}/download-directory`
+  }
+
   get chromeDebuggerAddress() {
     return this.rawResponseCapabilities?.["goog:chromeOptions"]?.debuggerAddress;
   }
@@ -132,6 +136,7 @@ export class ResponseCapabilities {
     }
     // set node session url
     copiedResponseCapabilities['sf:sessionUrl'] = `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
+    copiedResponseCapabilities['sf:autoDownloadUrl'] = this.downloadDirectoryEndpoint;
     return copiedResponse;
   }
 }
