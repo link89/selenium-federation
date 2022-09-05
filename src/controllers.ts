@@ -51,7 +51,11 @@ export class HubController implements IController {
   ) { }
 
   onRunProvisionTask: RequestHandler = async (ctx, next) => {
-    throw Error(`termiate endpoint is optional in hub mode`);
+    throw Error(`provision endpoint is optional in hub mode`);
+  }
+
+  onFileRequestToSession: RequestHandler = async (ctx, next) => {
+    throw Error(`download-directory endpoint is optional in hub mode`);
   }
 
   onTermiateRequest: RequestHandler = async (ctx, next) => {
@@ -97,16 +101,6 @@ export class HubController implements IController {
 
   onAutoCmdRequestToNode: RequestHandler = this.onAutoCmdRequest;
   onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
-
-  onFileRequestToSession: RequestHandler = async (ctx, next) => {
-    const { sessionId } = ctx.params;
-    const path = '/' + (ctx.params[0] || '');
-    const request = {
-      ...toForwardRequest(ctx),
-    };
-    const result = await this.hubService.forwardFileRequest(sessionId, path, request);
-    setForwardResponse(ctx, result);
-  }
 
   onWebsocketUpgrade = async (req: IncomingMessage, socket: Duplex, header: Buffer) => {
     throw Error(`hub mode won't handle websocket proxy`);

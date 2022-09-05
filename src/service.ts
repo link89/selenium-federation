@@ -210,32 +210,6 @@ export class HubService {
     }
   }
 
-  public async forwardFileRequest(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
-    const session = this.getSessionById(sessionId);
-    if (!session) {
-      return Left({
-        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
-        message: `session id ${sessionId} is invalid`,
-        stacktrace: new Error().stack || '',
-      });
-    }
-    request.baseURL = session.nodeUrl;
-    request.url = `/wd/hub/session/${sessionId}/download-directory${path}`;
-    request.validateStatus = alwaysTrue;
-    request.transformRequest = identity;
-    request.transformResponse = identity;
-    try {
-      const res = await this.axios.request(request);
-      return Right(res);
-    } catch (e) {
-      return Left({
-        ...WEBDRIVER_ERRORS.UNKNOWN_ERROR,
-        message: e.message || '',
-        stacktrace: e.stack || '',
-      });
-    }
-  }
-
   public async deleteWebdriverSession(sessionId: string, path: string, request: AxiosRequestConfig): Promise<Either<WebdriverError, AxiosResponse>> {
     const res = await this.forwardWebdriverRequest(sessionId, path, request);
     if (res.isRight()) {
