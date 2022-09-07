@@ -101,6 +101,10 @@ export class ResponseCapabilities {
     return `${this.request.getSessionBaseUrl(false)}/${this.sessionId}/download-directory`
   }
 
+  get executeScriptEndpoint() {
+    return `${this.request.getSessionBaseUrl(false)}/${this.sessionId}/execute-script`
+  }
+
   get chromeDebuggerAddress() {
     return this.rawResponseCapabilities?.["goog:chromeOptions"]?.debuggerAddress;
   }
@@ -137,6 +141,7 @@ export class ResponseCapabilities {
     // set node session url
     copiedResponseCapabilities['sf:sessionUrl'] = `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
     copiedResponseCapabilities['sf:autoDownloadUrl'] = this.downloadDirectoryEndpoint;
+    copiedResponseCapabilities['sf:executeScriptUrl'] = this.executeScriptEndpoint;
     return copiedResponse;
   }
 }
