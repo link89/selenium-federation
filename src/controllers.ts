@@ -295,14 +295,12 @@ export class LocalController implements IController {
   }
 
   onExecuteScriptToSession: RequestHandler = async (ctx, next) => {
-    await this.provisionTaskLock.withLock(async () => {
-      const task = await provisionTaskSchema.validate(ctx.request.body);
-      console.log(`start to run provision task`, task);
-      const result = await runProvisionTask(task);
-      setHttpResponse(ctx, {
-        status: 200,
-        body: result,
-      });
+    const task = await provisionTaskSchema.validate(ctx.request.body);
+    console.log(`start to run task`, task);
+    const result = await runProvisionTask(task);
+    setHttpResponse(ctx, {
+      status: 200,
+      body: result,
     });
   }
 
