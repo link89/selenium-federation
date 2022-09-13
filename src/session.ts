@@ -36,6 +36,17 @@ export class RequestCapabilities {
 
   get platformName() { return this.getValue('platformName'); }
 
+  get downloadFolder() {
+    switch (this.browserName) {
+      case 'chrome': return this.data.desiredCapabilities?.["goog:chromeOptions"]?.prefs?.["download.default_directory"];
+      case 'MicrosoftEdge': return;
+      case 'firefox': return;
+      case 'safari': return;
+      case 'nodejs': return;
+      default: throw Error(`browser ${this.browserName} is not supported`);
+    }
+  }
+
   get nodeUUID() { return this.getValue(SF_CAPS_FIELDS.NODE_UUID); }
   get nodeTags(): string[] | undefined { return this.getValue(SF_CAPS_FIELDS.NODE_TAGS) as any };
 
@@ -86,6 +97,10 @@ export class ResponseCapabilities {
     return `${this.request.getSessionBaseUrl(true)}/${this.sessionId}/se/cdp`;
   }
 
+  get downloadDirectoryEndpoint() {
+    return `${this.request.getSessionBaseUrl(false)}/${this.sessionId}/download-directory`
+  }
+
   get chromeDebuggerAddress() {
     return this.rawResponseCapabilities?.["goog:chromeOptions"]?.debuggerAddress;
   }
@@ -120,7 +135,8 @@ export class ResponseCapabilities {
       copiedResponseCapabilities['se:cdpVersion'] = 'FIXME';  // FIXME
     }
     // set node session url
-    copiedResponseCapabilities['sf:sessionUrl'] =  `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
+    copiedResponseCapabilities['sf:sessionUrl'] = `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
+    copiedResponseCapabilities['sf:autoDownloadUrl'] = this.downloadDirectoryEndpoint;
     return copiedResponse;
   }
 }
@@ -133,6 +149,7 @@ export interface ISession {
   kill: () => void;
   forward: (request: AxiosRequestConfig) => Promise<AxiosResponse<any>>;
   jsonObject: SessionDto;
+  downloadFolder: string | undefined;
 }
 
 export function createSession(
@@ -224,6 +241,10 @@ abstract class AbstractWebdriveSession implements ISession {
 
   get userDataDir(): string | undefined { return undefined; }
 
+  get downloadFolder() {
+    return this.request.downloadFolder || this.webdriverConfiguration.defaultCapabilities["sf:autoDownloadDirectory"];
+  }
+
   private async waitForReady() {
     await retry(async () => await this.axios.get('/status'), { max: 10, interval: 5e2 });
   }
@@ -306,6 +327,7 @@ class SafariSession extends CommonWebdriverSession {
 
 class NodeJsSession implements ISession {
   public id: string;
+  downloadFolder!: string;
   protected process?: ChildProcess;
   protected port?: number;
   public response?: ResponseCapabilities;
@@ -320,7 +342,7 @@ class NodeJsSession implements ISession {
   }
 
   async start() {
-    const { port, nodejsProcess} = await this.processManager.spawnNodeJsProcess({
+    const { port, nodejsProcess } = await this.processManager.spawnNodeJsProcess({
       path: this.webdriverConfiguration.command.path,
       envs: { ...this.webdriverConfiguration.command.envs, ...this.request.environmentVariables },
       args: this.webdriverConfiguration.command.args,
@@ -364,7 +386,7 @@ class NodeJsSession implements ISession {
         url: '/json',
         method: 'GET',
       });
-    }, {max: 5, interval: 1e3});
+    }, { max: 5, interval: 1e3 });
 
     return res!.data?.[0]?.webSocketDebuggerUrl as string;
   }

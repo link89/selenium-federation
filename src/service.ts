@@ -1,15 +1,19 @@
 import _ from "lodash";
 import * as yup from 'yup';
-import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types';
+import { AutoCmdError, Configuration, DriverConfiguration, DriverDto, driverDtoSchema, NodeDto, nodeDtoSchema, RegisterDto, WebdriverError } from './types'; 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { alwaysTrue, identity, Semaphore } from './utils';
+import { alwaysTrue, identity, retry, Semaphore } from './utils';
 import { Either, Left, Right } from 'purify-ts';
 import Bluebird from 'bluebird';
 import { Watchdog } from './utils';
 import { RequestCapabilities, ResponseCapabilities, createSession, ISession } from './session';
 import { AUTO_CMD_ERRORS, LONG_TIMEOUT_IN_MS, REGISTER_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from './constants';
 import { ProcessManager } from "./process";
-
+import { Context } from "koa";
+import { join } from 'path';
+import send from 'koa-send';
+import * as fs from 'fs';
+import { setHttpResponse } from "./controllers";
 
 export interface TerminateOptions {
   confirmed: boolean;
@@ -549,7 +553,7 @@ export class LocalService {
     const data: RegisterDto = {
       registerAs: this.config.publicUrl || `http://%s:${this.config.port}`,
     };
-    const baseURL= this.config.registerTo;
+    const baseURL = this.config.registerTo;
     try {
       const res = await this.axios.request({
         method: 'POST',
@@ -616,6 +620,7 @@ class WebdriverManager {
       );
       const res = await session.start();
       console.log(`${session.id}: session created`);
+      console.log(`downloadFolder: ${session.downloadFolder}`);
       this.addSession(session);
 
       const watchDog = new Watchdog(() => this.destroySession(session.id), this.sessionTimeoutInSeconds);
@@ -690,3 +695,82 @@ function isRequestMatch(config: Configuration, driver: DriverConfiguration, requ
 function matchTags(requestTags: string[], targetTags: string[]) {
   return requestTags.every(tag => tag.startsWith('!') ? (!targetTags.includes(tag.slice(1))) : targetTags.includes(tag));
 }
+
+export async function getFile(ctx: Context, root: string, isJsonResponse = true) {
+  if (!root) {
+    setHttpResponse(ctx, {
+      status: 404,
+      body: 'download folder is undefine',
+    });
+    return;
+  }
+  const url = '/' + (ctx.params[0] || '');
+  const encoding = ctx.query.encoding as BufferEncoding || 'utf-8';
+  const path = join(root, url);
+  try {
+    const stat = await fs.promises.lstat(path);
+    if (stat.isDirectory()) {
+      const files = await fs.promises.readdir(path, { withFileTypes: true });
+      ctx.status = 200;
+      const filenames = files.map(f => f.name + (f.isDirectory() ? '/' : '')).sort();
+      ctx.body = isJsonResponse ? filenames : renderDirectoyHtml(url, filenames)
+    } else {
+      if (isJsonResponse) {
+        ctx.body = await fs.promises.readFile(path, { encoding });
+      } else {
+        await send(ctx, url, { hidden: true, root });
+      }
+    }
+  } catch (e) {
+    setHttpResponse(ctx, {
+      status: 404,
+      body: {
+        message: e.message || '',
+        stack: e.stack || '',
+      }
+    });
+  }
+}
+
+export async function deleteFile(ctx: Context, root: string) {
+  const filename = ctx.params[0];
+  if (!root) {
+    setHttpResponse(ctx, {
+      status: 404,
+      body: 'download folder is undefine',
+    });
+    return;
+  }
+  const path = join(root, "/", filename); 
+  try {
+    if(fs.existsSync(path)){
+      fs.promises.unlink(join(root, '/', filename));
+    }
+    ctx.status = 204;
+  } catch (e) {
+    return setHttpResponse(ctx, {
+      status: 500,
+      body: {
+        message: e.message || '',
+        stack: e.stack || '',
+      },
+    });
+  }
+}
+
+function renderDirectoyHtml(dir: string, paths: string[]) {
+  return [
+    `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><html>`,
+    `<title>Directory listing for ${dir}</title>`,
+    `<body>`,
+    `<h2>Directory listing for ${dir}</h2>`,
+    `<hr>`,
+    `<ul>`,
+    ...paths.map(path => `<li><a href="${path}">${path}</a></li>`),
+    `</ul>`,
+    `<hr>`,
+    `</body>`,
+    `</html>`,
+  ].join('\n');
+}
+

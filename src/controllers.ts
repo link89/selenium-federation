@@ -1,5 +1,5 @@
 import { AxiosRequestConfig, AxiosResponse } from "axios";
-import { LocalService, HubService, TerminateOptions } from "./service";
+import { LocalService, HubService, TerminateOptions, getFile, deleteFile } from "./service";
 import { RequestCapabilities } from "./session";
 import { Context, Request } from 'koa';
 import Server from 'http-proxy';
@@ -9,7 +9,6 @@ import { match } from "path-to-regexp";
 import { logMessage, runProvisionTask, Semaphore, TaskResult } from "./utils";
 import { LONG_TIMEOUT_IN_MS, WEBDRIVER_ERRORS } from "./constants";
 import { Configuration, NodeDto, provisionTaskSchema, registerDtoSchema, RequestHandler, WebdriverError } from "./types";
-import send from 'koa-send';
 import * as fs from 'fs';
 import { join } from 'path';
 import { Either } from "purify-ts";
@@ -36,6 +35,8 @@ export interface IController {
   onAutoCmdRequestToNode: RequestHandler;
   onAutoCmdRequestToSession: RequestHandler;
 
+  onFileRequestToSession: RequestHandler
+
   onNodeRegiester: RequestHandler;
   onGetNodesRequest: RequestHandler;
   onTermiateRequest: RequestHandler;
@@ -50,7 +51,11 @@ export class HubController implements IController {
   ) { }
 
   onRunProvisionTask: RequestHandler = async (ctx, next) => {
-    throw Error(`termiate endpoint is optional in hub mode`);
+    throw Error(`provision endpoint is optional in hub mode`);
+  }
+
+  onFileRequestToSession: RequestHandler = async (ctx, next) => {
+    throw Error(`download-directory endpoint is optional in hub mode`);
   }
 
   onTermiateRequest: RequestHandler = async (ctx, next) => {
@@ -258,6 +263,25 @@ export class LocalController implements IController {
   onAutoCmdRequestToNode: RequestHandler = this.onAutoCmdRequest;
   onAutoCmdRequestToSession: RequestHandler = this.onAutoCmdRequest;
 
+  onFileRequestToSession: RequestHandler = async (ctx, next) => {
+    const { sessionId } = getSessionParams(ctx);
+    const session = this.localService.getWebdriverSessionById(sessionId);
+    if (!session) {
+      return setHttpResponse(ctx, {
+        ...WEBDRIVER_ERRORS.INVALID_SESSION_ID,
+        body: `session id ${sessionId} is invalid`,
+      });
+    }
+    const root = session?.downloadFolder as string;
+    if (ctx.method !== 'GET' && ctx.method !== 'DELETE') return;
+    if (ctx.method === "GET") {
+      return await getFile(ctx, root);
+    }
+    if (ctx.method === "DELETE") {
+      return await deleteFile(ctx, root);
+    }
+  }
+
   onNodeRegiester: RequestHandler = (ctx, next) => {
     throw Error(`register endpoint is not supported in local mode`);
   }
@@ -288,45 +312,11 @@ export const onError: RequestHandler = (ctx, next) => {
 export function serveStatic(root: string): RequestHandler {
   return async (ctx, next) => {
     if (ctx.method !== 'HEAD' && ctx.method !== 'GET') return;
-    const url = '/' + (ctx.params[0] || '');
-    const path = join(root, url);
-
-    try {
-      const stat = await fs.promises.lstat(path);
-      if (stat.isDirectory()) {
-        const files = await fs.promises.readdir(path, { withFileTypes: true });
-        const hrefs = files.map(f => f.name + (f.isDirectory() ? '/' : '')).sort();
-        ctx.status = 200;
-        ctx.body = renderDirectoyHtml(url, hrefs);
-      } else {
-        await send(ctx, url, { hidden: true, root });
-      }
-    } catch (err) {
-      console.log(err);
-      if (err.status !== 404) {
-        throw err
-      }
-    }
+    await getFile(ctx, root, false);
   }
 }
 
-function renderDirectoyHtml(dir: string, paths: string[]) {
-  return [
-    `<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"><html>`,
-    `<title>Directory listing for ${dir}</title>`,
-    `<body>`,
-    `<h2>Directory listing for ${dir}</h2>`,
-    `<hr>`,
-    `<ul>`,
-    ...paths.map(path => `<li><a href="${path}">${path}</a></li>`),
-    `</ul>`,
-    `<hr>`,
-    `</body>`,
-    `</html>`,
-  ].join('\n');
-}
-
-const setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
+export const setHttpResponse = (ctx: Context, response: Partial<HttpResponse>) => {
   if (response.status) {
     ctx.status = response.status;
   }
