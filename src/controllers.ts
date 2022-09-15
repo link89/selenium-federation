@@ -35,7 +35,9 @@ export interface IController {
   onAutoCmdRequestToNode: RequestHandler;
   onAutoCmdRequestToSession: RequestHandler;
 
-  onFileRequestToSession: RequestHandler
+  onFileRequestToSession: RequestHandler;
+
+  onExecuteScriptToSession: RequestHandler;
 
   onNodeRegiester: RequestHandler;
   onGetNodesRequest: RequestHandler;
@@ -56,6 +58,10 @@ export class HubController implements IController {
 
   onFileRequestToSession: RequestHandler = async (ctx, next) => {
     throw Error(`download-directory endpoint is optional in hub mode`);
+  }
+
+  onExecuteScriptToSession: RequestHandler = async (ctx, next) => {
+    throw Error(`execute script endpoint is optional in hub mode`);
   }
 
   onTermiateRequest: RequestHandler = async (ctx, next) => {
@@ -280,6 +286,16 @@ export class LocalController implements IController {
     if (ctx.method === "DELETE") {
       return await deleteFile(ctx, root);
     }
+  }
+
+  onExecuteScriptToSession: RequestHandler = async (ctx, next) => {
+    const task = await provisionTaskSchema.validate(ctx.request.body);
+    console.log(`start to run task`, task);
+    const result = await runProvisionTask(task);
+    setHttpResponse(ctx, {
+      status: 200,
+      body: result,
+    });
   }
 
   onNodeRegiester: RequestHandler = (ctx, next) => {
