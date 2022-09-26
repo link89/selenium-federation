@@ -49,8 +49,6 @@ import axios from "axios";
     .post('/nodes/:nodeId/auto-cmd', controller.onAutoCmdRequestToNode)
     // fs
     .all('/session/:sessionId/download-directory/(.*)', controller.onFileRequestToSession)
-    // execute script
-    .post('/session/:sessionId/execute-script', controller.onExecuteScriptToSession)
     // webdriver session
     .post('/session', controller.onNewWebdriverSessionRequest)
     .delete(['/session/:sessionId', '/session/:sessionId/'], controller.onDeleteWebdirverSessionRequest)

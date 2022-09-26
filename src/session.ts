@@ -29,6 +29,17 @@ export class RequestCapabilities {
     return `${proto}://${this.request.host}${_.trimEnd(this.request.path, '/')}`;
   }
 
+  getBaseUrl(isWebsocket: boolean) {
+    let proto = this.request.protocol;
+    if (isWebsocket) {
+      proto = {
+        'http': 'ws',
+        'https': 'wss',
+      }[proto] || 'ws';
+    }
+    return `${proto}://${this.request.host}`;
+  }
+
   get browserName() { return this.getValue('browserName'); }
   get browserVersion() { return this.getValue('browserVersion'); }
   get browserUUID() { return this.getValue(SF_CAPS_FIELDS.BROWSER_UUID); }
@@ -101,8 +112,8 @@ export class ResponseCapabilities {
     return `${this.request.getSessionBaseUrl(false)}/${this.sessionId}/download-directory`
   }
 
-  get executeScriptEndpoint() {
-    return `${this.request.getSessionBaseUrl(false)}/${this.sessionId}/execute-script`
+  get provisionEndpoint() {
+    return `${this.request.getBaseUrl(false)}/provision`
   }
 
   get chromeDebuggerAddress() {
@@ -141,7 +152,7 @@ export class ResponseCapabilities {
     // set node session url
     copiedResponseCapabilities['sf:sessionUrl'] = `${this.request.getSessionBaseUrl(false)}/${this.sessionId}`;
     copiedResponseCapabilities['sf:autoDownloadUrl'] = this.downloadDirectoryEndpoint;
-    copiedResponseCapabilities['sf:executeScriptUrl'] = this.executeScriptEndpoint;
+    copiedResponseCapabilities['sf:provisionUrl'] = this.provisionEndpoint;
     return copiedResponse;
   }
 }
