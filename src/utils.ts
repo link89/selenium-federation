@@ -263,7 +263,7 @@ export async function runProvisionTask(task: ProvisionTask, ctx: { downloadFolde
   let downloadFilePath: string | undefined;
 
   if (task.download) {
-    downloadFilePath = join(ctx.downloadFolder as string, getFileNameFromUrl(task.download));
+    downloadFilePath = join(ctx.downloadFolder, getFileNameFromUrl(task.download));
     console.log(`start to download ${task.download} to ${downloadFilePath}`);
     await saveUrlToFile(task.download, downloadFilePath);
   }
