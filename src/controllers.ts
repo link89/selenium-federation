@@ -35,7 +35,7 @@ export interface IController {
   onAutoCmdRequestToNode: RequestHandler;
   onAutoCmdRequestToSession: RequestHandler;
 
-  onFileRequestToSession: RequestHandler
+  onFileRequestToSession: RequestHandler;
 
   onNodeRegiester: RequestHandler;
   onGetNodesRequest: RequestHandler;
