@@ -56,7 +56,7 @@
     "@koa/router": "^10.1.1",
     "@sentry/node": "^6.0.2",
     "@sentry/tracing": "^6.0.2",
-    "axios": "^0.21.0",
+    "axios": "^1.6.0",
     "bluebird": "^3.7.2",
     "chalk": "^4.1.0",
     "get-port": "^5.1.1",
